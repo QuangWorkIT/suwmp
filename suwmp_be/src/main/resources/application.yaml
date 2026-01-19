@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: suwmp_be
+  profiles:
+    active: dev
