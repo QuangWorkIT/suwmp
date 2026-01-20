@@ -1,0 +1,26 @@
+package com.example.suwmp_be.controller;
+
+import com.example.suwmp_be.dto.RegisterRequest;
+import com.example.suwmp_be.service.AuthService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+@CrossOrigin
+public class AuthController {
+    private final AuthService authService;
+
+    public AuthController() {
+        authService = null;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return ResponseEntity.ok().build();
+    }
+}
