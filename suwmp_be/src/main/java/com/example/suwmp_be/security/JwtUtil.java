@@ -1,4 +1,4 @@
-package security;
+package com.example.suwmp_be.security;
 
 import com.example.suwmp_be.entity.User;
 import io.jsonwebtoken.JwtBuilder;
@@ -18,7 +18,7 @@ import java.util.Map;
 @Component
 @Slf4j
 public class JwtUtil {
-    @Value("${JWT_SECRET)}")
+    @Value("${JWT_SECRET}")
     private String jwtSecret;
     @Value("${JWT_EXPIRATION}")
     private int jwtExpiration;
