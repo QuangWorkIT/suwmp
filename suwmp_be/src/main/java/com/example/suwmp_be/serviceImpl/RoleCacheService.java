@@ -1,4 +1,4 @@
-package com.example.suwmp_be.service;
+package com.example.suwmp_be.serviceImpl;
 
 import com.example.suwmp_be.constants.RoleEnum;
 import com.example.suwmp_be.entity.Role;
