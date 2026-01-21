@@ -30,6 +30,7 @@ CREATE TABLE users (
     phone VARCHAR(50) UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role_id INT NOT NULL REFERENCES roles(id),
+    image_url VARCHAR(255),
     status VARCHAR(20) CHECK (status IN ('ACTIVE', 'SUSPENDED')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
