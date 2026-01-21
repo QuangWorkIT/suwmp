@@ -1,15 +1,14 @@
 package com.example.suwmp_be.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Entity
 @Table(name = "\"Token\"")
 public class Token {
@@ -29,4 +28,19 @@ public class Token {
 
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (expiredAt == null) {
+            expiredAt = LocalDateTime.now().plusDays(7);
+        }
+    }
+
+    public Token(User user, String tokenId) {
+        this.user = user;
+        this.tokenId = tokenId;
+    }
 }
