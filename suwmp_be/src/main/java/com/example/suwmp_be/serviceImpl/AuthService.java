@@ -1,24 +1,26 @@
-package com.example.suwmp_be.service;
+package com.example.suwmp_be.serviceImpl;
 
 import com.example.suwmp_be.constants.RoleEnum;
 import com.example.suwmp_be.dto.RegisterRequest;
-import com.example.suwmp_be.entity.Role;
 import com.example.suwmp_be.entity.User;
-import com.example.suwmp_be.repository.RoleRepository;
 import com.example.suwmp_be.repository.UserRepository;
+import com.example.suwmp_be.service.IAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthService implements IAuthService {
 
     private final UserRepository userRepository;
     private final RoleCacheService roleCacheService;
     private final PasswordEncoder passwordEncoder;
 
-    public void register(RegisterRequest req) {
+    @Override
+    public UUID register(RegisterRequest req) {
 
         if (userRepository.existsByEmail(req.email())) {
             throw new RuntimeException("Email already exists");
@@ -37,7 +39,7 @@ public class AuthService {
         user.setRole(roleCacheService.get(RoleEnum.CITIZEN));
         user.setStatus("ACTIVE");
 
-        userRepository.save(user);
+        return userRepository.save(user).getId();
     }
 }
 
