@@ -3,16 +3,8 @@ package com.example.suwmp_be.entity;
 import java.time.Instant;
 import java.util.UUID;
 
-import com.example.suwmp_be.constants.Role;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,10 +29,23 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password;
+    private String passwordHash;
+
+    @Column
+    private String imageUrl;
 
     @Column(nullable = false, unique = true)
-    private String phoneNumber;
+    private String phone;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
+    @Pattern(
+            regexp = "^(ACTIVE|SUSPENDED)$"
+    )
+    @Column(nullable = false)
+    private String status;
 
     private Instant createdAt = Instant.now();
 }

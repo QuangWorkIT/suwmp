@@ -6,5 +6,5 @@ suwmp_fe/.env
 suwmp_fe/.env.production
 
 # Root
-.env
+suwmp_be/.env
 .idea/

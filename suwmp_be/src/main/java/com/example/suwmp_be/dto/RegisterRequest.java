@@ -1,5 +1,6 @@
 package com.example.suwmp_be.dto;
 
+import com.example.suwmp_be.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -14,11 +15,13 @@ public record RegisterRequest(
                 regexp = "^(\\+84|0)[0-9]{9}$",
                 message = "Invalid Vietnamese phone number"
         )
-        String phoneNumber,
+        String phone,
 
         @NotBlank
         @Size(min = 8)
-        String password
+        String password,
+
+        Role role
 ) {
 
 }

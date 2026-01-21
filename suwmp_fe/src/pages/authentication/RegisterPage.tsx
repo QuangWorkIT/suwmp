@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AuthService } from "@/services/AuthService";
 import { useState } from "react";
 
 export default function Register() {
@@ -8,7 +9,7 @@ export default function Register() {
     fullName: "",
     email: "",
     password: "",
-    phoneNumber: "",
+    phone: "",
   });
 
   const handleChange = (
@@ -18,24 +19,8 @@ export default function Register() {
   };
 
   const submit = async () => {
-    const res = await fetch("http://localhost:8080/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fullName: form.fullName,
-        email: form.email,
-        phoneNumber: form.phoneNumber,
-        password: form.password,
-      }),
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (res.ok) {
-      alert("Account created!");
-    } else {
-      alert(data?.message || "Registration failed");
-    }
+    const response = await AuthService.register(form);
+    console.log(response);
   };
 
   return (
@@ -103,7 +88,7 @@ export default function Register() {
         </div>
 
         <div className="space-y-1 mt-6">
-          <Label htmlFor="phoneNumber" className="text-base">
+          <Label htmlFor="phone" className="text-base">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -121,7 +106,7 @@ export default function Register() {
             Phone Number
           </Label>
           <Input
-            name="phoneNumber"
+            name="phone"
             type="text"
             placeholder="Phone number"
             className="w-full border p-4 shadow-lg shadow-gray-400 input"
