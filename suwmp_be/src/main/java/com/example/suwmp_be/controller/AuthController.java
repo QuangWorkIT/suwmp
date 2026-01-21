@@ -1,7 +1,7 @@
 package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.RegisterRequest;
-import com.example.suwmp_be.service.AuthService;
+import com.example.suwmp_be.serviceImpl.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,6 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
     }
 }
