@@ -94,7 +94,6 @@ public class AuthService implements IAuthService
     public Token generateRefreshToken(User user)
     {
         Token token = new Token(user, UUID.randomUUID().toString());
-        token.setExpiredAt(LocalDateTime.now().plusDays(7));
         return tokenRepository.save(token);
     }
 }

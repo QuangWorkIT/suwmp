@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "\"Token\"")
+@Table(name = "\"token\"")
 public class Token {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +26,7 @@ public class Token {
     @Column(nullable = false)
     private LocalDateTime expiredAt;
 
-    @Column(insertable = false, updatable = false)
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
