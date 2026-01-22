@@ -14,13 +14,15 @@ import com.example.suwmp_be.service.IAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService implements IAuthService {
+public class AuthService implements IAuthService
+{
 
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
@@ -29,7 +31,8 @@ public class AuthService implements IAuthService {
     private final JwtUtil jwtUtil;
 
     @Override
-    public UUID register(RegisterRequest req) {
+    public UUID register(RegisterRequest req)
+    {
 
         if (userRepository.existsByEmail(req.email())) {
             throw new RuntimeException("Email already exists");
@@ -52,19 +55,47 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public TokenResponse login(LoginRequest req) {
-        System.out.println(req.getEmail() + " ");
+    public TokenResponse login(LoginRequest req)
+    {
         User user = userRepository.findByEmail(req.getEmail());
-        System.out.println(user);
-        if (user == null) {
+        if (user == null)
+        {
             throw new InvalidCredential("User not found");
         }
-        if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash())){
+        if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash()))
+        {
             throw new InvalidCredential("Invalid password");
         }
-        Token refreshToken = new Token(user, UUID.randomUUID().toString());
-        tokenRepository.save(refreshToken);
+        Token refreshToken = generateRefreshToken(user);
         return new TokenResponse(jwtUtil.generateToken(user), refreshToken.getTokenId());
+    }
+
+    @Override
+    @Transactional
+    public TokenResponse refreshToken(String refreshToken) {
+        Token oldToken = tokenRepository
+                .findTokenByTokenId(refreshToken)
+                .orElseThrow(() -> new InvalidCredential("Invalid refresh token"));
+        if (LocalDateTime.now().isAfter(oldToken.getExpiredAt())){
+            throw new InvalidCredential("Refresh token expired");
+        }
+
+        User user = oldToken.getUser();
+
+        tokenRepository.deleteTokenByTokenId(oldToken.getTokenId());
+        Token newToken = generateRefreshToken(user);
+
+        String newAccessToken = jwtUtil.generateToken(user);
+
+        return new TokenResponse(newAccessToken, newToken.getTokenId());
+    }
+
+    @Override
+    public Token generateRefreshToken(User user)
+    {
+        Token token = new Token(user, UUID.randomUUID().toString());
+        token.setExpiredAt(LocalDateTime.now().plusDays(7));
+        return tokenRepository.save(token);
     }
 }
 
