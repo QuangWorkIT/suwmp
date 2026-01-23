@@ -8,15 +8,16 @@ import {
   Download,
   Building2,
 } from "lucide-react";
+import { NavLink } from "react-router";
 
 const menu = [
-  { label: "Dashboard", icon: LayoutDashboard },
-  { label: "Requests", icon: ClipboardList },
-  { label: "Collectors", icon: Users },
-  { label: "Service Areas", icon: Map },
-  { label: "Capacity", icon: Layers },
-  { label: "Reports", icon: BarChart },
-  { label: "Export", icon: Download },
+  { label: "Dashboard", icon: LayoutDashboard, path: "dashboard" },
+  { label: "Requests", icon: ClipboardList, path: "requests" },
+  { label: "Collectors", icon: Users, path: "collectors" },
+  { label: "Service Areas", icon: Map, path: "areas" },
+  { label: "Capacity", icon: Layers, path: "capacity" },
+  { label: "Reports", icon: BarChart, path: "reports" },
+  { label: "Export", icon: Download, path: "export" },
 ];
 
 const EnterpriseSidebar = () => {
@@ -31,13 +32,20 @@ const EnterpriseSidebar = () => {
 
       <nav className="space-y-2">
         {menu.map((item) => (
-          <button
-            key={item.label}
-            className="flex items-center gap-3 w-full px-4 py-2 rounded-2xl text-gray-700 hover:bg-orange-500 hover:text-white cursor-pointer"
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-2 rounded-lg ${
+                isActive
+                  ? "bg-orange-100 text-orange-600"
+                  : "text-gray-700 hover:bg-orange-300 hover:text-white"
+              }`
+            }
           >
             <item.icon size={18} />
             {item.label}
-          </button>
+          </NavLink>
         ))}
       </nav>
     </aside>

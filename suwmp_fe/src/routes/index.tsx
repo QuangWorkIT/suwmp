@@ -1,5 +1,6 @@
 import CitizenMain from "@/components/layout/citizen/CitizenMain";
 import PublicMain from "@/components/layout/public/PublicMain";
+import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
 import CitizenHome from "@/pages/citizen/CitizenHome";
 import EnterpriseMain from "@/pages/enterprise/EnterpriseMain";
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
     path: "/enterprise",
     element: <EnterpriseMain />,
   },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  }
 ]);
 
 export default router;
