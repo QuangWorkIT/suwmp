@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthService } from "@/services/AuthService";
+import { Recycle } from "lucide-react";
 import { useState } from "react";
 
 export default function Register() {
@@ -26,6 +27,11 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-white">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <div className="flex justify-center">
+          <div className="mb-2 p-2 bg-linear-to-br from-emerald-400 to-emerald-600 rounded-xl inline-flex">
+            <Recycle className="text-white" size={36} />
+          </div>
+        </div>
         <h2 className="text-2xl font-bold text-center mb-2">
           Create Your Account
         </h2>
@@ -55,7 +61,7 @@ export default function Register() {
             name="fullName"
             placeholder="Full Name"
             required
-            className="w-full border p-4 shadow-lg shadow-gray-400 input"
+            className="w-full border p-4 shadow-lg shadow-gray-200 input"
             onChange={handleChange}
           />
         </div>
@@ -82,7 +88,7 @@ export default function Register() {
             name="email"
             type="email"
             placeholder="Email Address"
-            className="w-full border p-4 shadow-lg shadow-gray-400 input"
+            className="w-full border p-4 shadow-lg shadow-gray-200 input"
             onChange={handleChange}
           />
         </div>
@@ -109,7 +115,7 @@ export default function Register() {
             name="phone"
             type="text"
             placeholder="Phone number"
-            className="w-full border p-4 shadow-lg shadow-gray-400 input"
+            className="w-full border p-4 shadow-lg shadow-gray-200 input"
             onChange={handleChange}
           />
         </div>
@@ -136,13 +142,13 @@ export default function Register() {
             name="password"
             type="password"
             placeholder="Create a strong password"
-            className="w-full border p-4 shadow-lg shadow-gray-400 input"
+            className="w-full border p-4 shadow-lg shadow-gray-200 input"
             onChange={handleChange}
           />
 
           <Button
             onClick={submit}
-            className="w-full mt-6 bg-emerald-500 text-white py-4 rounded-lg text-md font-semibold hover:bg-emerald-700 cursor-pointer transition"
+            className="w-full mt-6 bg-linear-to-br from-emerald-400 to-emerald-600 text-white py-4 rounded-lg text-md font-semibold hover:bg-emerald-700 cursor-pointer transition"
           >
             Create Account →
           </Button>

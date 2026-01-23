@@ -2,6 +2,7 @@ import CitizenMain from "@/components/layout/citizen/CitizenMain";
 import PublicMain from "@/components/layout/public/PublicMain";
 import RegisterPage from "@/pages/authentication/RegisterPage";
 import CitizenHome from "@/pages/citizen/CitizenHome";
+import EnterpriseMain from "@/pages/enterprise/EnterpriseMain";
 import About from "@/pages/public/About";
 import PublicHome from "@/pages/public/PublicHome";
 import WasteguidePage from "@/pages/public/WasteguidePage";
@@ -20,11 +21,17 @@ const router = createBrowserRouter([
   {
     path: "/citizen",
     element: <CitizenMain />,
-    children: [{ index: true, element: <CitizenHome /> }],
+    children: [
+      { index: true, element: <CitizenHome /> },
+      {
+        path: "signup",
+        element: <RegisterPage />,
+      },
+    ],
   },
   {
-    path: "/register",
-    element: <RegisterPage />,
+    path: "/enterprise",
+    element: <EnterpriseMain />,
   },
 ]);
 
