@@ -15,4 +15,5 @@ public interface IAuthService {
     //refresh token
     TokenResponse refreshToken(String refreshToken);
     Token generateRefreshToken(User user);
+    void deleteRefreshToken(String tokenId);
 }

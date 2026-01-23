@@ -42,6 +42,41 @@ public class AuthController {
         );
     }
 
+    @DeleteMapping("/logout")
+    public ResponseEntity<BaseResponse<?>> logout(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken)
+    {
+        try {
+            if (refreshToken != null && !refreshToken.isEmpty()) {
+                authService.deleteRefreshToken(refreshToken);
+            }
+            ResponseCookie response = ResponseCookie.from("refreshToken", "")
+                    .maxAge(0)
+                    .secure(true)
+                    .httpOnly(true)
+                    .path("/")
+                    .sameSite("None")
+                    .build();
+
+            return ResponseEntity
+                    .ok()
+                    .header("Set-cookie", response.toString())
+                    .body(new BaseResponse<>(
+                            true,
+                            "Logout successful",
+                            null
+                    ));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new BaseResponse<>(
+                            false,
+                            "Logout failed: " + e.getMessage(),
+                            null
+                    ));
+        }
+    }
+
     @PostMapping("/refresh-token")
     public ResponseEntity<BaseResponse<TokenResponse>> refreshToken(
             @CookieValue(value = "refreshToken", required = false) String refreshToken)

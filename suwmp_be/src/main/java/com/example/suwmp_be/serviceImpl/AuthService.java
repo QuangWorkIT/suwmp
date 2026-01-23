@@ -82,7 +82,7 @@ public class AuthService implements IAuthService
 
         User user = oldToken.getUser();
 
-        tokenRepository.deleteTokenByTokenId(oldToken.getTokenId());
+        deleteRefreshToken(oldToken.getTokenId());
         Token newToken = generateRefreshToken(user);
 
         String newAccessToken = jwtUtil.generateToken(user);
@@ -95,6 +95,15 @@ public class AuthService implements IAuthService
     {
         Token token = new Token(user, UUID.randomUUID().toString());
         return tokenRepository.save(token);
+    }
+
+    @Override
+    public void deleteRefreshToken(String tokenId) {
+        try {
+            tokenRepository.deleteTokenByTokenId(tokenId);
+        } catch (RuntimeException e){
+            throw new RuntimeException("Error deleting refresh token " + e);
+        }
     }
 }
 
