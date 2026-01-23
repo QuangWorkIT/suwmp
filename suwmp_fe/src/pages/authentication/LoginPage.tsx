@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Zap, Mail, Lock } from "lucide-react";
 
 export default function Login() {
   const [form, setForm] = useState({
@@ -6,15 +7,70 @@ export default function Login() {
     password: "",
   });
 
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [touched, setTouched] = useState({
+    email: false,
+    password: false,
+  });
+
+  const validateEmail = (email: string): string => {
+    if (!email) return "Email is required";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
+
+  const validatePassword = (password: string): string => {
+    if (!password) return "Password is required";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    if (!/[a-z]/.test(password)) return "Password must contain at least 1 lowercase letter";
+    if (!/[A-Z]/.test(password)) return "Password must contain at least 1 uppercase letter";
+    if (!/[0-9]/.test(password)) return "Password must contain at least 1 number";
+    return "";
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+
+    if (touched[name as keyof typeof touched]) {
+      const error = name === "email" ? validateEmail(value) : validatePassword(value);
+      setErrors({ ...errors, [name]: error });
+    }
+  };
+
+  const handleBlur = (field: "email" | "password") => {
+    setTouched({ ...touched, [field]: true });
+    const value = form[field];
+    const error = field === "email" ? validateEmail(value) : validatePassword(value);
+    setErrors({ ...errors, [field]: error });
   };
 
   const submit = async () => {
-    // const response = await AuthService.login(form);
-    // console.log(response);
+    const emailError = validateEmail(form.email);
+    const passwordError = validatePassword(form.password);
+
+    setErrors({
+      email: emailError,
+      password: passwordError,
+    });
+
+    setTouched({
+      email: true,
+      password: true,
+    });
+
+    if (!emailError && !passwordError) {
+      // const response = await AuthService.login(form);
+      // console.log(response);
+      console.log("Form is valid, ready to submit:", form);
+    }
     return null;
   };
 
@@ -26,19 +82,7 @@ export default function Login() {
           {/* Logo */}
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none" 
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
+              <Zap className="w-8 h-8 text-white" />
             </div>
           </div>
 
@@ -55,29 +99,25 @@ export default function Login() {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
+                <Mail className="w-5 h-5 text-gray-400" />
               </div>
               <input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
+                onBlur={() => handleBlur("email")}
                 placeholder="you@example.com"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200"
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  touched.email && errors.email
+                    ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                    : "border-gray-200 focus:ring-teal-500 focus:border-transparent"
+                }`}
               />
             </div>
+            {touched.email && errors.email && (
+              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+            )}
           </div>
 
           {/* Password Input */}
@@ -90,29 +130,25 @@ export default function Login() {
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
+                <Lock className="w-5 h-5 text-gray-400" />
               </div>
               <input
                 type="password"
                 name="password"
                 value={form.password}
                 onChange={handleChange}
+                onBlur={() => handleBlur("password")}
                 placeholder="Enter your password"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200"
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  touched.password && errors.password
+                    ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                    : "border-gray-200 focus:ring-teal-500 focus:border-transparent"
+                }`}
               />
             </div>
+            {touched.password && errors.password && (
+              <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+            )}
           </div>
 
           {/* Keep me signed in */}
