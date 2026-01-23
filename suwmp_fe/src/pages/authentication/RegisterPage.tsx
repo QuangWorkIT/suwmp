@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthService } from "@/services/AuthService";
-import { Recycle } from "lucide-react";
+import { Lock, Mail, Phone, Recycle, User } from "lucide-react";
 import { useState } from "react";
 
 export default function Register() {
@@ -12,6 +12,11 @@ export default function Register() {
     password: "",
     phone: "",
   });
+
+  //   const [errors, setErrors] = useState({
+  //     email: "",
+  //     password: "",
+  //   });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -23,6 +28,25 @@ export default function Register() {
     const response = await AuthService.register(form);
     console.log(response);
   };
+
+  //   const validateEmail = (email: string): string => {
+  //     if (!email) return "Email is required";
+  //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //     if (!emailRegex.test(email)) return "Please enter a valid email address";
+  //     return "";
+  //   };
+
+  //   const validatePassword = (password: string): string => {
+  //     if (!password) return "Password is required";
+  //     if (password.length < 8) return "Password must be at least 8 characters";
+  //     if (!/[a-z]/.test(password))
+  //       return "Password must contain at least 1 lowercase letter";
+  //     if (!/[A-Z]/.test(password))
+  //       return "Password must contain at least 1 uppercase letter";
+  //     if (!/[0-9]/.test(password))
+  //       return "Password must contain at least 1 number";
+  //     return "";
+  //   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-white">
@@ -41,20 +65,7 @@ export default function Register() {
 
         <div className="space-y-1">
           <Label htmlFor="fullName" className="text-base">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              className="size-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-              />
-            </svg>
+            <User className="size-5" />
             Full Name
           </Label>
           <Input
@@ -68,20 +79,7 @@ export default function Register() {
 
         <div className="space-y-1 mt-6">
           <Label htmlFor="email" className="text-base">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
-              />
-            </svg>
+            <Mail className="size-5" />
             Email Address
           </Label>
           <Input
@@ -95,20 +93,7 @@ export default function Register() {
 
         <div className="space-y-1 mt-6">
           <Label htmlFor="phone" className="text-base">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
-              />
-            </svg>
+            <Phone className="size-5" />
             Phone Number
           </Label>
           <Input
@@ -122,20 +107,7 @@ export default function Register() {
 
         <div className="space-y-1 mt-6">
           <Label htmlFor="password" className="text-base">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-              />
-            </svg>
+            <Lock className="size-5" />
             Password
           </Label>
           <Input
