@@ -5,7 +5,6 @@ import { Link, useLocation } from 'react-router';
 
 function Sidebar() {
     const location = useLocation()
-    console.log(location)
 
     const sidebarItems = [
         { icon: <House size={18} />, label: "Dashboard", path: "/citizen/dashboard" },
