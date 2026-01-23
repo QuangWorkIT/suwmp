@@ -1,5 +1,6 @@
 import CitizenMain from "@/components/layout/citizen/CitizenMain";
 import PublicMain from "@/components/layout/public/PublicMain";
+import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
 import CitizenHome from "@/pages/citizen/CitizenHome";
 import About from "@/pages/public/About";
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
     path: "/register",
     element: <RegisterPage />,
   },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  }
 ]);
 
 export default router;
