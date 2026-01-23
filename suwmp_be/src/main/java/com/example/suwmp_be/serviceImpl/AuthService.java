@@ -98,6 +98,7 @@ public class AuthService implements IAuthService
     }
 
     @Override
+    @Transactional
     public void deleteRefreshToken(String tokenId) {
         try {
             tokenRepository.deleteTokenByTokenId(tokenId);
