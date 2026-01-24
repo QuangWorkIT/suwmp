@@ -1,0 +1,18 @@
+reviews:
+  auto_review: true
+  review_status: true
+
+  base_branches:
+    - main
+    - dev
+
+review:
+  focus:
+    - bugs
+    - security
+    - performance
+    - best-practices
+
+comments:
+  inline: true
+  summary: true
