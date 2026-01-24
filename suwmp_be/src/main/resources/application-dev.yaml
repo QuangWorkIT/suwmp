@@ -2,6 +2,11 @@ server:
   port: 8080
 
 spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 20MB
   datasource:
     url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
     username: ${POSTGRES_USER}
@@ -18,6 +23,20 @@ spring:
         jdbc:
           time_zone: UTC
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: us-east-1
+aws:
+  bucket:
+    name: ${BUCKET_NAME}
+
+allowed:
+  origin: { ALLOWED_ORIGIN }
 
 management:
   endpoints:

@@ -71,7 +71,7 @@ function LocationDetail({
 
                 mapRef.current!.flyTo({
                     center: [longitude, latitude],
-                    zoom: 14,
+                    zoom: 16,
                     essential: true,
                 });
 
@@ -107,7 +107,7 @@ function LocationDetail({
 
             mapRef.current.flyTo({
                 center: [longitude, latitude],
-                zoom: 14,
+                zoom: 16,
                 essential: true,
             });
 
