@@ -15,7 +15,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -53,3 +53,6 @@ management:
       enabled: true
     diskspace:
       enabled: true
+
+JWT_SECRET: ${JWT_SECRET}
+JWT_EXPIRATION: ${JWT_EXPIRATION}
