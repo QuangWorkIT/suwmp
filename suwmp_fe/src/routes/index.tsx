@@ -22,22 +22,20 @@ const router = createBrowserRouter([
   {
     path: "/citizen",
     element: <CitizenMain />,
-    children: [
-      { index: true, element: <CitizenHome /> },
-      {
-        path: "signup",
-        element: <RegisterPage />,
-      },
-    ],
+    children: [{ index: true, element: <CitizenHome /> }],
   },
   {
     path: "/enterprise",
     element: <EnterpriseMain />,
   },
   {
+    path: "signup",
+    element: <RegisterPage />,
+  },
+  {
     path: "/login",
     element: <LoginPage />,
-  }
+  },
 ]);
 
 export default router;

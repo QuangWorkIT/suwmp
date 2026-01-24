@@ -13,40 +13,85 @@ export default function Register() {
     phone: "",
   });
 
-  //   const [errors, setErrors] = useState({
-  //     email: "",
-  //     password: "",
-  //   });
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Field-level validation
+    if (name === "email") {
+      setErrors((prev) => ({
+        ...prev,
+        email: validateEmail(value),
+      }));
+    }
+
+    if (name === "password") {
+      setErrors((prev) => ({
+        ...prev,
+        password: validatePassword(value),
+      }));
+    }
   };
 
-  const submit = async () => {
-    const response = await AuthService.register(form);
-    console.log(response);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const emailError = validateEmail(form.email);
+    const passwordError = validatePassword(form.password);
+
+    setErrors({
+      email: emailError,
+      password: passwordError,
+    });
+
+    if (emailError || passwordError) return;
+
+    try {
+      setLoading(true);
+
+      const response = await AuthService.register(form);
+      console.log("Register success:", response);
+
+      // Optional: redirect / toast
+    } catch (err: any) {
+      setServerError(err?.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  //   const validateEmail = (email: string): string => {
-  //     if (!email) return "Email is required";
-  //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  //     if (!emailRegex.test(email)) return "Please enter a valid email address";
-  //     return "";
-  //   };
+  const validateEmail = (email: string): string => {
+    if (!email) return "Email is required";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
 
-  //   const validatePassword = (password: string): string => {
-  //     if (!password) return "Password is required";
-  //     if (password.length < 8) return "Password must be at least 8 characters";
-  //     if (!/[a-z]/.test(password))
-  //       return "Password must contain at least 1 lowercase letter";
-  //     if (!/[A-Z]/.test(password))
-  //       return "Password must contain at least 1 uppercase letter";
-  //     if (!/[0-9]/.test(password))
-  //       return "Password must contain at least 1 number";
-  //     return "";
-  //   };
+  const validatePassword = (password: string): string => {
+    if (!password) return "Password is required";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    if (!/[a-z]/.test(password))
+      return "Password must contain at least 1 lowercase letter";
+    if (!/[A-Z]/.test(password))
+      return "Password must contain at least 1 uppercase letter";
+    if (!/[0-9]/.test(password))
+      return "Password must contain at least 1 number";
+    return "";
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-white">
@@ -86,9 +131,14 @@ export default function Register() {
             name="email"
             type="email"
             placeholder="Email Address"
-            className="w-full border p-4 shadow-lg shadow-gray-200 input"
+            className={`w-full border p-4 shadow-lg shadow-gray-200 input ${
+              errors.email ? "border-red-500" : ""
+            }`}
             onChange={handleChange}
           />
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+          )}
         </div>
 
         <div className="space-y-1 mt-6">
@@ -114,15 +164,22 @@ export default function Register() {
             name="password"
             type="password"
             placeholder="Create a strong password"
-            className="w-full border p-4 shadow-lg shadow-gray-200 input"
+            className={`w-full border p-4 shadow-lg shadow-gray-200 input ${
+              errors.password ? "border-red-500" : ""
+            }`}
             onChange={handleChange}
           />
+          {errors.password && (
+            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+          )}
 
           <Button
-            onClick={submit}
-            className="w-full mt-6 bg-linear-to-br from-emerald-400 to-emerald-600 text-white py-4 rounded-lg text-md font-semibold hover:bg-emerald-700 cursor-pointer transition"
+            type="submit"
+            disabled={loading}
+            onClick={handleSubmit}
+            className="w-full mt-6 bg-linear-to-br from-emerald-400 to-emerald-600 text-white py-4 rounded-lg text-md font-semibold disabled:opacity-50 hover:bg-emerald-700 cursor-pointer transition"
           >
-            Create Account →
+            {loading ? "Creating..." : "Create Account →"}
           </Button>
         </div>
 
