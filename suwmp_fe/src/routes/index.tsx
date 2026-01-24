@@ -15,28 +15,27 @@ import { createBrowserRouter, Navigate } from "react-router";
 
 
 const router = createBrowserRouter([
-    {
-        path: "/",
-        element: <PublicMain />,
-        children: [
-            { index: true, element: <PublicHome /> },
-            { path: "wasteguide", element: <WasteguidePage /> },
-            { path: "about", element: <About /> }
-        ]
-    },
-    {
-        path: "/citizen",
-        element: <CitizenMain />,
-        children: [
-            { index: true, element: <Navigate to="dashboard" replace /> },
-            { path: "dashboard", element: <CitizenHome /> },
-            { path: "reports", element: <ReportHistory /> },
-            { path: "leaderboard", element: <LeaderBoard /> },
-            { path: "feedback", element: <FeedBack /> },
-        ]
-    },
-    { path: "/citizen/new-report", element: <WasteReportProcess /> }
-])
+  {
+    path: "/",
+    element: <PublicMain />,
+    children: [
+      { index: true, element: <PublicHome /> },
+      { path: "wasteguide", element: <WasteguidePage /> },
+      { path: "about", element: <About /> }
+    ]
+  },
+  {
+    path: "/citizen",
+    element: <CitizenMain />,
+    children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: "dashboard", element: <CitizenHome /> },
+      { path: "reports", element: <ReportHistory /> },
+      { path: "leaderboard", element: <LeaderBoard /> },
+      { path: "feedback", element: <FeedBack /> },
+    ]
+  },
+  { path: "/citizen/new-report", element: <WasteReportProcess /> },
   {
     path: "/",
     element: <PublicMain />,
@@ -47,22 +46,17 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "/citizen",
-    element: <CitizenMain />,
-    children: [{ index: true, element: <CitizenHome /> }],
-  },
-  {
     path: "/enterprise",
     element: <EnterpriseMain />,
   },
   {
-    path: "signup",
+    path: "/signup",
     element: <RegisterPage />,
   },
   {
-    path: "/login",
+    path: "/signin",
     element: <LoginPage />,
   },
-]);
+])
 
 export default router;
