@@ -1,6 +1,6 @@
 import { Outlet } from "react-router";
-import EnterpriseHeader from "./EnterpriseHeader";
-import EnterpriseSidebar from "./EnterpriseSidebar";
+import EnterpriseHeader from "../../components/layout/enterprise/EnterpriseHeader";
+import EnterpriseSidebar from "../../components/layout/enterprise/EnterpriseSidebar";
 
 const EnterpriseMain = () => {
   return (
