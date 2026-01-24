@@ -2,12 +2,15 @@ package com.example.suwmp_be.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "waste_reports")
-@Data
+@Getter
+@Setter
 public class WasteReport {
 
     @Id
@@ -21,7 +24,7 @@ public class WasteReport {
     private User citizen;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "enterprises_id", nullable = false)
+    @JoinColumn(name = "enterprise_id", nullable = false)
     private Enterprise enterprise;
 
     @ManyToOne(fetch = FetchType.LAZY)

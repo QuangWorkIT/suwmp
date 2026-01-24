@@ -21,8 +21,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <PublicHome /> },
       { path: "wasteguide", element: <WasteguidePage /> },
-      { path: "about", element: <About /> }
-    ]
+      { path: "about", element: <About /> },
+    ],
   },
   {
     path: "/citizen",
@@ -37,26 +37,11 @@ const router = createBrowserRouter([
   },
   { path: "/citizen/new-report", element: <WasteReportProcess /> },
   {
-    path: "/",
-    element: <PublicMain />,
-    children: [
-      { index: true, element: <PublicHome /> },
-      { path: "wasteguide", element: <WasteguidePage /> },
-      { path: "about", element: <About /> },
-    ],
-  },
-  {
     path: "/enterprise",
     element: <EnterpriseMain />,
   },
-  {
-    path: "/signup",
-    element: <RegisterPage />,
-  },
-  {
-    path: "/signin",
-    element: <LoginPage />,
-  },
+  { path: "/signup", element: <RegisterPage /> },
+  { path: "/signin", element: <LoginPage /> },
 ])
 
 export default router;

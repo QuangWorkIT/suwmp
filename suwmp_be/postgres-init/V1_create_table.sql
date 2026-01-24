@@ -92,7 +92,7 @@ CREATE TABLE waste_reports (
     id BIGSERIAL PRIMARY KEY,
     citizen_id UUID NOT NULL REFERENCES users(id),
     waste_type_id INT NOT NULL REFERENCES waste_types(id),
-    enterprises_id BIGSERIAL NOT NULL REFERENCES enterprises(id),
+    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
     description TEXT,
     latitude DOUBLE PRECISION ,
     longitude DOUBLE PRECISION ,

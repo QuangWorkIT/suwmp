@@ -41,7 +41,8 @@ function WasteReportProcess() {
     }
 
     const handleSubmit = async () => {
-        if (!imageUploaded || !selectedType || !location || !notes || !selectedEnterprise) return
+        if (!imageUploaded || !selectedType || location.length !== 2
+            || !notes || !selectedEnterprise || !user.user) return
 
         try {
             setSubmitting(true)
@@ -55,7 +56,7 @@ function WasteReportProcess() {
                 latitude: location[1],
                 description: notes,
                 enterprisesId: selectedEnterprise,
-                citizenId: user.user?.id || "",
+                citizenId: user.user?.id,
                 wasteTypeId: Number(selectedType.id),
                 aiSuggestedTypeId: Number(selectedType.id),
                 status: "PENDING"
