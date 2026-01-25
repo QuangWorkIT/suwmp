@@ -14,7 +14,6 @@ import PublicHome from "@/pages/public/PublicHome";
 import WasteguidePage from "@/pages/public/WasteguidePage";
 import { createBrowserRouter, Navigate } from "react-router";
 
-
 const router = createBrowserRouter([
   {
     path: "/",

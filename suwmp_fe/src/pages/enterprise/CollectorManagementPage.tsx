@@ -4,10 +4,10 @@ import { Search, UserPlus, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatsCards } from "@/components/collector/StatsCards";
-import { CollectorCard } from "@/components/collector/CollectorCard";
-import { CollectorDialog } from "@/components/collector/CollectorDialog";
-import { DeleteCollectorDialog } from "@/components/collector/DeleteCollectorDialog";
+import { StatsCards } from "@/components/common/collector/StatsCards";
+import { CollectorCard } from "@/components/common/collector/CollectorCard";
+import { CollectorDialog } from "@/components/common/collector/CollectorDialog";
+import { DeleteCollectorDialog } from "@/components/common/collector/DeleteCollectorDialog";
 import { CollectorService } from "@/services/CollectorService";
 import { mockCollectors, USE_MOCK_DATA } from "@/data/mockCollectors";
 import type {
