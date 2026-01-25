@@ -86,7 +86,7 @@ function Header() {
                             {/* Sign In */}
                             <DropdownMenuItem className="p-0 focus:bg-transparent hover:bg-transparent">
                                 <Link 
-                                    to="/citizen/signin" 
+                                    to="/signin" 
                                     className="flex items-center gap-3 w-full p-3 hover:bg-primary focus:bg-primary transition-colors duration-200 group rounded-md"
                                 >
                                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 group-hover:bg-white/20 transition-colors duration-200">
@@ -102,7 +102,7 @@ function Header() {
                             {/* Get Started */}
                             <DropdownMenuItem className="p-0 focus:bg-transparent hover:bg-transparent mt-1">
                                 <Link 
-                                    to="/citizen/signup" 
+                                    to="/signup" 
                                     className="flex items-center gap-3 w-full p-3 hover:bg-primary focus:bg-primary transition-colors duration-200 group rounded-md"
                                 >
                                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 group-hover:bg-white/20 transition-colors duration-200">
