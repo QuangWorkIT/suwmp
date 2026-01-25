@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Zap, Mail, Lock } from "lucide-react";
+import { Link } from "react-router";
 
 export default function Login() {
   const [form, setForm] = useState({
@@ -26,10 +27,6 @@ export default function Login() {
 
   const validatePassword = (password: string): string => {
     if (!password) return "Password is required";
-    if (password.length < 8) return "Password must be at least 8 characters";
-    if (!/[a-z]/.test(password)) return "Password must contain at least 1 lowercase letter";
-    if (!/[A-Z]/.test(password)) return "Password must contain at least 1 uppercase letter";
-    if (!/[0-9]/.test(password)) return "Password must contain at least 1 number";
     return "";
   };
 
@@ -215,12 +212,12 @@ export default function Login() {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <a
-                href="#"
+              <Link
+                to="/signup"
                 className="font-semibold text-teal-500 hover:text-teal-600 transition-colors"
               >
                 Sign up for free
-              </a>
+              </Link>
             </p>
           </div>
         </div>
