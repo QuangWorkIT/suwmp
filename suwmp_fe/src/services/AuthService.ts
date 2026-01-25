@@ -1,5 +1,5 @@
 import authClient from "../config/axios";
-import type { RegisterRequest } from "../types/auth";
+import type { RegisterRequest, ResetPasswordRequest } from "../types/auth";
 
 export const AuthService = {
   register: async (payload: RegisterRequest) => {
@@ -21,6 +21,30 @@ export const AuthService = {
         error: message,
         status: error.response?.status,
       };
+    }
+  },
+
+  verifyEmail: async (email: string) => {
+    try {
+      await authClient.post(
+        "/auth/forgot-password",
+        { email },
+        { withCredentials: true },
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  resetPassword: async (payload: ResetPasswordRequest) => {
+    try {
+      await authClient.post("/auth/reset-password", payload, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
   },
 };

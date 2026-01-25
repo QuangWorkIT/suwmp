@@ -1,10 +1,11 @@
 package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
+import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
+import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
 import com.example.suwmp_be.dto.request.LoginRequest;
 import com.example.suwmp_be.dto.request.RegisterRequest;
 import com.example.suwmp_be.dto.response.TokenResponse;
-import com.example.suwmp_be.entity.Token;
 import com.example.suwmp_be.serviceImpl.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,9 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -43,6 +41,26 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<BaseResponse<?>> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        authService.verifyEmail(request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(
+                true,
+                "Verify email successfully.")
+        );
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<BaseResponse<?>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(
+                true,
+                "Reset password successfully")
+        );
+    }
+
     @PostMapping("/login")
     @Operation(
             summary = "User login",
@@ -57,17 +75,16 @@ public class AuthController {
             ),
             @ApiResponse(responseCode = "400", description = "Invalid credentials")
     })
-    public ResponseEntity<BaseResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request)
-    {
+    public ResponseEntity<BaseResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
         TokenResponse response = authService.login(request);
         ResponseCookie cookie = setCookieToken(response.getRefreshToken());
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .header("Set-cookie", cookie.toString())
                 .body(new BaseResponse<>(
-                true,
-                "Login successful",
-                response)
-        );
+                        true,
+                        "Login successful",
+                        response)
+                );
     }
 
     @DeleteMapping("/logout")
@@ -81,8 +98,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Logout failed")
     })
     public ResponseEntity<BaseResponse<?>> logout(
-            @CookieValue(value = "refreshToken", required = false) String refreshToken)
-    {
+            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
         try {
             if (refreshToken != null && !refreshToken.isEmpty()) {
                 authService.deleteRefreshToken(refreshToken);
@@ -129,8 +145,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid or expired refresh token")
     })
     public ResponseEntity<BaseResponse<TokenResponse>> refreshToken(
-            @CookieValue(value = "refreshToken", required = false) String refreshToken)
-    {
+            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
         TokenResponse token = authService.refreshToken(refreshToken);
         ResponseCookie cookie = setCookieToken(token.getRefreshToken());
         return ResponseEntity
@@ -139,7 +154,7 @@ public class AuthController {
                 .body(new BaseResponse<>(
                         true,
                         "Token refresh successfully",
-                                token
+                        token
                 ));
     }
 
