@@ -44,14 +44,16 @@ CREATE TABLE enterprises (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    rating FLOAT NOT NULL,
+    photo_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE service_area (
     id BIGSERIAL PRIMARY KEY,
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    longitude DECIMAL(10,6),
-    latitude DECIMAL(10,6),
+    longitude DOUBLE PRECISION,
+    latitude DOUBLE PRECISION,
     radius BIGINT
 );
 
@@ -90,9 +92,10 @@ CREATE TABLE waste_reports (
     id BIGSERIAL PRIMARY KEY,
     citizen_id UUID NOT NULL REFERENCES users(id),
     waste_type_id INT NOT NULL REFERENCES waste_types(id),
+    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
     description TEXT,
-    latitude DECIMAL(10,6),
-    longitude DECIMAL(10,6),
+    latitude DOUBLE PRECISION ,
+    longitude DOUBLE PRECISION ,
     photo_url VARCHAR(500),
     status VARCHAR(20) CHECK (
         status IN ('PENDING', 'ACCEPTED', 'ASSIGNED', 'COLLECTED')
@@ -195,3 +198,19 @@ INSERT INTO waste_types (
 (1, 'ORGANIC', 'Biodegradable waste such as food scraps and garden waste', NOW(), NOW(), NULL),
 (2, 'RECYCLABLE', 'Waste materials that can be recycled such as plastic, paper, and metal', NOW(), NOW(), NULL),
 (3, 'HAZARDOUS', 'Waste that poses a risk to health or the environment, including chemicals and batteries', NOW(), NOW(), NULL);
+
+
+-- ===========================================
+-- SEED DATA: ENTERPRISES
+-- ===========================================
+
+INSERT INTO enterprises (
+    name,
+    description,
+    rating,
+    photo_url,
+    created_at
+) VALUES
+('Green Earth Waste Solution', 'Leading waste management service provider focused on sustainability.', 4.8, 'https://example.com/green_earth.jpg', NOW()),
+('Urban Cleaners', 'Efficient urban waste collection and processing.', 4.5, 'https://example.com/urban_cleaners.jpg', NOW()),
+('EcoCollect', 'Innovative waste collection with a focus on recycling.', 4.7, 'https://example.com/ecocollect.jpg', NOW());
