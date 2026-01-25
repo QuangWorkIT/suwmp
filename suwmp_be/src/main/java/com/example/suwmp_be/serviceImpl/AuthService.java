@@ -1,17 +1,23 @@
 package com.example.suwmp_be.serviceImpl;
 
+import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.constants.RoleEnum;
+import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
+import com.example.suwmp_be.dto.forgot_password.SendLinkResetDto;
+import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
 import com.example.suwmp_be.dto.request.LoginRequest;
 import com.example.suwmp_be.dto.request.RegisterRequest;
 import com.example.suwmp_be.dto.response.TokenResponse;
 import com.example.suwmp_be.entity.Token;
 import com.example.suwmp_be.entity.User;
+import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.exception.InvalidCredential;
 import com.example.suwmp_be.repository.TokenRepository;
 import com.example.suwmp_be.repository.UserRepository;
 import com.example.suwmp_be.security.JwtUtil;
 import com.example.suwmp_be.service.IAuthService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +27,8 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService implements IAuthService
-{
+@Slf4j
+public class AuthService implements IAuthService {
 
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
@@ -30,9 +36,11 @@ public class AuthService implements IAuthService
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    private final EmailService emailService;
+    private final OtpService otpService;
+
     @Override
-    public UUID register(RegisterRequest req)
-    {
+    public UUID register(RegisterRequest req) {
 
         if (userRepository.existsByEmail(req.email())) {
             throw new RuntimeException("Email already exists");
@@ -52,6 +60,31 @@ public class AuthService implements IAuthService
         user.setStatus("ACTIVE");
 
         return userRepository.save(user).getId();
+    }
+
+    @Override
+    public void verifyEmail(VerifyEmailRequest request) {
+        var user = userRepository.findByEmail(request.email());
+        if (user == null)
+            throw new NotFoundException(ErrorCode.EMAIL_NOT_EXIST);
+
+        SendLinkResetDto sendLinkResetDto = new SendLinkResetDto(user.getEmail(), user.getFullName());
+        emailService.sendLinkReset(sendLinkResetDto);
+
+        log.info("Verify email successfully");
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
+        String email = otpService.validateToken(resetPasswordRequest.getResetToken());
+        var user = userRepository.findByEmail(email);
+        if (user == null)
+            throw new NotFoundException(ErrorCode.EMAIL_NOT_EXIST);
+        var passwordHash = passwordEncoder.encode(resetPasswordRequest.getNewPassword());
+        user.setPasswordHash(passwordHash);
+        userRepository.save(user);
+
+        log.info("Reset password successfully");
     }
 
     @Override

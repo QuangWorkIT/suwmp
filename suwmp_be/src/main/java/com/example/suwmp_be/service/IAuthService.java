@@ -1,5 +1,7 @@
 package com.example.suwmp_be.service;
 
+import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
+import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
 import com.example.suwmp_be.dto.request.LoginRequest;
 import com.example.suwmp_be.dto.request.RegisterRequest;
 import com.example.suwmp_be.dto.response.TokenResponse;
@@ -16,4 +18,8 @@ public interface IAuthService {
     TokenResponse refreshToken(String refreshToken);
     Token generateRefreshToken(User user);
     void deleteRefreshToken(String tokenId);
+
+    void verifyEmail(VerifyEmailRequest email);
+
+    void resetPassword(ResetPasswordRequest request);
 }

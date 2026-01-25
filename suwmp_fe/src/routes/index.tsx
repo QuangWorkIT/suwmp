@@ -1,13 +1,15 @@
 import CitizenMain from "@/components/layout/citizen/CitizenMain";
+import EnterpriseMain from "@/components/layout/enterprise/EnterpriseMain";
 import PublicMain from "@/components/layout/public/PublicMain";
 import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
 import CitizenHome from "@/pages/citizen/CitizenHome";
-import EnterpriseMain from "@/pages/enterprise/EnterpriseMain";
 import About from "@/pages/public/About";
+import ForgotPasswordPage from "@/pages/authentication/ForgotPasswordPage";
 import PublicHome from "@/pages/public/PublicHome";
 import WasteguidePage from "@/pages/public/WasteguidePage";
 import { createBrowserRouter } from "react-router";
+import ResetPasswordPage from "@/pages/authentication/ResetPasswordPage";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +33,14 @@ const router = createBrowserRouter([
   {
     path: "signup",
     element: <RegisterPage />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPasswordPage />,
   },
   {
     path: "/login",

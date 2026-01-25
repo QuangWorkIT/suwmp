@@ -15,9 +15,21 @@ services:
     networks:
       waste-collect-net:
 
+  redis:
+    image: redis:8.4
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks:
+      waste-collect-net:
+
 networks:
   waste-collect-net:
-      driver: bridge
+    driver: bridge
 
 volumes:
   postgres-data:
+  redis-data:
