@@ -3,7 +3,7 @@ package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
-import com.example.suwmp_be.service.WasteReportService;
+import com.example.suwmp_be.service.IWasteReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/waste-report")
 public class WasteReportController {
-    private final WasteReportService wasteService;
+    private final IWasteReportService wasteService;
 
     @PostMapping
     public ResponseEntity<BaseResponse<Long>> createWasteReport(
