@@ -14,3 +14,8 @@ export interface ApiError {
   message?: string;
   [key: string]: any;
 }
+
+export interface ResetPasswordRequest {
+  resetToken: string;
+  newPassword: string;
+}

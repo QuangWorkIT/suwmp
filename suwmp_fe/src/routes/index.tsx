@@ -1,7 +1,8 @@
 import CitizenMain from "@/components/layout/citizen/CitizenMain";
-import PublicMain from "@/components/layout/public/PublicMain";
 import EnterpriseMain from "@/components/layout/enterprise/EnterpriseMain";
 import AdminMain from "@/components/layout/admin/AdminMain";
+import PublicMain from "@/components/layout/public/PublicMain";
+import ForgotPasswordPage from "@/pages/authentication/ForgotPasswordPage";
 import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
 import CitizenHome from "@/pages/citizen/CitizenHome";
@@ -15,6 +16,8 @@ import About from "@/pages/public/About";
 import PublicHome from "@/pages/public/PublicHome";
 import WasteguidePage from "@/pages/public/WasteguidePage";
 import { createBrowserRouter, Navigate } from "react-router";
+
+import ResetPasswordPage from "@/pages/authentication/ResetPasswordPage";
 
 const router = createBrowserRouter([
   {
@@ -35,15 +38,13 @@ const router = createBrowserRouter([
       { path: "reports", element: <ReportHistory /> },
       { path: "leaderboard", element: <LeaderBoard /> },
       { path: "feedback", element: <FeedBack /> },
-    ]
+    ],
   },
   { path: "/citizen/new-report", element: <WasteReportProcess /> },
   {
     path: "/enterprise",
     element: <EnterpriseMain />,
-    children: [
-      { path: "collectors", element: <CollectorManagementPage /> },
-    ],
+    children: [{ path: "collectors", element: <CollectorManagementPage /> }],
   },
   {
     path: "/admin",
@@ -63,6 +64,19 @@ const router = createBrowserRouter([
   },
   { path: "/signup", element: <RegisterPage /> },
   { path: "/signin", element: <LoginPage /> },
-])
+
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPasswordPage />,
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+]);
 
 export default router;
