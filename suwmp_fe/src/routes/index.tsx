@@ -16,6 +16,7 @@ import WasteguidePage from "@/pages/public/WasteguidePage";
 import { createBrowserRouter, Navigate } from "react-router";
 
 import ResetPasswordPage from "@/pages/authentication/ResetPasswordPage";
+import CollectionRequest from "@/pages/enterprise/CollectionRequest";
 
 const router = createBrowserRouter([
   {
@@ -42,7 +43,10 @@ const router = createBrowserRouter([
   {
     path: "/enterprise",
     element: <EnterpriseMain />,
-    children: [{ path: "collectors", element: <CollectorManagementPage /> }],
+    children: [
+      { path: "collectors", element: <CollectorManagementPage /> },
+      { path: "requests", element: <CollectionRequest /> },
+    ],
   },
   { path: "/signup", element: <RegisterPage /> },
   { path: "/signin", element: <LoginPage /> },

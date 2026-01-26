@@ -23,14 +23,14 @@ const EnterpriseMain = () => {
   const isCollectorsPage = location.pathname.includes("/collectors");
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex min-h-screen ">
       <EnterpriseSidebar />
-      <div className="w-full flex flex-col overflow-hidden">
+      <div className="w-full flex flex-col ">
         <EnterpriseHeader 
           title={isCollectorsPage ? undefined : title} 
           subtitle={isCollectorsPage ? undefined : subtitle} 
         />
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1">
           <Outlet />
         </div>
       </div>
