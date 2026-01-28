@@ -31,7 +31,7 @@ public class GlobalExceptionHandling {
     @ExceptionHandler(InvalidCredential.class)
     public ResponseEntity<Map<String, String>> handleInvalidCredential(InvalidCredential ex) {
         Map<String, String> error = new HashMap<>();
-        error.put("error", "Login error: " + ex.getMessage());
+        error.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 

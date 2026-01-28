@@ -16,7 +16,7 @@ function Sidebar() {
 
 
     return (
-        <aside className="fixed left-0 top-0 min-w-[250px] min-h-screen 
+        <aside className="fixed left-0 top-0 w-[250px] min-h-screen 
         border-r border-foreground/20 flex flex-col bg-[#DAE7DE]/40">
             <div className="">
                 <div className="flex items-center gap-2 hover:cursor-pointer p-6">

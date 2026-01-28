@@ -43,6 +43,9 @@ public class WasteReport {
     @Column(nullable = false)
     private double longitude;
 
+    @Column
+    private double volume;
+
     @Column(nullable = false)
     private String photoUrl;
 

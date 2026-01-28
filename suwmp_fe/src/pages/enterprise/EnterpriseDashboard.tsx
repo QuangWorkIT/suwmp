@@ -1,5 +1,5 @@
 const EnterpriseDashboard = () => {
-  return <div></div>;
+  return <div>Enterprise dashboard</div>;
 };
 
 export default EnterpriseDashboard;
