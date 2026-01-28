@@ -5,6 +5,7 @@ import com.example.suwmp_be.dto.response.WasteTypeResponse;
 import com.example.suwmp_be.entity.WasteType;
 import com.example.suwmp_be.repository.WasteTypeRepository;
 import com.example.suwmp_be.service.IWasteTypeService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ public class WasteTypeService implements IWasteTypeService {
 
     private final WasteTypeRepository repository;
 
+    @Transactional
     @Override
     public WasteTypeResponse create(CreateWasteTypeRequest req) {
         if (repository.existsByNameIgnoreCaseAndDeletedAtIsNull(req.getName())) {
@@ -48,6 +50,7 @@ public class WasteTypeService implements IWasteTypeService {
                 .toList();
     }
 
+    @Transactional
     @Override
     public void delete(Integer id) {
         WasteType type = repository.findById(id)

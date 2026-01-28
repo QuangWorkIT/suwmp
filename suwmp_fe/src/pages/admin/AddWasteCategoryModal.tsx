@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { api } from "@/config/api";
 
 export type WasteType = {
   id: number;
@@ -41,22 +42,20 @@ export default function AddWasteCategoryModal({
       setLoading(true);
       setError(null);
 
-      const res = await fetch("http://localhost:8080/api/admin/waste-types", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }),
-      });
+      const res = await api.post(
+        "/admin/waste-types",
+        { name, description },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       console.log("Creating waste type:", {
         name,
         description,
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to create waste category");
-      }
-
-      const data: WasteType = await res.json();
+      const data: WasteType = await res.data;
       onCreated(data);
       onClose();
       setName("");

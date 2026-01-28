@@ -12,7 +12,7 @@ import lombok.*;
 public class CreateWasteTypeRequest {
 
     @NotBlank(message = "Waste type name is required")
-    @Size(max = 255, message = "Full name must not exceed 255 characters")
+    @Size(max = 100, message = "Waste type name must not exceed 100 characters")
     private String name;
 
     private String description;

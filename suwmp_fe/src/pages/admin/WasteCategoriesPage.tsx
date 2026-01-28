@@ -1,5 +1,6 @@
 import { useEffect, useState, type JSX } from "react";
 import AddWasteCategoryModal from "./AddWasteCategoryModal";
+import { api } from "@/config/api";
 
 import {
   Recycle,
@@ -44,9 +45,8 @@ const WasteCategoriesPage = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/admin/waste-types");
-        if (!res.ok) throw new Error("Failed to load waste types");
-        setWasteTypes(await res.json());
+        const res = await api.get("/admin/waste-types");
+        setWasteTypes(await res.data);
       } catch (err) {
         setError("Unable to load waste categories");
       } finally {

@@ -80,7 +80,7 @@ CREATE TABLE waste_types (
 CREATE TABLE enterprise_capacity (
     id BIGSERIAL PRIMARY KEY,
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    waste_type_id INT NOT NULL REFERENCES waste_types(id),
+    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
     daily_capacity_kg INT NOT NULL
 );
 
@@ -91,7 +91,7 @@ CREATE TABLE enterprise_capacity (
 CREATE TABLE waste_reports (
     id BIGSERIAL PRIMARY KEY,
     citizen_id UUID NOT NULL REFERENCES users(id),
-    waste_type_id INT NOT NULL REFERENCES waste_types(id),
+    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
     description TEXT,
     latitude DOUBLE PRECISION ,
@@ -100,7 +100,7 @@ CREATE TABLE waste_reports (
     status VARCHAR(20) CHECK (
         status IN ('PENDING', 'ACCEPTED', 'ASSIGNED', 'COLLECTED')
     ),
-    ai_suggested_type_id INT REFERENCES waste_types(id),
+    ai_suggested_type_id BIGINT REFERENCES waste_types(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -138,7 +138,7 @@ CREATE TABLE report_collection_status_logs (
 CREATE TABLE reward_rules (
     id BIGSERIAL PRIMARY KEY,
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    waste_type_id INT NOT NULL REFERENCES waste_types(id),
+    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
     base_points INT NOT NULL,
     quality_multiplier DECIMAL(3,2),
     time_bonus INT,
