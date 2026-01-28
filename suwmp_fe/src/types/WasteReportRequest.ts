@@ -25,5 +25,5 @@ export type WasteReportEnterprise = {
     priority: string;
     collectorName: string;
     createdAt: string;
-    enterprisesId: number;
+    enterpriseId: number;
 }

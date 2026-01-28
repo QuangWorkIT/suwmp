@@ -6,6 +6,7 @@ import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.view.CollectionRequestView;
 import com.example.suwmp_be.service.IWasteReportService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class WasteReportController {
 
     @GetMapping("/enterprise/{enterpriseId}")
     public ResponseEntity<BaseResponse<List<CollectionRequestView>>> getWasteReports(
-            @PathVariable Long enterpriseId
+            @PathVariable @Positive Long enterpriseId
     ) {
         return ResponseEntity.ok(new BaseResponse<>(
                 true, "Get waste reports successfully",

@@ -24,7 +24,6 @@ export const AuthService = {
   },
   register: async (payload: RegisterRequest) => {
     try {
-      console.log(payload);
       const response = await authClient.post("/auth/register", payload);
 
       return {

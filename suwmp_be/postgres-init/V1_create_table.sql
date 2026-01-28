@@ -105,6 +105,7 @@ CREATE TABLE waste_reports (
     latitude DOUBLE PRECISION ,
     longitude DOUBLE PRECISION ,
     photo_url VARCHAR(500),
+    volume DOUBLE PRECISION,
     status VARCHAR(20) CHECK (
         status IN ('PENDING', 'ACCEPTED', 'ASSIGNED','ON_THE_WAY', 'COLLECTED')
     ),
