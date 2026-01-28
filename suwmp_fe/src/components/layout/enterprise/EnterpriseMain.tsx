@@ -13,6 +13,12 @@ const EnterpriseMain = () => {
         subtitle: "Manage your collection team",
       };
     }
+    if (location.pathname.includes("/areas")) {
+      return {
+        title: "Service Areas",
+        subtitle: "Manage collection zones and coverage",
+      };
+    }
     return {
       title: "Operations Dashboard",
       subtitle: "Real-time overview of waste processing operations",

@@ -15,7 +15,6 @@ import type {
   CreateCollectorRequest,
   UpdateCollectorRequest,
   CollectorStats,
-  PaginatedResponse,
 } from "@/types/collector";
 
 const CollectorManagementPage = () => {
@@ -121,7 +120,7 @@ const CollectorManagementPage = () => {
   }, [collectors, searchQuery]);
 
   // Debounced search (simple implementation)
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [, setDebouncedSearch] = useState("");
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -235,12 +234,6 @@ const CollectorManagementPage = () => {
     setSelectedCollector(null);
     setDialogMode("create");
     setDialogOpen(true);
-  };
-
-  // Handle delete click
-  const handleDeleteClick = (collector: Collector) => {
-    setSelectedCollector(collector);
-    setDeleteDialogOpen(true);
   };
 
   return (
@@ -374,7 +367,13 @@ const CollectorManagementPage = () => {
           onOpenChange={setDialogOpen}
           mode={dialogMode}
           collector={selectedCollector || undefined}
-          onSubmit={dialogMode === "create" ? handleCreate : handleUpdate}
+          onSubmit={async (data) => {
+            if (dialogMode === "create") {
+              await handleCreate(data as CreateCollectorRequest);
+            } else {
+              await handleUpdate(data as UpdateCollectorRequest);
+            }
+          }}
         />
 
         <DeleteCollectorDialog
