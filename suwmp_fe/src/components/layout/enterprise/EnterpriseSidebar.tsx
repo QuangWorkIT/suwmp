@@ -1,3 +1,4 @@
+import UserProfileBadge from "@/components/common/UserProfileBadge";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -22,7 +23,7 @@ const menu = [
 
 const EnterpriseSidebar = () => {
   return (
-    <aside className="w-60 bg-muted min-h-screen border-r p-4 shadow-xl shadow-gray-300">
+    <aside className="w-60 flex flex-col bg-muted h-screen border-r p-4 shadow-xl shadow-gray-300">
       <div className="flex items-center gap-4">
         <div className="mb-6 p-2 bg-linear-to-br from-orange-300 to-orange-600 rounded-xl inline-flex">
           <Building2 className="text-white" size={28} />
@@ -48,6 +49,11 @@ const EnterpriseSidebar = () => {
           </NavLink>
         ))}
       </nav>
+
+      {/* User profile */}
+      <div className="p-3 border-t border-foreground/20 mt-auto justify-end">
+        <UserProfileBadge />
+      </div>
     </aside>
   );
 };
