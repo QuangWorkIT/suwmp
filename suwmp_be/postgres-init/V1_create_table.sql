@@ -69,7 +69,7 @@ CREATE TABLE enterprise_collectors (
 -- ===========================================
 
 CREATE TABLE waste_types (
-    id INT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL, -- Organic, Recyclable, Hazardous
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -188,17 +188,15 @@ INSERT INTO roles (id, name) VALUES
 -- ===========================================
 
 INSERT INTO waste_types (
-    id,
     name,
     description,
     created_at,
     updated_at,
     deleted_at
 ) VALUES
-(1, 'ORGANIC', 'Biodegradable waste such as food scraps and garden waste', NOW(), NOW(), NULL),
-(2, 'RECYCLABLE', 'Waste materials that can be recycled such as plastic, paper, and metal', NOW(), NOW(), NULL),
-(3, 'HAZARDOUS', 'Waste that poses a risk to health or the environment, including chemicals and batteries', NOW(), NOW(), NULL);
-
+('ORGANIC', 'Biodegradable waste such as food scraps and garden waste', NOW(), NOW(), NULL),
+('RECYCLABLE', 'Waste materials that can be recycled such as plastic, paper, and metal', NOW(), NOW(), NULL),
+('HAZARDOUS', 'Waste that poses a risk to health or the environment, including chemicals and batteries', NOW(), NOW(), NULL);
 
 -- ===========================================
 -- SEED DATA: ENTERPRISES
