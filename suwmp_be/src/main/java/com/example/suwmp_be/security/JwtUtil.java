@@ -1,7 +1,6 @@
 package com.example.suwmp_be.security;
 
 import com.example.suwmp_be.entity.User;
-import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -18,9 +17,9 @@ import java.util.Map;
 @Component
 @Slf4j
 public class JwtUtil {
-    @Value("${JWT_SECRET}")
+    @Value("${app.jwt.secret}")
     private String jwtSecret;
-    @Value("${JWT_EXPIRATION}")
+    @Value("${app.jwt.expiration}")
     private int jwtExpiration;
 
     private SecretKey secretKey;
@@ -49,6 +48,14 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public String getClaim(String token, String claimKey) {
+        Object value = Jwts.parser().verifyWith(secretKey).build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get(claimKey);
+        return value == null ? null : value.toString();
     }
 
     public boolean validateJwtToken(String token) {
