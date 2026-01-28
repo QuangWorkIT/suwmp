@@ -2,20 +2,11 @@ import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
 import { reverseGeocode } from "./geocoding";
 
 export const standardizeWasteReportRequest = async (req: WasteReportEnterprise) => {
-    const address  = await reverseGeocode(req.requestLongitude, req.requestLatitude);
-    console.log(address);
+    const address = await reverseGeocode(req.requestLongitude, req.requestLatitude);
     return {
-        requestId: req.requestId,
-        wasteTypeName: req.wasteTypeName,
-        volume: req.volume,
+        ...req,
+        priority: "normal",
         zone: "Zone A",
         address: address,
-        citizenName: req.citizenName,
-        citizenPhone: req.citizenPhone,
-        currentStatus: req.currentStatus,
-        priority: "normal",
-        collectorName: req.collectorName,
-        createdAt: req.createdAt,
-        enterprisesId: req.enterprisesId
     }
 }

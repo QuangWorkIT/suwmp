@@ -1,22 +1,16 @@
-import CitizenMain from "@/components/layout/citizen/CitizenMain";
-import EnterpriseMain from "@/components/layout/enterprise/EnterpriseMain";
 import PublicMain from "@/components/layout/public/PublicMain";
 import ForgotPasswordPage from "@/pages/authentication/ForgotPasswordPage";
 import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
-import CitizenHome from "@/pages/citizen/CitizenHome";
-import FeedBack from "@/pages/citizen/FeedBack";
-import LeaderBoard from "@/pages/citizen/LeaderBoard";
-import ReportHistory from "@/pages/citizen/ReportHistory";
-import WasteReportProcess from "@/pages/citizen/WasteReportProcess";
-import CollectorManagementPage from "@/pages/enterprise/CollectorManagementPage";
-import About from "@/pages/public/About";
 import PublicHome from "@/pages/public/PublicHome";
+import About from "@/pages/public/About";
 import WasteguidePage from "@/pages/public/WasteguidePage";
-import { createBrowserRouter, Navigate } from "react-router";
-
 import ResetPasswordPage from "@/pages/authentication/ResetPasswordPage";
-import CollectionRequest from "@/pages/enterprise/CollectionRequest";
+import { citizenRoutes } from "./citizent.route";
+import { enterpriseRoutes } from "./enterprise.route";
+import { createBrowserRouter } from "react-router";
+import UnAuthorizedPage from "@/pages/error/UnAuthorizedPage";
+
 
 const router = createBrowserRouter([
   {
@@ -28,26 +22,10 @@ const router = createBrowserRouter([
       { path: "about", element: <About /> },
     ],
   },
-  {
-    path: "/citizen",
-    element: <CitizenMain />,
-    children: [
-      { index: true, element: <Navigate to="dashboard" replace /> },
-      { path: "dashboard", element: <CitizenHome /> },
-      { path: "reports", element: <ReportHistory /> },
-      { path: "leaderboard", element: <LeaderBoard /> },
-      { path: "feedback", element: <FeedBack /> },
-    ],
-  },
-  { path: "/citizen/new-report", element: <WasteReportProcess /> },
-  {
-    path: "/enterprise",
-    element: <EnterpriseMain />,
-    children: [
-      { path: "collectors", element: <CollectorManagementPage /> },
-      { path: "requests", element: <CollectionRequest /> },
-    ],
-  },
+
+  ...citizenRoutes,
+  ...enterpriseRoutes,
+
   { path: "/signup", element: <RegisterPage /> },
   { path: "/signin", element: <LoginPage /> },
 
@@ -59,10 +37,7 @@ const router = createBrowserRouter([
     path: "/reset-password",
     element: <ResetPasswordPage />,
   },
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
+  { path: "/unauthorized", element: <UnAuthorizedPage /> }
 ]);
 
 export default router;

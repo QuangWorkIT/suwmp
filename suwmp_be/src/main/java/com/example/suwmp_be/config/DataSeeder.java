@@ -43,7 +43,7 @@ public class DataSeeder implements CommandLineRunner {
             users.add(User.builder()
                     .fullName("Demo Citizen " + i)
                     .email(String.format("citizen%02d@example.com", i))
-                    .phone("0900000123" + String.format("%03d", i))
+                    .phone("0900000" + String.format("%03d", i))
                     .passwordHash(passwordEncoder.encode("Password!" + i))
                     .role(roleCacheService.get(RoleEnum.CITIZEN))
                     .status("ACTIVE")

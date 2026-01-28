@@ -1,5 +1,5 @@
 import { api } from "@/config/api";
-import type { WasteReportRequest } from "@/types/WasteReportRequest";
+import type {WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
 
 const wasteReportService = {
@@ -15,7 +15,7 @@ const wasteReportService = {
     getWasteReportsByEnterprise: async (enterpriseId: number) => {
         try {
             const response = await api.get(`/waste-report/enterprise/${enterpriseId}`);
-            const arr: any[] = []
+            const arr: WasteReportEnterprise[] = []
             for (let i = 0; i < response.data.data.length; i++) {
                 const element = response.data.data[i];
                 arr.push(await standardizeWasteReportRequest(element))

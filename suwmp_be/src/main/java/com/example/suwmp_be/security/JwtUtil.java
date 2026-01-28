@@ -35,6 +35,7 @@ public class JwtUtil {
         payload.put("fullName", user.getFullName());
         payload.put("role", user.getRole().getName());
         payload.put("email", user.getEmail());
+        payload.put("status", user.getStatus());
         return Jwts.builder()
                 .subject(user.getId().toString())
                 .claims(payload)

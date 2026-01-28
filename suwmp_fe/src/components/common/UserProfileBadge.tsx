@@ -14,7 +14,7 @@ function UserProfileBadge() {
                     {user ? user.fullName.charAt(0).toUpperCase() : "U"}
                 </div>
                 <div>
-                    <p className="font-medium">{user?.fullName || "User"}</p>
+                    <p className="font-medium text-sm max-w-[110px] overflow-hidden text-ellipsis">{user?.fullName || "User"}</p>
                     <p className="text-muted-foreground text-xs max-w-[110px] overflow-hidden text-ellipsis">{user?.email || "N/A"}</p>
                 </div>
             </div>
