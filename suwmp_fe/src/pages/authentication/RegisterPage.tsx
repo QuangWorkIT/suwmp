@@ -19,7 +19,7 @@ export default function Register() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [serverError, setServerError] = useState("");
+  const [, setServerError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

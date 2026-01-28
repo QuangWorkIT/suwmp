@@ -10,6 +10,7 @@ import LeaderBoard from "@/pages/citizen/LeaderBoard";
 import ReportHistory from "@/pages/citizen/ReportHistory";
 import WasteReportProcess from "@/pages/citizen/WasteReportProcess";
 import CollectorManagementPage from "@/pages/enterprise/CollectorManagementPage";
+import ServiceAreasPage from "@/pages/enterprise/ServiceAreasPage";
 import About from "@/pages/public/About";
 import PublicHome from "@/pages/public/PublicHome";
 import WasteguidePage from "@/pages/public/WasteguidePage";
@@ -42,7 +43,12 @@ const router = createBrowserRouter([
   {
     path: "/enterprise",
     element: <EnterpriseMain />,
-    children: [{ path: "collectors", element: <CollectorManagementPage /> }],
+    children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: "dashboard", element: <Navigate to="collectors" replace /> },
+      { path: "collectors", element: <CollectorManagementPage /> },
+      { path: "areas", element: <ServiceAreasPage /> },
+    ],
   },
   { path: "/signup", element: <RegisterPage /> },
   { path: "/signin", element: <LoginPage /> },
