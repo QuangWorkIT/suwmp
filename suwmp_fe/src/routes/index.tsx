@@ -3,13 +3,6 @@ import AdminMain from "@/components/layout/admin/AdminMain";
 import ForgotPasswordPage from "@/pages/authentication/ForgotPasswordPage";
 import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
-import CitizenHome from "@/pages/citizen/CitizenHome";
-import FeedBack from "@/pages/citizen/FeedBack";
-import LeaderBoard from "@/pages/citizen/LeaderBoard";
-import ReportHistory from "@/pages/citizen/ReportHistory";
-import WasteReportProcess from "@/pages/citizen/WasteReportProcess";
-import CollectorManagementPage from "@/pages/enterprise/CollectorManagementPage";
-import ServiceAreasPage from "@/pages/enterprise/ServiceAreasPage";
 import { AdminDashboardPage, UserManagementPage, WasteCategoriesPage } from "@/pages/admin";
 import About from "@/pages/public/About";
 import PublicHome from "@/pages/public/PublicHome";
@@ -19,7 +12,6 @@ import { citizenRoutes } from "./citizent.route";
 import { enterpriseRoutes } from "./enterprise.route";
 import { createBrowserRouter, Navigate } from "react-router";
 import UnAuthorizedPage from "@/pages/error/UnAuthorizedPage";
-
 
 const router = createBrowserRouter([
   {
@@ -31,28 +23,8 @@ const router = createBrowserRouter([
       { path: "about", element: <About /> },
     ],
   },
-  {
-    path: "/citizen",
-    element: <CitizenMain />,
-    children: [
-      { index: true, element: <Navigate to="dashboard" replace /> },
-      { path: "dashboard", element: <CitizenHome /> },
-      { path: "reports", element: <ReportHistory /> },
-      { path: "leaderboard", element: <LeaderBoard /> },
-      { path: "feedback", element: <FeedBack /> },
-      { path: "new-report", element: <WasteReportProcess /> },
-    ],
-  },
-  {
-    path: "/enterprise",
-    element: <EnterpriseMain />,
-    children: [
-      { index: true, element: <Navigate to="dashboard" replace /> },
-      { path: "dashboard", element: <Navigate to="collectors" replace /> },
-      { path: "collectors", element: <CollectorManagementPage /> },
-      { path: "areas", element: <ServiceAreasPage /> },
-    ],
-  },
+  ...citizenRoutes,
+  ...enterpriseRoutes,
   {
     path: "/admin",
     element: <AdminMain />,
@@ -71,7 +43,7 @@ const router = createBrowserRouter([
   },
   { path: "/signup", element: <RegisterPage /> },
   { path: "/signin", element: <LoginPage /> },
-
+  { path: "/login", element: <LoginPage /> },
   {
     path: "/forgot-password",
     element: <ForgotPasswordPage />,

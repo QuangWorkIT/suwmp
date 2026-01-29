@@ -8,15 +8,23 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    # Use 5433 to avoid conflicts with a locally-installed PostgreSQL on 5432
+    # Provide sensible defaults so running from IDE (without loading .env) still works.
+    url: jdbc:postgresql://localhost:5433/${POSTGRES_DB:waste_collect_db}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:250266}
     driver-class-name: org.postgresql.Driver
   data:
     redis:
       host: localhost
       port: 6379
       timeout: 2000
+  mail:
+    # Dev defaults. Configure real SMTP via env vars if you need email sending.
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:25}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
 
   jpa:
     hibernate:
@@ -32,16 +40,20 @@ spring:
 cloud:
   aws:
     credentials:
-      access-key: ${AWS_ACCESS_KEY}
-      secret-key: ${AWS_SECRET_KEY}
+      # Provide dev defaults so the app can start without real AWS credentials.
+      # S3 will only work if you supply real values (env vars) and a real bucket.
+      access-key: ${AWS_ACCESS_KEY:dummy}
+      secret-key: ${AWS_SECRET_KEY:dummy}
     region:
       static: us-east-1
 aws:
   bucket:
-    name: ${BUCKET_NAME}
+    name: ${BUCKET_NAME:dummy-bucket}
 
 allowed:
-  origin: ${ALLOWED_ORIGIN}
+  # Comma-separated list of allowed origins for CORS.
+  # Default supports local dev if you run from IDE without extra env vars.
+  origin: ${ALLOWED_ORIGIN:http://localhost:5173,http://localhost:3000}
 
 management:
   endpoints:
@@ -59,8 +71,11 @@ management:
     diskspace:
       enabled: true
 
-JWT_SECRET: ${JWT_SECRET}
-JWT_EXPIRATION: ${JWT_EXPIRATION}
-
 app:
+  jwt:
+    # Keep these as app-scoped keys to avoid circular placeholder issues if someone has
+    # JWT_SECRET=${JWT_SECRET} in their machine/user environment.
+    secret: ${JWT_SECRET:your-secret-key-here-change-this-in-production}
+    expiration: ${JWT_EXPIRATION:86400000}
+
   fe-url: "http://localhost:5173"
