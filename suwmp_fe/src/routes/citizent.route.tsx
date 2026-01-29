@@ -20,9 +20,14 @@ export const citizenRoutes = [
                     { path: "reports", element: <ReportHistory /> },
                     { path: "leaderboard", element: <LeaderBoard /> },
                     { path: "feedback", element: <FeedBack /> },
-                    { path: "new-report", element: <WasteReportProcess /> },
                 ]
             }
+        ],
+    },
+    {
+        element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
+        children: [
+            { path: "/citizen/new-report", element: <WasteReportProcess /> },
         ],
     },
 ]
