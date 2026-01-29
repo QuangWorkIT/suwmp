@@ -12,7 +12,7 @@ spring:
     # Provide sensible defaults so running from IDE (without loading .env) still works.
     url: jdbc:postgresql://localhost:5433/${POSTGRES_DB:waste_collect_db}
     username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:250266}
+    password: ${POSTGRES_PASSWORD:dev-password}
     driver-class-name: org.postgresql.Driver
   data:
     redis:
