@@ -32,7 +32,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public Page<UserResponse> getAllUsers(Pageable pageable) {
-        Page<User> page = userRepository.findAll(pageable);
+        Page<User> page = userRepository.findByDeletedAtIsNull(pageable);
         return userMapper.toPageResponse(page);
     }
 
