@@ -44,6 +44,12 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
+        if(userRepository.existsByPhone(request.getPhone())) {
+            throw new RuntimeException("Phone number already exists: " + request.getPhone());
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists: " + request.getEmail());
+        }
         Role role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new RuntimeException("Role not found with id: " + request.getRoleId()));
 

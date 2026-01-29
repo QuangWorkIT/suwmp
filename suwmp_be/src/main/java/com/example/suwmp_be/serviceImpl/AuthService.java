@@ -98,7 +98,7 @@ public class AuthService implements IAuthService {
             throw new InvalidCredential("User not found");
         }
         if (user.getStatus().equals(UserStatus.SUSPENDED.toString())
-            && user.getDeletedAt() != null)
+            || user.getDeletedAt() != null)
         {
             throw new InvalidCredential("User is not active");
         }
