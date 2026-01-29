@@ -34,6 +34,19 @@ public class UserController {
                 allUsers));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<BaseResponse<Page<UserResponse>>> searchUsers(
+            @PageableDefault(size = 6)
+            Pageable pageable,
+            @RequestParam(required = false) String keyword
+    ) {
+        Page<UserResponse> users = userService.searchUsersByFullNameOrEmail(pageable, keyword);
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Users search successfully",
+                users));
+    }
+
     @PostMapping
     public ResponseEntity<BaseResponse<UserResponse>> createUser(
             @Valid  @RequestBody CreateUserRequest request

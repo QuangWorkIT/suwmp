@@ -18,6 +18,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Page<User> findByDeletedAtIsNull(Pageable pageable);
 
+    @Query("""
+    SELECT u FROM User u
+    WHERE u.deletedAt IS NULL
+      AND (LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    """)
+    Page<User> searchUser(Pageable pageable, String keyword);
+
     @Query("SELECT u FROM User u WHERE u.email = :email")
     User findByEmail(@Param("email") String email);
 }

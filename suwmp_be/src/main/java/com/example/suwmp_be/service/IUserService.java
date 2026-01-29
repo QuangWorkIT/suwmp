@@ -11,6 +11,7 @@ import java.util.UUID;
 
 public interface IUserService {
     Page<UserResponse> getAllUsers(Pageable pageable);
+    Page<UserResponse> searchUsersByFullNameOrEmail(Pageable pageable, String keyword);
     UserResponse createUser(CreateUserRequest request);
     UserResponse updateUser(UUID userId, UpdateUserRequest request);
     void deleteUser(UUID userId);

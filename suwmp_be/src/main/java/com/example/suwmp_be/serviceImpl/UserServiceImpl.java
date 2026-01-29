@@ -37,6 +37,12 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
+    public Page<UserResponse> searchUsersByFullNameOrEmail(Pageable pageable, String keyword) {
+        Page<User> page = userRepository.searchUser(pageable, keyword);
+        return userMapper.toPageResponse(page);
+    }
+
+    @Override
     public UserResponse createUser(CreateUserRequest request) {
         Role role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new RuntimeException("Role not found with id: " + request.getRoleId()));
