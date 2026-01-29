@@ -61,8 +61,8 @@ const ServiceAreasPage = () => {
       const updates: Record<number, string> = {};
       for (const a of unresolved) {
         try {
-          // geocoding.reverseGeocode expects (longitude, latitude)
-          const addr = await reverseGeocode(a.longitude, a.latitude);
+          // reverseGeocode expects (latitude, longitude)
+          const addr = await reverseGeocode(a.latitude, a.longitude);
           if (addr) updates[a.id] = addr;
         } catch {
           // ignore and keep lat/lng fallback
@@ -108,7 +108,7 @@ const ServiceAreasPage = () => {
       setAreas((prev) => [newArea, ...prev]);
       setPendingPoint(null);
       try {
-        const addr = await reverseGeocode(newArea.longitude, newArea.latitude);
+        const addr = await reverseGeocode(newArea.latitude, newArea.longitude);
         if (addr) setAddresses((prev) => ({ ...prev, [newArea.id]: addr }));
       } catch {
         // ignore

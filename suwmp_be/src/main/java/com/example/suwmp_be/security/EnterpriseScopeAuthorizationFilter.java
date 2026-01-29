@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 public class EnterpriseScopeAuthorizationFilter extends OncePerRequestFilter {
 
     private static final Pattern SERVICE_AREA_PATH =
-            Pattern.compile("^/api/v1/enterprises/(?<enterpriseId>\\d+)/service-areas/?$");
+            Pattern.compile("^/api/v1/enterprises/(?<enterpriseId>\\d+)/service-areas(?:/.*)?$");
 
     private final EnterpriseUserRepository enterpriseUserRepository;
 

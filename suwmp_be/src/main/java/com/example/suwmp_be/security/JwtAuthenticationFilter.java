@@ -47,9 +47,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Principal: UUID string; Authority: ROLE_{roleName}
+        UUID principalId;
+        try {
+            principalId = UUID.fromString(userId);
+        } catch (IllegalArgumentException ex) {
+            // Malformed UUID in token subject – treat as unauthenticated
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Principal: UUID; Authority: ROLE_{roleName}
         var auth = new UsernamePasswordAuthenticationToken(
-                UUID.fromString(userId),
+                principalId,
                 null,
                 List.of(new SimpleGrantedAuthority("ROLE_" + role))
         );

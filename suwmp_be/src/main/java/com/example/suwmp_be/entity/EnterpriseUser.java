@@ -11,8 +11,16 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "enterprise_users",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"enterprise_id", "user_id"}))
+@Table(
+        name = "enterprise_users",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"enterprise_id", "user_id"}),
+        indexes = {
+                @Index(
+                        name = "idx_enterprise_users_enterprise_user",
+                        columnList = "enterprise_id, user_id"
+                )
+        }
+)
 public class EnterpriseUser {
 
     @Id

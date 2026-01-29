@@ -16,6 +16,8 @@ const TRACKASIA_STYLE =
 export default function ServiceAreaMap({ areas, onMapClick }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<trackasiagl.Map | null>(null);
+  const onMapClickRef = useRef<typeof onMapClick>();
+  onMapClickRef.current = onMapClick;
 
   const geojson = useMemo(() => {
     return {
@@ -66,14 +68,14 @@ export default function ServiceAreaMap({ areas, onMapClick }: Props) {
     });
 
     map.on("click", (e: any) => {
-      onMapClick?.(e.lngLat.lng, e.lngLat.lat);
+      onMapClickRef.current?.(e.lngLat.lng, e.lngLat.lat);
     });
 
     return () => {
       map.remove();
       mapRef.current = null;
     };
-  }, [geojson, onMapClick]);
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;

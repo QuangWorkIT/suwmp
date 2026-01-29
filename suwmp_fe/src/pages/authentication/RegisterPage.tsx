@@ -19,7 +19,7 @@ export default function Register() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [, setServerError] = useState("");
+  const [serverError, setServerError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -171,6 +171,12 @@ export default function Register() {
           />
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+          )}
+
+          {serverError && (
+            <p className="text-red-500 text-sm mt-3 text-center">
+              {serverError}
+            </p>
           )}
 
           <Button

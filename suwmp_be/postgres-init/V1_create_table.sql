@@ -49,6 +49,19 @@ CREATE TABLE enterprises (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Link ENTERPRISE users (in users table) to an enterprise they manage
+-- This is required to enforce enterprise-scoped authorization for enterprise endpoints.
+CREATE TABLE enterprise_users (
+    id BIGSERIAL PRIMARY KEY,
+    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
+    user_id UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (enterprise_id, user_id)
+);
+
+CREATE INDEX idx_enterprise_users_enterprise_user
+    ON enterprise_users (enterprise_id, user_id);
+
 CREATE TABLE service_area (
     id BIGSERIAL PRIMARY KEY,
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),

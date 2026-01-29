@@ -4,11 +4,13 @@ import com.example.suwmp_be.dto.request.CreateServiceAreaRequest;
 import com.example.suwmp_be.dto.response.ServiceAreaResponse;
 import com.example.suwmp_be.entity.Enterprise;
 import com.example.suwmp_be.entity.ServiceArea;
+import com.example.suwmp_be.exception.ResourceNotFoundException;
 import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.repository.ServiceAreaRepository;
 import com.example.suwmp_be.service.ServiceAreaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,7 +24,7 @@ public class ServiceAreaServiceImpl implements ServiceAreaService {
     @Override
     public ServiceAreaResponse create(Long enterpriseId, CreateServiceAreaRequest request) {
         Enterprise enterprise = enterpriseRepository.findById(enterpriseId)
-                .orElseThrow(() -> new RuntimeException("Enterprise not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "id", enterpriseId));
 
         ServiceArea area = new ServiceArea();
         area.setEnterprise(enterprise);
@@ -35,6 +37,7 @@ public class ServiceAreaServiceImpl implements ServiceAreaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ServiceAreaResponse> list(Long enterpriseId) {
         return serviceAreaRepository.findByEnterpriseId(enterpriseId)
                 .stream()
