@@ -21,6 +21,8 @@ public class WasteReportRequest {
 
     private String description;
 
+    private Double volume;
+
     @NotNull
     private Long enterprisesId;
 

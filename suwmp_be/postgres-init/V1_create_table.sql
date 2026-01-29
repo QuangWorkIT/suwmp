@@ -1,52 +1,58 @@
 -- ===========================================
 -- EXTENSIONS
 -- ===========================================
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE
+EXTENSION IF NOT EXISTS pgcrypto;
 
 -- ===========================================
 -- DROP ALL TABLES (CLEAN INIT)
 -- ===========================================
-DO $$ DECLARE
-    r RECORD;
+DO
+$$ DECLARE
+r RECORD;
 BEGIN
-    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
         EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
-    END LOOP;
+END LOOP;
 END $$;
 
 -- ===========================================
 -- CORE IDENTITY & ACCESS MANAGEMENT
 -- ===========================================
 
-CREATE TABLE roles (
-    id INT PRIMARY KEY,
+CREATE TABLE roles
+(
+    id   INT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE -- CITIZEN, COLLECTOR, ENTERPRISE, ADMIN
 );
 
-CREATE TABLE users (
-    id UUID PRIMARY KEY,
-    full_name VARCHAR(255),
-    email VARCHAR(255) UNIQUE,
-    phone VARCHAR(50) UNIQUE,
+CREATE TABLE users
+(
+    id            UUID PRIMARY KEY,
+    full_name     VARCHAR(255),
+    email         VARCHAR(255) UNIQUE,
+    phone         VARCHAR(50) UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role_id INT NOT NULL REFERENCES roles(id),
-    image_url VARCHAR(255),
-    status VARCHAR(20) CHECK (status IN ('ACTIVE', 'SUSPENDED')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    role_id       INT          NOT NULL REFERENCES roles (id),
+    image_url     VARCHAR(255),
+    status        VARCHAR(20) CHECK (status IN ('ACTIVE', 'SUSPENDED')),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at    TIMESTAMP
 );
 
 -- ===========================================
 -- ENTERPRISE & COLLECTOR MANAGEMENT
 -- ===========================================
 
-CREATE TABLE enterprises (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+CREATE TABLE enterprises
+(
+    id          BIGSERIAL PRIMARY KEY,
+    name        VARCHAR(255) NOT NULL,
     description TEXT,
-    rating FLOAT NOT NULL,
-    photo_url VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    rating      FLOAT        NOT NULL,
+    photo_url   VARCHAR(500),
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Link ENTERPRISE users (in users table) to an enterprise they manage
@@ -70,11 +76,12 @@ CREATE TABLE service_area (
     radius BIGINT
 );
 
-CREATE TABLE enterprise_collectors (
-    id BIGSERIAL PRIMARY KEY,
-    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    collector_id UUID NOT NULL REFERENCES users(id),
-    status VARCHAR(20) CHECK (status IN ('ACTIVE', 'INACTIVE'))
+CREATE TABLE enterprise_collectors
+(
+    id            BIGSERIAL PRIMARY KEY,
+    enterprise_id BIGINT NOT NULL REFERENCES enterprises (id),
+    collector_id  UUID   NOT NULL REFERENCES users (id),
+    status        VARCHAR(20) CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 
 -- ===========================================
@@ -85,9 +92,9 @@ CREATE TABLE waste_types (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL, -- Organic, Recyclable, Hazardous
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP,
+    deleted_at  TIMESTAMP
 );
 
 CREATE TABLE enterprise_capacity (
@@ -110,27 +117,26 @@ CREATE TABLE waste_reports (
     latitude DOUBLE PRECISION ,
     longitude DOUBLE PRECISION ,
     photo_url VARCHAR(500),
+    volume DOUBLE PRECISION,
     status VARCHAR(20) CHECK (
-        status IN ('PENDING', 'ACCEPTED', 'ASSIGNED', 'COLLECTED')
+        status IN ('PENDING', 'ACCEPTED', 'ASSIGNED','ON_THE_WAY', 'COLLECTED')
     ),
     ai_suggested_type_id BIGINT REFERENCES waste_types(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 -- ===========================================
 -- COLLECTION ASSIGNMENT & STATUS TRACKING
 -- ===========================================
 
-CREATE TABLE collection_assignments (
-    id BIGSERIAL PRIMARY KEY,
-    waste_report_id BIGINT NOT NULL REFERENCES waste_reports(id),
-    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    collector_id UUID NOT NULL REFERENCES users(id),
-    assigned_at TIMESTAMP,
+CREATE TABLE collection_assignments(
+    id               BIGSERIAL PRIMARY KEY,
+    waste_report_id  BIGINT NOT NULL REFERENCES waste_reports (id),
+    enterprise_id    BIGINT NOT NULL REFERENCES enterprises (id),
+    collector_id     UUID   NOT NULL REFERENCES users (id),
+    assigned_at      TIMESTAMP,
     start_collect_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_at TIMESTAMP,
-    photo_url VARCHAR(500)
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_updated_at  TIMESTAMP
 );
 
 CREATE TABLE report_collection_status_logs (
@@ -158,29 +164,31 @@ CREATE TABLE reward_rules (
     active BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE reward_transactions (
-    id BIGSERIAL PRIMARY KEY,
-    citizen_id UUID NOT NULL REFERENCES users(id),
-    waste_report_id BIGINT NOT NULL REFERENCES waste_reports(id),
-    points INT NOT NULL,
-    reason VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE reward_transactions
+(
+    id              BIGSERIAL PRIMARY KEY,
+    citizen_id      UUID   NOT NULL REFERENCES users (id),
+    waste_report_id BIGINT NOT NULL REFERENCES waste_reports (id),
+    points          INT    NOT NULL,
+    reason          VARCHAR(255),
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ===========================================
 -- FEEDBACK, COMPLAINTS & DISPUTES
 -- ===========================================
 
-CREATE TABLE complaints (
-    id BIGSERIAL PRIMARY KEY,
-    citizen_id UUID NOT NULL REFERENCES users(id),
-    waste_report_id BIGINT NOT NULL REFERENCES waste_reports(id),
-    description TEXT,
-    photo_url VARCHAR(500),
-    status VARCHAR(20) CHECK (
+CREATE TABLE complaints
+(
+    id              BIGSERIAL PRIMARY KEY,
+    citizen_id      UUID   NOT NULL REFERENCES users (id),
+    waste_report_id BIGINT NOT NULL REFERENCES waste_reports (id),
+    description     TEXT,
+    photo_url       VARCHAR(500),
+    status          VARCHAR(20) CHECK (
         status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED')
-    ),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ),
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -188,12 +196,12 @@ CREATE TABLE complaints (
 -- SEED DATA: ROLES
 -- ===========================================
 
-INSERT INTO roles (id, name) VALUES
-(1, 'CITIZEN'),
-(2, 'ENTERPRISE'),
-(3, 'COLLECTOR'),
-(4, 'ADMIN'),
-(5, 'GUEST');
+INSERT INTO roles (id, name)
+VALUES (1, 'CITIZEN'),
+       (2, 'ENTERPRISE'),
+       (3, 'COLLECTOR'),
+       (4, 'ADMIN'),
+       (5, 'GUEST');
 
 
 -- ===========================================
@@ -215,13 +223,14 @@ INSERT INTO waste_types (
 -- SEED DATA: ENTERPRISES
 -- ===========================================
 
-INSERT INTO enterprises (
-    name,
-    description,
-    rating,
-    photo_url,
-    created_at
-) VALUES
-('Green Earth Waste Solution', 'Leading waste management service provider focused on sustainability.', 4.8, 'https://example.com/green_earth.jpg', NOW()),
-('Urban Cleaners', 'Efficient urban waste collection and processing.', 4.5, 'https://example.com/urban_cleaners.jpg', NOW()),
-('EcoCollect', 'Innovative waste collection with a focus on recycling.', 4.7, 'https://example.com/ecocollect.jpg', NOW());
+INSERT INTO enterprises (name,
+                         description,
+                         rating,
+                         photo_url,
+                         created_at)
+VALUES ('Green Earth Waste Solution', 'Leading waste management service provider focused on sustainability.', 4.8,
+        'https://example.com/green_earth.jpg', NOW()),
+       ('Urban Cleaners', 'Efficient urban waste collection and processing.', 4.5,
+        'https://example.com/urban_cleaners.jpg', NOW()),
+       ('EcoCollect', 'Innovative waste collection with a focus on recycling.', 4.7,
+        'https://example.com/ecocollect.jpg', NOW());
