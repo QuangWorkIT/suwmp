@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/redux/hooks';
 import { Bell, Plus } from 'lucide-react';
+import { Link } from 'react-router';
 
 function Header() {
     const { user } = useAppSelector(state => state.user)
@@ -18,9 +19,11 @@ function Header() {
                 transition-all duration-200 ease-in-out'>
                     <Bell size={22} />
                 </div>
-                <Button className='rounded-[10px] px-6 py-5'>
-                    <Plus /> New Report
-                </Button>
+                <Link to="/citizen/new-report" >
+                    <Button className='rounded-[10px] px-6 py-5'>
+                        <Plus /> New Report
+                    </Button>
+                </Link>
             </div>
         </header>
     )

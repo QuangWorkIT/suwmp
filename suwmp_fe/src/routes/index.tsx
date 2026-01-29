@@ -1,7 +1,5 @@
-import CitizenMain from "@/components/layout/citizen/CitizenMain";
-import EnterpriseMain from "@/components/layout/enterprise/EnterpriseMain";
-import AdminMain from "@/components/layout/admin/AdminMain";
 import PublicMain from "@/components/layout/public/PublicMain";
+import AdminMain from "@/components/layout/admin/AdminMain";
 import ForgotPasswordPage from "@/pages/authentication/ForgotPasswordPage";
 import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
@@ -16,9 +14,12 @@ import { AdminDashboardPage, UserManagementPage, WasteCategoriesPage } from "@/p
 import About from "@/pages/public/About";
 import PublicHome from "@/pages/public/PublicHome";
 import WasteguidePage from "@/pages/public/WasteguidePage";
-import { createBrowserRouter, Navigate } from "react-router";
-
 import ResetPasswordPage from "@/pages/authentication/ResetPasswordPage";
+import { citizenRoutes } from "./citizent.route";
+import { enterpriseRoutes } from "./enterprise.route";
+import { createBrowserRouter, Navigate } from "react-router";
+import UnAuthorizedPage from "@/pages/error/UnAuthorizedPage";
+
 
 const router = createBrowserRouter([
   {
@@ -79,10 +80,7 @@ const router = createBrowserRouter([
     path: "/reset-password",
     element: <ResetPasswordPage />,
   },
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
+  { path: "/unauthorized", element: <UnAuthorizedPage /> }
 ]);
 
 export default router;
