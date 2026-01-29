@@ -1,8 +1,23 @@
 import { useState } from "react";
 import { Zap, Mail, Lock } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { AuthService } from "@/services/AuthService";
+import { toast } from "sonner";
+import { decodePayLoad } from "@/utilities/jwt";
+import { useAppDispatch } from "@/redux/hooks";
+import { login } from "@/redux/features/userSlice";
+
+export const roleNavigation = {
+  "ENTERPRISE": "/enterprise",
+  "COLLECTOR": "/collector",
+  "ADMIN": "/admin",
+  "CITIZEN": "/citizen"
+}
 
 export default function Login() {
+  const dispatch = useAppDispatch()
+  const nav = useNavigate()
+
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -64,9 +79,21 @@ export default function Login() {
     });
 
     if (!emailError && !passwordError) {
-      // const response = await AuthService.login(form);
-      // console.log(response);
-      console.log("Form is valid, ready to submit:", form);
+      const res = await AuthService.login(form);
+      if (res.success) {
+        toast.success("Login successfully");
+
+        const payload = decodePayLoad(res.data.accessToken)
+        dispatch(login({ user: payload, token: res.data.accessToken }))
+
+        nav(roleNavigation[payload.role], { replace: true })
+
+      } else {
+        if (res.error === "User not found" || res.error === "Invalid password") {
+          toast.error("Invalid credentials");
+        } else
+          toast.error(res.error);
+      }
     }
     return null;
   };
@@ -105,11 +132,10 @@ export default function Login() {
                 onChange={handleChange}
                 onBlur={() => handleBlur("email")}
                 placeholder="you@example.com"
-                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
-                  touched.email && errors.email
-                    ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-200 focus:ring-teal-500 focus:border-transparent"
-                }`}
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${touched.email && errors.email
+                  ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                  : "border-gray-200 focus:ring-teal-500 focus:border-transparent"
+                  }`}
               />
             </div>
             {touched.email && errors.email && (
@@ -121,9 +147,9 @@ export default function Login() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-gray-700">Password</label>
-              <a href="#" className="text-sm text-teal-500 hover:text-teal-600 transition-colors">
+              <Link to="/forgot-password" className="text-sm text-teal-500 hover:text-teal-600 transition-colors">
                 Forgot password?
-              </a>
+              </Link >
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -136,11 +162,10 @@ export default function Login() {
                 onChange={handleChange}
                 onBlur={() => handleBlur("password")}
                 placeholder="Enter your password"
-                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
-                  touched.password && errors.password
-                    ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-200 focus:ring-teal-500 focus:border-transparent"
-                }`}
+                className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${touched.password && errors.password
+                  ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                  : "border-gray-200 focus:ring-teal-500 focus:border-transparent"
+                  }`}
               />
             </div>
             {touched.password && errors.password && (
@@ -165,6 +190,7 @@ export default function Login() {
 
           {/* Sign In Button */}
           <button
+            type="submit"
             onClick={submit}
             className="w-full bg-gradient-to-r from-teal-500 to-green-500 text-white font-semibold py-3 px-4 rounded-xl hover:from-teal-600 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-teal-200"
           >
