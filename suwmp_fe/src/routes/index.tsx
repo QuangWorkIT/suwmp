@@ -39,9 +39,9 @@ const router = createBrowserRouter([
       { path: "reports", element: <ReportHistory /> },
       { path: "leaderboard", element: <LeaderBoard /> },
       { path: "feedback", element: <FeedBack /> },
+      { path: "new-report", element: <WasteReportProcess /> },
     ],
   },
-  { path: "/citizen/new-report", element: <WasteReportProcess /> },
   {
     path: "/enterprise",
     element: <EnterpriseMain />,
