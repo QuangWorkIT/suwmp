@@ -6,13 +6,15 @@ interface AdminHeaderProps {
     description: string;
     showAddButton?: boolean;
     buttonText?: string;
+    onAddClick?: () => void;
 }
 
 function AdminHeader({ 
     title = 'Admin Dashboard', 
     description = 'Manage your platform',
     showAddButton = false,
-    buttonText = 'Add User'
+    buttonText = 'Add User',
+    onAddClick
 }: AdminHeaderProps) {
 
     return (
@@ -35,7 +37,9 @@ function AdminHeader({
 
                 {/* Dynamic Action Button */}
                 {showAddButton && (
-                    <Button className='rounded-lg px-5 py-5 bg-green-600 hover:bg-green-700 text-white
+                    <Button 
+                        onClick={onAddClick}
+                        className='rounded-lg px-5 py-5 bg-green-600 hover:bg-green-700 text-white
                     shadow-sm transition-all duration-200'>
                         <Plus size={18} className="mr-2" />
                         {buttonText}

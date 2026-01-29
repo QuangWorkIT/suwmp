@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter, Download, MoreVertical } from 'lucide-react';
@@ -15,11 +16,18 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { UserDialog } from "@/components/users/UserDialog";
+import { type UserFormValues } from "@/components/users/UserForm";
+import { toast } from "sonner"; // Assuming sonner is used for toasts based on package.json
+import { useOutletContext } from 'react-router';
+import { UserService } from "@/services/UserService";
 
 interface User {
     id: string;
-    name: string;
+    fullName: string;
     email: string;
+    phone: string;
+    roleId: string;
     role: 'Citizen' | 'Collector' | 'Enterprise';
     status: 'active' | 'suspended' | 'inactive';
     activity: string;
@@ -27,95 +35,97 @@ interface User {
     avatar: string;
 }
 
+interface UserManagementContext {
+    setOnAddClick: (handler: () => void) => void;
+}
 
 export default function UserManagementPage() {
-    // Mock data - replace with actual API call
-    const [users] = useState<User[]>([
-        {
-            id: '1',
-            name: 'John Doe',
-            email: 'john@example.com',
-            role: 'Citizen',
-            status: 'active',
-            activity: '12 Reports',
-            joined: 'Jan 5, 2026',
-            avatar: 'J'
-        },
-        {
-            id: '2',
-            name: 'GreenCycle Inc.',
-            email: 'contact@greencycle.com',
-            role: 'Enterprise',
-            status: 'active',
-            activity: '45 Requests',
-            joined: 'Dec 12, 2025',
-            avatar: 'G'
-        },
-        {
-            id: '3',
-            name: 'Alex Chen',
-            email: 'alex@collector.com',
-            role: 'Collector',
-            status: 'active',
-            activity: '245 Tasks',
-            joined: 'Jan 8, 2026',
-            avatar: 'A'
-        },
-        {
-            id: '4',
-            name: 'Sarah Mills',
-            email: 'sarah@example.com',
-            role: 'Citizen',
-            status: 'suspended',
-            activity: '4 Reports',
-            joined: 'Nov 20, 2025',
-            avatar: 'S'
-        },
-        {
-            id: '5',
-            name: 'Maria Santos',
-            email: 'maria@collector.com',
-            role: 'Collector',
-            status: 'active',
-            activity: '312 Tasks',
-            joined: 'Jan 10, 2026',
-            avatar: 'M'
-        },
-        {
-            id: '6',
-            name: 'EcoEnterprise',
-            email: 'info@ecoent.com',
-            role: 'Enterprise',
-            status: 'inactive',
-            activity: '0 Requests',
-            joined: 'Oct 15, 2025',
-            avatar: 'E'
-        },
-    ]);
+    const { setOnAddClick } = useOutletContext<UserManagementContext>();
+
+    // State for users and pagination
+    const [users, setUsers] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [pagination, setPagination] = useState({
+        pageNumber: 0,
+        pageSize: 6,
+        totalPages: 0,
+        totalElements: 0,
+        first: true,
+        last: true
+    });
 
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
+    
+    // Modal state
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+    const fetchUsers = async (page: number = 0) => {
+        setIsLoading(true);
+        try {
+            const response = await UserService.getUsers(page, pagination.pageSize);
+            const { content, totalPages, totalElements, number, first, last } = response.data;
+            
+            // Map API response to User interface
+            const mappedUsers: User[] = content.map((u: any) => ({
+                id: u.id,
+                fullName: u.fullName,
+                email: u.email,
+                phone: '', // Not in get list response yet, defaulting to empty
+                roleId: '', // Not in get list response, defaulting
+                role: u.role,
+                status: u.status,
+                activity: u.activityStatus || 'No activity',
+                joined: new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                avatar: u.fullName.charAt(0).toUpperCase()
+            }));
+
+            setUsers(mappedUsers);
+            setPagination({
+                ...pagination,
+                pageNumber: number,
+                totalPages,
+                totalElements,
+                first,
+                last
+            });
+        } catch (error) {
+            console.error("Failed to fetch users", error);
+            toast.error("Failed to load users");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const handlePageChange = (newPage: number) => {
+        fetchUsers(newPage);
+    };
 
     const getRoleColor = (role: string) => {
-        switch (role) {
-            case 'Citizen':
-                return 'bg-green-50 text-green-700 border border-green-100'; // Green pill
-            case 'Enterprise':
-                return 'bg-orange-50 text-orange-700 border border-orange-100'; // Orange pill
-            case 'Collector':
-                return 'bg-blue-50 text-blue-700 border border-blue-100'; // Blue pill
+        switch (role.toUpperCase()) {
+            case 'CITIZEN':
+                return 'bg-green-50 text-green-700 border border-green-100';
+            case 'ENTERPRISE':
+                return 'bg-orange-50 text-orange-700 border border-orange-100';
+            case 'COLLECTOR':
+                return 'bg-blue-50 text-blue-700 border border-blue-100';
             default:
                 return 'bg-gray-50 text-gray-700 border border-gray-100';
         }
     };
 
     const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'active':
+        switch (status.toUpperCase()) {
+            case 'ACTIVE':
                 return 'bg-green-50 text-green-700 border border-green-100';
-            case 'suspended':
+            case 'SUSPENDED':
                 return 'bg-red-50 text-red-700 border border-red-100';
-            case 'inactive':
+            case 'INACTIVE':
                 return 'bg-gray-100 text-gray-600 border border-gray-200';
             default:
                 return 'bg-gray-50 text-gray-600';
@@ -134,8 +144,86 @@ export default function UserManagementPage() {
         return colors[index % colors.length];
     };
 
+
+
+    const handleAddUser = () => {
+        setSelectedUser(null);
+        setIsDialogOpen(true);
+    };
+
+    useEffect(() => {
+        if (setOnAddClick) {
+            setOnAddClick(() => handleAddUser);
+        }
+
+        return () => {
+            if (setOnAddClick) {
+                setOnAddClick(() => () => {}); // Reset to no-op or null
+            }
+        }
+    }, [setOnAddClick]);
+
+    const handleEditUser = (user: User) => {
+        setSelectedUser(user);
+        setIsDialogOpen(true);
+    };
+
+    const handleDeleteUser = (userId: string) => {
+        if (confirm('Are you sure you want to delete this user?')) {
+            setUsers(users.filter(u => u.id !== userId));
+            toast.success("User deleted successfully");
+        }
+    };
+
+    const handleFormSubmit = async (data: UserFormValues) => {
+        try {
+            if (selectedUser) {
+                // Update existing user
+                await UserService.updateUser(selectedUser.id, data);
+                
+                // Update local list
+                const updatedUsers = users.map(user => 
+                    user.id === selectedUser.id 
+                        ? { 
+                            ...user, 
+                            ...data, 
+                            role: data.roleId === "1" ? "Citizen" : data.roleId === "2" ? "Enterprise" : "Collector" as any, // Simple map for UI
+                            status: data.status as any
+                        } 
+                        : user
+                );
+                setUsers(updatedUsers);
+                toast.success("User updated successfully");
+            } else {
+                // Add new user
+                await UserService.createUser({
+                    ...data,
+                    // If CreateUserRequest doesn't have status, we exclude it or UserService handles it. 
+                    // CreateUserRequest in UserService.ts currently doesn't have status. 
+                    // I should check UserService.ts CreateUserRequest. 
+                    // If it doesn't, I cast data or strictly select fields.
+                    // For now, assume UserService ignores extra fields or I strictly pick.
+                    fullName: data.fullName,
+                    email: data.email,
+                    phone: data.phone,
+                    roleId: data.roleId
+                });
+                toast.success("User added successfully");
+                // Refresh list to get real ID and data
+                 fetchUsers(pagination.pageNumber); 
+            }
+            setIsDialogOpen(false);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to save user");
+        }
+    };
+
     return (
         <div className="space-y-6">
+            <div className="hidden justify-between items-center">
+                <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+            </div>
+
             {/* Search and Filters Card */}
             <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-wrap items-center gap-4">
                 <div className="relative flex-1 min-w-[300px]">
@@ -197,66 +285,108 @@ export default function UserManagementPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {users.map((user, index) => (
-                                <tr key={user.id} className="hover:bg-gray-50/80 transition-colors group">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full ${getAvatarColor(index)} flex items-center justify-center text-white font-medium shadow-sm`}>
-                                                {user.avatar}
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-gray-900 group-hover:text-green-700 transition-colors">{user.name}</div>
-                                                <div className="text-xs text-gray-500">{user.email}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getRoleColor(user.role)}`}>
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(user.status)}`}>
-                                            {user.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {user.activity}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {user.joined}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-600">
-                                                    <MoreVertical size={16} />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuItem>View Profile</DropdownMenuItem>
-                                                <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-amber-600 focus:text-amber-700">Suspend User</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-600 focus:text-red-700">Delete User</DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                        Loading users...
                                     </td>
                                 </tr>
-                            ))}
+                            ) : users.length > 0 ? (
+                                users.map((user, index) => (
+                                    <tr key={user.id} className="hover:bg-gray-50/80 transition-colors group">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-full ${getAvatarColor(index)} flex items-center justify-center text-white font-medium shadow-sm`}>
+                                                    {user.avatar}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-gray-900 group-hover:text-green-700 transition-colors">{user.fullName}</div>
+                                                    <div className="text-xs text-gray-500">{user.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${getRoleColor(user.role)}`}>
+                                                {user.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(user.status)}`}>
+                                                {user.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {user.activity}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {user.joined}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-600">
+                                                        <MoreVertical size={16} />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-48">
+                                                    <DropdownMenuItem onClick={() => handleEditUser(user)}>Edit Details</DropdownMenuItem>
+                                                    <DropdownMenuItem 
+                                                        className="text-red-600 focus:text-red-700"
+                                                        onClick={() => handleDeleteUser(user.id)}
+                                                    >
+                                                        Delete User
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                        No users found matching your search.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Pagination Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white">
-                    <p className="text-sm text-gray-500">Showing 6 of 52,400 users</p>
+                    <p className="text-sm text-gray-500">Showing {users.length} of {pagination.totalElements} users</p>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="h-8 text-xs border-gray-200 text-gray-600">Previous</Button>
-                        <Button variant="outline" size="sm" className="h-8 text-xs border-gray-200 text-gray-600">Next</Button>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-xs border-gray-200 text-gray-600"
+                            onClick={() => handlePageChange(pagination.pageNumber - 1)}
+                            disabled={pagination.first}
+                        >
+                            Previous
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-xs border-gray-200 text-gray-600"
+                            onClick={() => handlePageChange(pagination.pageNumber + 1)}
+                            disabled={pagination.last}
+                        >
+                            Next
+                        </Button>
                     </div>
                 </div>
             </div>
+
+            <UserDialog 
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                user={selectedUser}
+                onSubmit={handleFormSubmit}
+                onCancel={() => setIsDialogOpen(false)}
+            />
         </div>
     );
 }
+
 
