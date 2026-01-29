@@ -16,6 +16,16 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { UserDialog } from "@/components/users/UserDialog";
 import { type UserFormValues } from "@/components/users/UserForm";
 import { toast } from "sonner"; // Assuming sonner is used for toasts based on package.json
@@ -29,7 +39,7 @@ interface User {
     phone: string;
     roleId: string;
     role: 'Citizen' | 'Collector' | 'Enterprise';
-    status: 'active' | 'suspended' | 'inactive';
+    status: 'active' | 'suspended';
     activity: string;
     joined: string;
     avatar: string;
@@ -61,19 +71,23 @@ export default function UserManagementPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-    const fetchUsers = async (page: number = 0) => {
+    const fetchUsers = async (page: number = 0, query: string = searchQuery) => {
         setIsLoading(true);
         try {
-            const response = await UserService.getUsers(page, pagination.pageSize);
+            let response;
+            if (query.trim()) {
+                response = await UserService.searchUsers(query, page, pagination.pageSize);
+            } else {
+                response = await UserService.getUsers(page, pagination.pageSize);
+            }
             const { content, totalPages, totalElements, number, first, last } = response.data;
             
-            // Map API response to User interface
             const mappedUsers: User[] = content.map((u: any) => ({
                 id: u.id,
                 fullName: u.fullName,
                 email: u.email,
-                phone: '', // Not in get list response yet, defaulting to empty
-                roleId: '', // Not in get list response, defaulting
+                phone: u.phone,
+                roleId: '',
                 role: u.role,
                 status: u.status,
                 activity: u.activityStatus || 'No activity',
@@ -99,12 +113,21 @@ export default function UserManagementPage() {
     };
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        const timer = setTimeout(() => {
+            fetchUsers(0, searchQuery);
+        }, 500); // Debounce search
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const handlePageChange = (newPage: number) => {
-        fetchUsers(newPage);
+        fetchUsers(newPage, searchQuery);
     };
+
+    // Frontend filtering for roles
+    const filteredUsers = users.filter(user => {
+        if (roleFilter === 'all') return true;
+        return user.role.toLowerCase() === roleFilter.toLowerCase();
+    });
 
     const getRoleColor = (role: string) => {
         switch (role.toUpperCase()) {
@@ -125,8 +148,6 @@ export default function UserManagementPage() {
                 return 'bg-green-50 text-green-700 border border-green-100';
             case 'SUSPENDED':
                 return 'bg-red-50 text-red-700 border border-red-100';
-            case 'INACTIVE':
-                return 'bg-gray-100 text-gray-600 border border-gray-200';
             default:
                 return 'bg-gray-50 text-gray-600';
         }
@@ -143,7 +164,6 @@ export default function UserManagementPage() {
         ];
         return colors[index % colors.length];
     };
-
 
 
     const handleAddUser = () => {
@@ -168,55 +188,84 @@ export default function UserManagementPage() {
         setIsDialogOpen(true);
     };
 
+    // Confirmation state
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<string | null>(null);
+    
+    const [updateConfirmOpen, setUpdateConfirmOpen] = useState(false);
+    const [pendingUpdateData, setPendingUpdateData] = useState<UserFormValues | null>(null);
+
     const handleDeleteUser = (userId: string) => {
-        if (confirm('Are you sure you want to delete this user?')) {
-            setUsers(users.filter(u => u.id !== userId));
+        setUserToDelete(userId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteUser = async () => {
+        if (!userToDelete) return;
+        try {
+            await UserService.deleteUser(userToDelete);
+            setUsers(users.filter(u => u.id !== userToDelete));
             toast.success("User deleted successfully");
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to delete user");
+        } finally {
+            setDeleteConfirmOpen(false);
+            setUserToDelete(null);
         }
     };
 
     const handleFormSubmit = async (data: UserFormValues) => {
-        try {
-            if (selectedUser) {
-                // Update existing user
-                await UserService.updateUser(selectedUser.id, data);
-                
-                // Update local list
-                const updatedUsers = users.map(user => 
-                    user.id === selectedUser.id 
-                        ? { 
-                            ...user, 
-                            ...data, 
-                            role: data.roleId === "1" ? "Citizen" : data.roleId === "2" ? "Enterprise" : "Collector" as any, // Simple map for UI
-                            status: data.status as any
-                        } 
-                        : user
-                );
-                setUsers(updatedUsers);
-                toast.success("User updated successfully");
-            } else {
-                // Add new user
+        if (selectedUser) {
+            // Confirm update
+            setPendingUpdateData(data);
+            setUpdateConfirmOpen(true);
+        } else {
+            // Create user directly
+            try {
                 await UserService.createUser({
                     ...data,
-                    // If CreateUserRequest doesn't have status, we exclude it or UserService handles it. 
-                    // CreateUserRequest in UserService.ts currently doesn't have status. 
-                    // I should check UserService.ts CreateUserRequest. 
-                    // If it doesn't, I cast data or strictly select fields.
-                    // For now, assume UserService ignores extra fields or I strictly pick.
                     fullName: data.fullName,
                     email: data.email,
                     phone: data.phone,
                     roleId: data.roleId
                 });
                 toast.success("User added successfully");
-                // Refresh list to get real ID and data
-                 fetchUsers(pagination.pageNumber); 
+                fetchUsers(pagination.pageNumber);
+                setIsDialogOpen(false);
+            } catch (error: any) {
+                toast.error(error.response?.data?.message || "Failed to create user");
             }
+        }
+    };
+
+    const confirmUpdateUser = async () => {
+        if (!selectedUser || !pendingUpdateData) return;
+        try {
+            await UserService.updateUser(selectedUser.id, pendingUpdateData);
+            
+            // Update local list
+            const updatedUsers = users.map(user => 
+                user.id === selectedUser.id 
+                    ? { 
+                        ...user, 
+                        ...pendingUpdateData, 
+                        role: pendingUpdateData.roleId === "1" ? "Citizen" : pendingUpdateData.roleId === "2" ? "Enterprise" : "Collector" as any,
+                        status: pendingUpdateData.status as any
+                    } 
+                    : user
+            );
+            setUsers(updatedUsers);
+            toast.success("User updated successfully");
             setIsDialogOpen(false);
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to save user");
+        } finally {
+            setUpdateConfirmOpen(false);
+            setPendingUpdateData(null);
         }
     };
+
+
 
     return (
         <div className="space-y-6">
@@ -291,8 +340,8 @@ export default function UserManagementPage() {
                                         Loading users...
                                     </td>
                                 </tr>
-                            ) : users.length > 0 ? (
-                                users.map((user, index) => (
+                            ) : filteredUsers.length > 0 ? (
+                                filteredUsers.map((user, index) => (
                                     <tr key={user.id} className="hover:bg-gray-50/80 transition-colors group">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
@@ -354,7 +403,7 @@ export default function UserManagementPage() {
 
                 {/* Pagination Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white">
-                    <p className="text-sm text-gray-500">Showing {users.length} of {pagination.totalElements} users</p>
+                    <p className="text-sm text-gray-500">Showing {filteredUsers.length} of {pagination.totalElements} users</p>
                     <div className="flex gap-2">
                         <Button 
                             variant="outline" 
@@ -385,6 +434,36 @@ export default function UserManagementPage() {
                 onSubmit={handleFormSubmit}
                 onCancel={() => setIsDialogOpen(false)}
             />
+
+            <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the user account.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setDeleteConfirmOpen(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteUser} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={updateConfirmOpen} onOpenChange={setUpdateConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Update User?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to update this user's information?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setUpdateConfirmOpen(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmUpdateUser}>Update</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

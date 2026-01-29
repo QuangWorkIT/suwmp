@@ -45,7 +45,7 @@ export function UserDialog({ open, onOpenChange, user, onSubmit, onCancel }: Use
                         email: user.email,
                         phone: user.phone || '',
                         roleId: getRoleId(user.role) as "1" | "2" | "3",
-                        status: (user.status.toUpperCase()) as "ACTIVE" | "SUSPENDED" | "INACTIVE"
+                        status: (user.status.toUpperCase()) as "ACTIVE" | "SUSPENDED"
                     } : undefined}
                     onSubmit={onSubmit}
                     onCancel={onCancel}
