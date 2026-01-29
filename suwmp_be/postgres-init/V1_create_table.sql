@@ -82,7 +82,7 @@ CREATE TABLE enterprise_collectors (
 -- ===========================================
 
 CREATE TABLE waste_types (
-    id INT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL, -- Organic, Recyclable, Hazardous
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -93,7 +93,7 @@ CREATE TABLE waste_types (
 CREATE TABLE enterprise_capacity (
     id BIGSERIAL PRIMARY KEY,
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    waste_type_id INT NOT NULL REFERENCES waste_types(id),
+    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
     daily_capacity_kg INT NOT NULL
 );
 
@@ -104,7 +104,7 @@ CREATE TABLE enterprise_capacity (
 CREATE TABLE waste_reports (
     id BIGSERIAL PRIMARY KEY,
     citizen_id UUID NOT NULL REFERENCES users(id),
-    waste_type_id INT NOT NULL REFERENCES waste_types(id),
+    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
     description TEXT,
     latitude DOUBLE PRECISION ,
@@ -113,7 +113,7 @@ CREATE TABLE waste_reports (
     status VARCHAR(20) CHECK (
         status IN ('PENDING', 'ACCEPTED', 'ASSIGNED', 'COLLECTED')
     ),
-    ai_suggested_type_id INT REFERENCES waste_types(id),
+    ai_suggested_type_id BIGINT REFERENCES waste_types(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -151,7 +151,7 @@ CREATE TABLE report_collection_status_logs (
 CREATE TABLE reward_rules (
     id BIGSERIAL PRIMARY KEY,
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    waste_type_id INT NOT NULL REFERENCES waste_types(id),
+    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
     base_points INT NOT NULL,
     quality_multiplier DECIMAL(3,2),
     time_bonus INT,
@@ -201,17 +201,15 @@ INSERT INTO roles (id, name) VALUES
 -- ===========================================
 
 INSERT INTO waste_types (
-    id,
     name,
     description,
     created_at,
     updated_at,
     deleted_at
 ) VALUES
-(1, 'ORGANIC', 'Biodegradable waste such as food scraps and garden waste', NOW(), NOW(), NULL),
-(2, 'RECYCLABLE', 'Waste materials that can be recycled such as plastic, paper, and metal', NOW(), NOW(), NULL),
-(3, 'HAZARDOUS', 'Waste that poses a risk to health or the environment, including chemicals and batteries', NOW(), NOW(), NULL);
-
+('ORGANIC', 'Biodegradable waste such as food scraps and garden waste', NOW(), NOW(), NULL),
+('RECYCLABLE', 'Waste materials that can be recycled such as plastic, paper, and metal', NOW(), NOW(), NULL),
+('HAZARDOUS', 'Waste that poses a risk to health or the environment, including chemicals and batteries', NOW(), NOW(), NULL);
 
 -- ===========================================
 -- SEED DATA: ENTERPRISES
