@@ -48,4 +48,7 @@ public class User {
     private String status;
 
     private Instant createdAt = Instant.now();
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 }

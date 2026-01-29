@@ -33,7 +33,8 @@ CREATE TABLE users (
     image_url VARCHAR(255),
     status VARCHAR(20) CHECK (status IN ('ACTIVE', 'SUSPENDED')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );
 
 -- ===========================================

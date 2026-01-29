@@ -2,6 +2,7 @@ package com.example.suwmp_be.serviceImpl;
 
 import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.constants.RoleEnum;
+import com.example.suwmp_be.constants.UserStatus;
 import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
 import com.example.suwmp_be.dto.forgot_password.SendLinkResetDto;
 import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
@@ -95,6 +96,11 @@ public class AuthService implements IAuthService {
         if (user == null)
         {
             throw new InvalidCredential("User not found");
+        }
+        if (user.getStatus().equals(UserStatus.SUSPENDED.toString())
+            && user.getDeletedAt() != null)
+        {
+            throw new InvalidCredential("User is not active");
         }
         if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash()))
         {
