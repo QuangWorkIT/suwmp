@@ -26,7 +26,7 @@ const userSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   phone: z.string().min(9, { message: "Phone must be at least 9 characters." }),
   roleId: z.enum(["1", "2", "3"]),
-  status: z.enum(["ACTIVE", "SUSPENDED", "INACTIVE"]),
+  status: z.enum(["ACTIVE", "SUSPENDED"]),
 });
 
 export type UserFormValues = z.infer<typeof userSchema>;

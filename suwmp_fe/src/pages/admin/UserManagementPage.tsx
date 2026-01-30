@@ -52,7 +52,6 @@ interface UserManagementContext {
 export default function UserManagementPage() {
     const { setOnAddClick } = useOutletContext<UserManagementContext>();
 
-    // State for users and pagination
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [pagination, setPagination] = useState({
@@ -67,7 +66,6 @@ export default function UserManagementPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
     
-    // Modal state
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -115,7 +113,7 @@ export default function UserManagementPage() {
     useEffect(() => {
         const timer = setTimeout(() => {
             fetchUsers(0, searchQuery);
-        }, 500); // Debounce search
+        }, 500);
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
@@ -123,7 +121,6 @@ export default function UserManagementPage() {
         fetchUsers(newPage, searchQuery);
     };
 
-    // Frontend filtering for roles
     const filteredUsers = users.filter(user => {
         if (roleFilter === 'all') return true;
         return user.role.toLowerCase() === roleFilter.toLowerCase();
@@ -188,7 +185,6 @@ export default function UserManagementPage() {
         setIsDialogOpen(true);
     };
 
-    // Confirmation state
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
     
