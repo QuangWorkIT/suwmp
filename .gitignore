@@ -1,9 +1,12 @@
 # Backend
 suwmp_be/.env
+suwmp_be/node_modules/
 
 # Frontend
 suwmp_fe/.env
 suwmp_fe/.env.production
+suwmp_fe/node_modules/
+suwmp_fe/dist/
 
 # Root
 .env

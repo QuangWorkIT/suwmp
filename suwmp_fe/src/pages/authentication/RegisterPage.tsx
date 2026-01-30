@@ -173,6 +173,12 @@ export default function Register() {
             <p className="text-red-500 text-sm mt-1">{errors.password}</p>
           )}
 
+          {serverError && (
+            <p className="text-red-500 text-sm mt-3 text-center">
+              {serverError}
+            </p>
+          )}
+
           <Button
             type="submit"
             disabled={loading}

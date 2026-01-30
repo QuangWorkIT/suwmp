@@ -27,7 +27,7 @@ const EnterpriseHeader = ({
                   {subtitle}
                 </p>
               )}
-            </div>
+      </div>
           )}
 
           <div className="flex items-center gap-3">
@@ -37,9 +37,9 @@ const EnterpriseHeader = ({
                   className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors shadow-sm"
                   title="Export"
                 >
-                  <Download size={16} />
-                  Export
-                </button>
+          <Download size={16} />
+          Export
+        </button>
                 <button 
                   className="relative p-2 rounded-lg hover:bg-muted transition-colors"
                   title="Notifications"
