@@ -108,22 +108,23 @@ CREATE TABLE enterprise_capacity (
 -- WASTE REPORTING (CORE FEATURE)
 -- ===========================================
 
-CREATE TABLE waste_reports (
-    id BIGSERIAL PRIMARY KEY,
-    citizen_id UUID NOT NULL REFERENCES users(id),
-    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
-    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    description TEXT,
-    latitude DOUBLE PRECISION ,
-    longitude DOUBLE PRECISION ,
-    photo_url VARCHAR(500),
-    volume DOUBLE PRECISION,
-    status VARCHAR(20) CHECK (
-        status IN ('PENDING', 'ACCEPTED', 'ASSIGNED','ON_THE_WAY', 'COLLECTED')
-    ),
-    ai_suggested_type_id BIGINT REFERENCES waste_types(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
+CREATE TABLE waste_reports
+(
+    id                   BIGSERIAL PRIMARY KEY,
+    citizen_id           UUID   NOT NULL REFERENCES users (id),
+    waste_type_id        BIGINT NOT NULL REFERENCES waste_types (id),
+    enterprise_id        BIGINT NOT NULL REFERENCES enterprises (id),
+    description          TEXT,
+    latitude             DOUBLE PRECISION,
+    longitude            DOUBLE PRECISION,
+    photo_url            VARCHAR(500),
+    volume               DOUBLE PRECISION,
+    status               VARCHAR(20) CHECK (
+        status IN ('PENDING', 'ACCEPTED', 'ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
+        ),
+    ai_suggested_type_id BIGINT REFERENCES waste_types (id),
+    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 -- ===========================================
 -- COLLECTION ASSIGNMENT & STATUS TRACKING
 -- ===========================================

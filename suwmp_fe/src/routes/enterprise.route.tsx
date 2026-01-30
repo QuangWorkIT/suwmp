@@ -15,7 +15,7 @@ export const enterpriseRoutes = [
                 element: <EnterpriseMain />,
                 children: [
                     { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: "dashboard", element: <Navigate to="collectors" replace /> },
+                    { path: "dashboard", element: <EnterpriseDashboard /> },
                     { path: "collectors", element: <CollectorManagementPage /> },
                     { path: "areas", element: <ServiceAreasPage /> },
                     { path: "requests", element: <CollectionRequest /> },

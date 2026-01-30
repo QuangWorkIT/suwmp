@@ -8,7 +8,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: ${PGTZ}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./suwmp_be/postgres-init:/docker-entrypoint-initdb.d:ro
