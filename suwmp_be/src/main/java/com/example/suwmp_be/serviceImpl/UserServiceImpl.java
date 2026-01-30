@@ -68,6 +68,12 @@ public class UserServiceImpl implements IUserService {
     public UserResponse updateUser(UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        if(userRepository.existsByPhone(request.getPhone())) {
+            throw new RuntimeException("Phone number already exists: " + request.getPhone());
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists: " + request.getEmail());
+        }
 
         userMapper.updateEntity(request, user);
 
