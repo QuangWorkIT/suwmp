@@ -262,13 +262,13 @@ const ServiceAreasPage = () => {
                     </div>
                   </div>
 
-                  <p className="mt-4 text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {addresses[a.id]
                       ? addresses[a.id]
                       : `Lat ${a.latitude.toFixed(4)}, Lng ${a.longitude.toFixed(4)}`}
                   </p>
 
-                  <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="p-2 rounded-lg bg-muted/30 text-center">
                       <p className="text-lg font-semibold">{Math.round(a.radius / 1000)}</p>
                       <p className="text-xs text-muted-foreground">Radius (km)</p>
@@ -279,7 +279,7 @@ const ServiceAreasPage = () => {
                     </div>
                   </div>
 
-                  <Separator className="my-4" />
+                  <Separator />
 
                   <div className="grid grid-cols-2 gap-2">
                     <Button variant="outline" size="sm">
