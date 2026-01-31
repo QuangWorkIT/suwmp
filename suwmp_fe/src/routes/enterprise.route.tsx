@@ -5,6 +5,7 @@ import EnterpriseDashboard from "@/pages/enterprise/EnterpriseDashboard";
 import CollectorManagementPage from "@/pages/enterprise/CollectorManagementPage";
 import CollectionRequest from "@/pages/enterprise/CollectionRequest";
 import ServiceAreasPage from "@/pages/enterprise/ServiceAreasPage";
+import CapacityManagementPage from "@/pages/enterprise/CapacityManagementPage";
 
 export const enterpriseRoutes = [
     {
@@ -19,6 +20,7 @@ export const enterpriseRoutes = [
                     { path: "collectors", element: <CollectorManagementPage /> },
                     { path: "areas", element: <ServiceAreasPage /> },
                     { path: "requests", element: <CollectionRequest /> },
+                    { path: "capacity", element: <CapacityManagementPage /> },
                 ]
             }
         ],
