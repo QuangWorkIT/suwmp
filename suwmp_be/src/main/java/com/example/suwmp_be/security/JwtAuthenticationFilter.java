@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,45 +25,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
+
+        // No Authorization header → treat as anonymous (public endpoints)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authHeader.substring("Bearer ".length()).trim();
+        String token = authHeader.substring(7).trim();
+
+        // Token present but invalid → 401
         if (token.isEmpty() || !jwtUtil.validateJwtToken(token)) {
-            filterChain.doFilter(request, response);
+            SecurityContextHolder.clearContext();
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT");
             return;
         }
 
         String userId = jwtUtil.getUserFromToken(token);
         String role = jwtUtil.getClaim(token, "role");
 
-        if (userId == null || role == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         UUID principalId;
         try {
             principalId = UUID.fromString(userId);
         } catch (IllegalArgumentException ex) {
-            // Malformed UUID in token subject – treat as unauthenticated
-            filterChain.doFilter(request, response);
+            SecurityContextHolder.clearContext();
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid user ID in token");
             return;
         }
 
-        // Principal: UUID; Authority: ROLE_{roleName}
-        var auth = new UsernamePasswordAuthenticationToken(
+        var authentication = new UsernamePasswordAuthenticationToken(
                 principalId,
                 null,
                 List.of(new SimpleGrantedAuthority("ROLE_" + role))
         );
-        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }
 }

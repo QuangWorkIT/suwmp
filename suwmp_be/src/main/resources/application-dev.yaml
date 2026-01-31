@@ -8,8 +8,6 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
   datasource:
-    # Use 5433 to avoid conflicts with a locally-installed PostgreSQL on 5432
-    # Provide sensible defaults so running from IDE (without loading .env) still works.
     url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:waste_collect_db}
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:dev-password}
@@ -20,7 +18,6 @@ spring:
       port: 6379
       timeout: 2000
   mail:
-    # Dev defaults. Configure real SMTP via env vars if you need email sending.
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:25}
     username: ${MAIL_USERNAME:}
@@ -52,7 +49,6 @@ aws:
 
 allowed:
   # Comma-separated list of allowed origins for CORS.
-  # Default supports local dev if you run from IDE without extra env vars.
   origin: ${ALLOWED_ORIGIN:http://localhost:5173,http://localhost:3000}
 
 management:

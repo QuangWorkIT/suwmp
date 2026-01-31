@@ -272,7 +272,8 @@ const CollectorManagementPage = () => {
             placeholder="Search collectors..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 shadow-sm"
+            className="pl-10 focus-visible:ring-amber-500 focus-visible:border-amber-500 bg-white
+                      focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:shadow-md"
           />
         </motion.div>
 

@@ -80,28 +80,28 @@ function CollectionRequest() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="p-6 min-h-screen bg-background"
+            className="min-h-screen bg-background"
         >
             <div>
-                <header className="top-0 z-40 glass-light border-b border-border/50">
-                    <div className="flex items-center justify-between px-6 py-4">
-                        <div>
-                            <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>Collection Requests</h1>
-                            <p className="text-sm text-muted-foreground">Manage and assign waste collection requests</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Button variant="outline" size="sm">
-                                <Download className="w-4 h-4 mr-2" />
-                                Export
-                            </Button>
-                            <button className="relative p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                                <Bell className="w-5 h-5" />
-                            </button>
-                        </div>
+                <header className="fixed top-0 left-[250px] w-[calc(100%-250px)]
+                bg-white/50 px-6 py-5 border-b border-foreground/20 flex 
+                justify-between items-center backdrop-blur-xl backdrop-saturate-200">
+                    <div>
+                        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>Collection Requests</h1>
+                        <p className="text-sm text-muted-foreground">Manage and assign waste collection requests</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Button variant="outline" size="sm">
+                            <Download className="w-4 h-4 mr-2" />
+                            Export
+                        </Button>
+                        <button className="relative p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                            <Bell className="w-5 h-5" />
+                        </button>
                     </div>
                 </header>
 
-                <main className="space-y-6">
+                <main className="space-y-6 pt-[120px] px-6">
                     <Card className="p-4 shadow-md">
                         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
                             <div className="flex flex-1 gap-3 flex-wrap">
@@ -109,7 +109,8 @@ function CollectionRequest() {
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                     <Input
                                         placeholder="Search by ID or address..."
-                                        className="pl-10"
+                                        className="pl-10 focus-visible:ring-amber-500 focus-visible:border-amber-500 
+                                        focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:shadow-md"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         data-testid="input-search"
@@ -175,7 +176,7 @@ function CollectionRequest() {
                                         <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Collector</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Priority</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
+                                        <th className="text-right py-3 pr-6 text-sm font-medium text-muted-foreground">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -254,7 +255,7 @@ function CollectionRequest() {
                                                         {status.label}
                                                     </Badge>
                                                 </td>
-                                                <td className="py-3 px-4">
+                                                <td className="py-3 pr-6">
                                                     <div className="flex items-center justify-end gap-1">
                                                         <Button variant="ghost" size="icon" className="h-8 w-8">
                                                             <Eye className="w-4 h-4" />
