@@ -83,9 +83,9 @@ function CollectionRequest() {
             className="min-h-screen bg-background"
         >
             <div>
-                <header className="fixed top-0 left-[250px] w-[calc(100%-250px)]
-                bg-white/50 px-6 py-5 border-b border-foreground/20 flex 
-                justify-between items-center backdrop-blur-xl backdrop-saturate-200">
+                <header className="fixed top-0 left-0 w-full lg:left-[250px] lg:w-[calc(100%-250px)]
+                 bg-white/50 px-6 py-5 border-b border-foreground/20 flex 
+                 justify-between items-center backdrop-blur-xl backdrop-saturate-200">
                     <div>
                         <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>Collection Requests</h1>
                         <p className="text-sm text-muted-foreground">Manage and assign waste collection requests</p>

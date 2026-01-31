@@ -5,11 +5,15 @@ const s3Service = {
         try {
             const formData = new FormData();
             formData.append("image", image);
-            const response = await authClient.post("/s3/upload", formData);
+            const response = await authClient.post("/s3/upload", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
             return response.data;
         } catch (error) {
             console.log("Error uploading image:", error);
-            throw new Error("Failed to upload image");  
+            throw new Error("Failed to upload image");
         }
     }
 }

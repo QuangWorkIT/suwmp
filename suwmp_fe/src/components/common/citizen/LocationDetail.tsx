@@ -176,7 +176,7 @@ export default function LocationDetail({
                         </div>
                     </div>
 
-                    <Button variant="outline" onClick={useCurrentLocation} className='w-full'>
+                    <Button variant="outline" onClick={useCurrentLocation} className='w-full' disabled={isLoading}>
                         <AnimatePresence mode="wait">
                             {isLoading ? (
                                 <motion.span key="loading" className="flex gap-2 items-center">

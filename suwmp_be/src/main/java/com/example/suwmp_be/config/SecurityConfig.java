@@ -1,6 +1,7 @@
 package com.example.suwmp_be.config;
 
 import com.example.suwmp_be.dto.BaseResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +15,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.example.suwmp_be.security.JwtAuthenticationFilter;
-import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 public class SecurityConfig {
@@ -54,7 +54,7 @@ public class SecurityConfig {
                             res.setContentType("application/json");
                             MAPPER.writeValue(
                                     res.getOutputStream(),
-                                    new BaseResponse<>(false, "Unauthorized request")
+                                    new BaseResponse<>(false, "Unauthorized")
                             );
                         })
                         // 403 – authenticated but no permission

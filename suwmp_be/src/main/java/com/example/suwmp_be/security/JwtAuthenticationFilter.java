@@ -1,5 +1,8 @@
 package com.example.suwmp_be.security;
 
+import com.example.suwmp_be.constants.ErrorCode;
+import com.example.suwmp_be.dto.BaseResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,8 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Token present but invalid → 401
         if (token.isEmpty() || !jwtUtil.validateJwtToken(token)) {
-            SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT");
+            writeAuthError(response, ErrorCode.ACCESS_TOKEN_INVALID);
             return;
         }
 
@@ -54,8 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             principalId = UUID.fromString(userId);
         } catch (IllegalArgumentException ex) {
-            SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid user ID in token");
+            writeAuthError(response, ErrorCode.USER_ID_INVALID);
             return;
         }
 
@@ -68,5 +69,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }
+
+    private void writeAuthError(HttpServletResponse response, ErrorCode errorCode)
+            throws IOException {
+
+        SecurityContextHolder.clearContext();
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+
+        new ObjectMapper().writeValue(
+                response.getOutputStream(),
+                new BaseResponse<>(false, errorCode.getMessage())
+        );
+    }
+
 }
 

@@ -2,7 +2,7 @@ import { Card } from "../../ui/card"
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Camera, Check, ImageIcon, Upload } from "lucide-react";
 import { Button } from "../../ui/button";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 interface WastePhotoUploadProps {
   imageUploaded: File | null,
@@ -18,6 +18,23 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 function WastePhotoUpload({ imageUploaded, setImageUploaded, handleNextStep }: WastePhotoUploadProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [error, setError] = useState<string | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  // Create and cache object URL, revoke on cleanup
+  useEffect(() => {
+    if (!imageUploaded) {
+      setImagePreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(imageUploaded);
+    setImagePreviewUrl(objectUrl);
+
+    // Cleanup: revoke the object URL to prevent memory leaks
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [imageUploaded]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -87,7 +104,7 @@ function WastePhotoUpload({ imageUploaded, setImageUploaded, handleNextStep }: W
                 </div>
                 <div className="w-150 h-76 mx-auto rounded-xl overflow-hidden border bg-muted shadow-sm">
                   <img
-                    src={URL.createObjectURL(imageUploaded)}
+                    src={imagePreviewUrl || ''}
                     alt="Uploaded waste"
                     className="w-full h-full object-cover"
                   />
