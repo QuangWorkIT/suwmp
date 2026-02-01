@@ -3,21 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-import { api } from "@/config/api";
-
-export type WasteType = {
-  id: number;
-  name: string;
-  description?: string;
-  createdAt: string;
-  updatedAt?: string;
-  deletedAt?: string;
-};
+import { toast } from "sonner";
+import WasteCategoryService from "@/services/WasteCategoryService";
+import type { WasteCategory } from "@/types/WasteCategory";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  onCreated: (wasteType: WasteType) => void;
+  onCreated: (wasteCategory: WasteCategory) => void;
 };
 
 export default function AddWasteCategoryModal({
@@ -42,22 +35,14 @@ export default function AddWasteCategoryModal({
       setLoading(true);
       setError(null);
 
-      const res = await api.post(
-        "/admin/waste-types",
-        { name, description },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      console.log("Creating waste type:", {
+      const created = await WasteCategoryService.create({
         name,
         description,
       });
 
-      const data: WasteType = await res.data;
-      onCreated(data);
+      onCreated(created);
       onClose();
+
       setName("");
       setDescription("");
     } catch (err) {
@@ -65,6 +50,8 @@ export default function AddWasteCategoryModal({
     } finally {
       setLoading(false);
     }
+
+    toast.success("Waste category created successfully");
   };
 
   return (
@@ -83,7 +70,7 @@ export default function AddWasteCategoryModal({
             <Label className="mb-1 block text-sm font-medium">Name</Label>
             <Input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value.toUpperCase())}
               className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="e.g. Construction Waste"
             />
