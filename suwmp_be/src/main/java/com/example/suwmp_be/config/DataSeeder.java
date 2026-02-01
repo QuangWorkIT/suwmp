@@ -1,8 +1,10 @@
 package com.example.suwmp_be.config;
 
 import com.example.suwmp_be.constants.RoleEnum;
+import com.example.suwmp_be.entity.EnterpriseUser;
 import com.example.suwmp_be.entity.User;
 import com.example.suwmp_be.serviceImpl.RoleCacheService;
+import com.example.suwmp_be.repository.EnterpriseUserRepository;
 import com.example.suwmp_be.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -15,119 +17,155 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@Profile({"dev", "test"})
+@Profile({ "dev", "test" })
 @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
 
-    private final UserRepository userRepository;
-    private final RoleCacheService roleCacheService;
-    private final PasswordEncoder passwordEncoder;
+        private final UserRepository userRepository;
+        private final EnterpriseUserRepository enterpriseUserRepository;
+        private final RoleCacheService roleCacheService;
+        private final PasswordEncoder passwordEncoder;
 
-    @Override
-    @Transactional
-    public void run(String... args) {
+        @Override
+        @Transactional
+        public void run(String... args) {
 
-        if (userRepository.count() > 0) {
-            System.out.println("⚙️ Users already exist. Seeder skipped.");
-            return;
+                if (userRepository.count() > 0) {
+                        System.out.println("⚙️ Users already exist. Seeder skipped.");
+                        return;
+                }
+
+                System.out.println("🌱 Seeding users using RoleCacheService...");
+
+                List<User> users = new ArrayList<>();
+
+                /*
+                 * ============================
+                 * CITIZENS (10)
+                 * ============================
+                 */
+                for (int i = 1; i <= 10; i++) {
+                        users.add(User.builder()
+                                        .fullName("Demo Citizen " + i)
+                                        .email(String.format("citizen%02d@example.com", i))
+                                        .phone("0900000" + String.format("%03d", i))
+                                        .passwordHash(passwordEncoder.encode("Password!" + i))
+                                        .role(roleCacheService.get(RoleEnum.CITIZEN))
+                                        .status("ACTIVE")
+                                        .build());
+                }
+
+                /*
+                 * ============================
+                 * ENTERPRISE ACCOUNTS (2)
+                 * ============================
+                 */
+                users.add(User.builder()
+                                .fullName("Green Earth Enterprise")
+                                .email("enterprise1@suwmp.com")
+                                .phone("0911111111")
+                                .passwordHash(passwordEncoder.encode("Enterprise@123"))
+                                .role(roleCacheService.get(RoleEnum.ENTERPRISE))
+                                .status("ACTIVE")
+                                .build());
+
+                users.add(User.builder()
+                                .fullName("Urban Cleaners Enterprise")
+                                .email("enterprise2@suwmp.com")
+                                .phone("0922222222")
+                                .passwordHash(passwordEncoder.encode("Enterprise@123"))
+                                .role(roleCacheService.get(RoleEnum.ENTERPRISE))
+                                .status("ACTIVE")
+                                .build());
+
+                users.add(User.builder()
+                                .fullName("Nguyen Huy")
+                                .email("nguyenhuyak781@gmail.com")
+                                .phone("0934686868")
+                                .passwordHash(passwordEncoder.encode("Huy12345@"))
+                                .role(roleCacheService.get(RoleEnum.ENTERPRISE))
+                                .status("ACTIVE")
+                                .build());
+
+                /*
+                 * ============================
+                 * COLLECTORS (2)
+                 * ============================
+                 */
+                users.add(User.builder()
+                                .fullName("Collector Nguyen Van A")
+                                .email("collector1@suwmp.com")
+                                .phone("0933333333")
+                                .passwordHash(passwordEncoder.encode("Collector@123"))
+                                .role(roleCacheService.get(RoleEnum.COLLECTOR))
+                                .status("ACTIVE")
+                                .build());
+
+                users.add(User.builder()
+                                .fullName("Collector Tran Van B")
+                                .email("collector2@suwmp.com")
+                                .phone("0944444444")
+                                .passwordHash(passwordEncoder.encode("Collector@123"))
+                                .role(roleCacheService.get(RoleEnum.COLLECTOR))
+                                .status("ACTIVE")
+                                .build());
+
+                /*
+                 * ============================
+                 * ADMINS (2)
+                 * ============================
+                 */
+                users.add(User.builder()
+                                .fullName("System Admin One")
+                                .email("admin1@suwmp.com")
+                                .phone("0988888881")
+                                .passwordHash(passwordEncoder.encode("Admin@123"))
+                                .role(roleCacheService.get(RoleEnum.ADMIN))
+                                .status("ACTIVE")
+                                .build());
+
+                users.add(User.builder()
+                                .fullName("System Admin Two")
+                                .email("admin2@suwmp.com")
+                                .phone("0988888882")
+                                .passwordHash(passwordEncoder.encode("Admin@123"))
+                                .role(roleCacheService.get(RoleEnum.ADMIN))
+                                .status("ACTIVE")
+                                .build());
+
+                userRepository.saveAll(users);
+
+                /*
+                 * ============================
+                 * LINK ENTERPRISE USERS TO ENTERPRISES
+                 * Note: Enterprise IDs 1, 2, 3 are seeded in V1_create_table.sql
+                 * ============================
+                 */
+                List<EnterpriseUser> enterpriseUsers = new ArrayList<>();
+
+                // Get the enterprise users we just created
+                List<User> savedEnterpriseUsers = users.stream()
+                                .filter(u -> u.getRole().getName().equals("ENTERPRISE"))
+                                .toList();
+
+                // Map enterprise users to enterprises:
+                // enterprise1@suwmp.com -> Enterprise ID 1 (Green Earth Waste Solution)
+                // enterprise2@suwmp.com -> Enterprise ID 2 (Urban Cleaners)
+                // nguyenhuyak781@gmail.com -> Enterprise ID 3 (EcoCollect)
+                for (int i = 0; i < savedEnterpriseUsers.size(); i++) {
+                        EnterpriseUser enterpriseUser = new EnterpriseUser();
+                        enterpriseUser.setEnterpriseId((long) (i + 1)); // Enterprise IDs: 1, 2, 3
+                        enterpriseUser.setUserId(savedEnterpriseUsers.get(i).getId());
+                        enterpriseUsers.add(enterpriseUser);
+                }
+
+                enterpriseUserRepository.saveAll(enterpriseUsers);
+
+                System.out.println("✅ Seed completed:");
+                System.out.println("   - 10 CITIZENS");
+                System.out.println("   - 3 ENTERPRISES");
+                System.out.println("   - 3 ENTERPRISE_USERS");
+                System.out.println("   - 2 COLLECTORS");
+                System.out.println("   - 2 ADMINS");
         }
-
-        System.out.println("🌱 Seeding users using RoleCacheService...");
-
-        List<User> users = new ArrayList<>();
-
-        /* ============================
-           CITIZENS (10)
-        ============================ */
-        for (int i = 1; i <= 10; i++) {
-            users.add(User.builder()
-                    .fullName("Demo Citizen " + i)
-                    .email(String.format("citizen%02d@example.com", i))
-                    .phone("0900000" + String.format("%03d", i))
-                    .passwordHash(passwordEncoder.encode("Password!" + i))
-                    .role(roleCacheService.get(RoleEnum.CITIZEN))
-                    .status("ACTIVE")
-                    .build());
-        }
-
-        /* ============================
-           ENTERPRISE ACCOUNTS (2)
-        ============================ */
-        users.add(User.builder()
-                .fullName("Green Earth Enterprise")
-                .email("enterprise1@suwmp.com")
-                .phone("0911111111")
-                .passwordHash(passwordEncoder.encode("Enterprise@123"))
-                .role(roleCacheService.get(RoleEnum.ENTERPRISE))
-                .status("ACTIVE")
-                .build());
-
-        users.add(User.builder()
-                .fullName("Urban Cleaners Enterprise")
-                .email("enterprise2@suwmp.com")
-                .phone("0922222222")
-                .passwordHash(passwordEncoder.encode("Enterprise@123"))
-                .role(roleCacheService.get(RoleEnum.ENTERPRISE))
-                .status("ACTIVE")
-                .build());
-
-        users.add(User.builder()
-                .fullName("Nguyen Huy")
-                .email("nguyenhuyak781@gmail.com")
-                .phone("0934686868")
-                .passwordHash(passwordEncoder.encode("Huy12345@"))
-                .role(roleCacheService.get(RoleEnum.ENTERPRISE))
-                .status("ACTIVE")
-                .build());
-
-        /* ============================
-           COLLECTORS (2)
-        ============================ */
-        users.add(User.builder()
-                .fullName("Collector Nguyen Van A")
-                .email("collector1@suwmp.com")
-                .phone("0933333333")
-                .passwordHash(passwordEncoder.encode("Collector@123"))
-                .role(roleCacheService.get(RoleEnum.COLLECTOR))
-                .status("ACTIVE")
-                .build());
-
-        users.add(User.builder()
-                .fullName("Collector Tran Van B")
-                .email("collector2@suwmp.com")
-                .phone("0944444444")
-                .passwordHash(passwordEncoder.encode("Collector@123"))
-                .role(roleCacheService.get(RoleEnum.COLLECTOR))
-                .status("ACTIVE")
-                .build());
-
-        /* ============================
-           ADMINS (2)
-        ============================ */
-        users.add(User.builder()
-                .fullName("System Admin One")
-                .email("admin1@suwmp.com")
-                .phone("0988888881")
-                .passwordHash(passwordEncoder.encode("Admin@123"))
-                .role(roleCacheService.get(RoleEnum.ADMIN))
-                .status("ACTIVE")
-                .build());
-
-        users.add(User.builder()
-                .fullName("System Admin Two")
-                .email("admin2@suwmp.com")
-                .phone("0988888882")
-                .passwordHash(passwordEncoder.encode("Admin@123"))
-                .role(roleCacheService.get(RoleEnum.ADMIN))
-                .status("ACTIVE")
-                .build());
-
-        userRepository.saveAll(users);
-
-        System.out.println("✅ Seed completed:");
-        System.out.println("   - 10 CITIZENS");
-        System.out.println("   - 2 ENTERPRISES");
-        System.out.println("   - 2 COLLECTORS");
-        System.out.println("   - 2 ADMINS");
-    }
 }

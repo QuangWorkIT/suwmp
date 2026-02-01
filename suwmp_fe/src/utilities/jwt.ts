@@ -7,6 +7,7 @@ interface AuthJwtPayload extends JwtPayload {
     role: UserRole;
     email: string;
     fullName: string;
+    exp: number
 }
 
 export const decodePayLoad = (token: string): UserInterface => {
@@ -18,4 +19,9 @@ export const decodePayLoad = (token: string): UserInterface => {
         role: payload.role,
         status: payload.status
     }
+}
+
+export const isTokenExpired = (token: string): boolean => {
+    const payload = jwtDecode<AuthJwtPayload>(token)
+    return payload.exp < (Date.now() / 1000)
 }
