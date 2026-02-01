@@ -4,8 +4,12 @@ import { Label } from "@/components/ui/label";
 import { AuthService } from "@/services/AuthService";
 import { Lock, Mail, Phone, Recycle, User } from "lucide-react";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { toast } from "sonner";
 
 export default function Register() {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -66,7 +70,11 @@ export default function Register() {
       const response = await AuthService.register(form);
       console.log("Register success:", response);
 
-      // Optional: redirect / toast
+      toast.success("Account created successfully!");
+
+      setTimeout(() => {
+        navigate("/signin");
+      }, 1500);
     } catch (err: any) {
       setServerError(err?.response?.data?.message || "Registration failed");
     } finally {
@@ -95,12 +103,15 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-white">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl m-8 p-8">
+        {/* Logo */}
         <div className="flex justify-center">
-          <div className="mb-2 p-2 bg-linear-to-br from-emerald-400 to-emerald-600 rounded-xl inline-flex">
+          <div className="mb-3 p-3.5 bg-linear-to-br from-emerald-400 to-emerald-600 rounded-xl inline-flex">
             <Recycle className="text-white" size={36} />
           </div>
         </div>
+
+        {/* Title */}
         <h2 className="text-2xl font-bold text-center mb-2">
           Create Your Account
         </h2>
@@ -108,6 +119,7 @@ export default function Register() {
           Join EcoCollect and start making a difference
         </p>
 
+        {/* Full Name Input */}
         <div className="space-y-1">
           <Label htmlFor="fullName" className="text-base">
             <User className="size-5" />
@@ -122,6 +134,7 @@ export default function Register() {
           />
         </div>
 
+        {/* Email Input */}
         <div className="space-y-1 mt-6">
           <Label htmlFor="email" className="text-base">
             <Mail className="size-5" />
@@ -141,6 +154,7 @@ export default function Register() {
           )}
         </div>
 
+        {/* Phone Number Input */}
         <div className="space-y-1 mt-6">
           <Label htmlFor="phone" className="text-base">
             <Phone className="size-5" />
@@ -155,6 +169,7 @@ export default function Register() {
           />
         </div>
 
+        {/* Password Input */}
         <div className="space-y-1 mt-6">
           <Label htmlFor="password" className="text-base">
             <Lock className="size-5" />
@@ -183,11 +198,48 @@ export default function Register() {
             type="submit"
             disabled={loading}
             onClick={handleSubmit}
-            className="w-full mt-6 bg-linear-to-br from-emerald-400 to-emerald-600 text-white py-4 rounded-lg text-md font-semibold disabled:opacity-50 hover:bg-emerald-700 cursor-pointer transition"
+            className="w-full bg-linear-to-r from-teal-500 to-green-500 text-white font-semibold mt-6 py-5 px-3 rounded-xl 
+            hover:from-teal-600 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 
+            transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-teal-200 cursor-pointer"
           >
             {loading ? "Creating..." : "Create Account →"}
           </Button>
+
+          {/* Divider */}
+          <div className="relative mt-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-500">
+                OR CONTINUE WITH
+              </span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            className="w-full flex items-center justify-center mt-6 px-5 py-3 border border-gray-200 rounded-xl 
+            hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200"
+          >
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+              className="w-5 h-5"
+            />
+            <span className="text-sm font-medium text-gray-500"> Google</span>
+          </Button>
         </div>
+
+        <p className="text-sm text-center mt-6">
+          Already have an account?{" "}
+          <Link
+            to="/signin"
+            className="font-semibold text-teal-500 hover:text-teal-600 transition-colors"
+          >
+            Back to Sign in page
+          </Link>
+        </p>
 
         <p className="text-xs text-center text-gray-400 mt-4">
           By creating an account, you agree to our{" "}
