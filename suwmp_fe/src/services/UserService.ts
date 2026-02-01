@@ -85,7 +85,7 @@ export const UserService = {
     // Fetch all users without pagination (for client-side filtering)
     getAllUsers: async (): Promise<PaginatedResponse<UserResponse>> => {
         try {
-            const response = await authClient.get(`/users`);
+            const response = await authClient.get(`/users?size=10000`);
             return response.data;
         } catch (error) {
             console.error("Error fetching all users:", error);
