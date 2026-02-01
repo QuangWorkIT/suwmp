@@ -11,6 +11,7 @@ export interface UserResponse {
     id: string;
     fullName: string;
     email: string;
+    phone?: string;
     role: string;
     status: string;
     activityStatus: string | null;

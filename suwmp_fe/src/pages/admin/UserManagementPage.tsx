@@ -30,7 +30,7 @@ import { UserDialog } from "@/components/users/UserDialog";
 import { type UserFormValues } from "@/components/users/UserForm";
 import { toast } from "sonner"; // Assuming sonner is used for toasts based on package.json
 import { useOutletContext } from 'react-router';
-import { UserService } from "@/services/UserService";
+import { UserService, type UserResponse } from "@/services/UserService";
 
 interface User {
     id: string;
@@ -44,6 +44,8 @@ interface User {
     joined: string;
     avatar: string;
 }
+
+
 
 interface UserManagementContext {
     setOnAddClick: (handler: () => void) => void;
@@ -71,12 +73,12 @@ export default function UserManagementPage() {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
     // Map API response to User type
-    const mapUsers = (content: any[]): User[] => {
-        return content.map((u: any) => ({
+    const mapUsers = (content: UserResponse[]): User[] => {
+        return content.map((u: UserResponse) => ({
             id: u.id,
             fullName: u.fullName,
             email: u.email,
-            phone: u.phone,
+            phone: u.phone ?? '',
             roleId: '',
             role: u.role && typeof u.role === 'string' 
                 ? u.role.charAt(0).toUpperCase() + u.role.slice(1).toLowerCase() as any 
