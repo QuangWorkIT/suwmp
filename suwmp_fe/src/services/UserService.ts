@@ -74,7 +74,7 @@ export const UserService = {
 
     searchUsers: async (keyword: string, pageNumber: number = 0, pageSize: number = 6): Promise<PaginatedResponse<UserResponse>> => {
         try {
-            const response = await authClient.get(`/users/search?pageNumber=${pageNumber}&pageSize=${pageSize}&keyword=${keyword}`);
+            const response = await authClient.get(`/users/search?page=${pageNumber}&size=${pageSize}&keyword=${keyword}`);
             return response.data;
         } catch (error) {
             console.error("Error searching users:", error);
