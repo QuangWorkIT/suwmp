@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import AdminHeader from './AdminHeader'
 import { Outlet, useLocation } from 'react-router'
 import AdminSideBar from './AdminSideBar'
 
 function AdminMain() {
     const location = useLocation();
+    const [onAddClick, setOnAddClick] = useState<(() => void) | null>(null);
 
     // Map routes to header content
     const getHeaderContent = () => {
@@ -79,9 +81,12 @@ function AdminMain() {
             <AdminSideBar />
 
             <div className="ml-[250px] h-full flex flex-col">
-                <AdminHeader {...headerContent} />
+                <AdminHeader 
+                    {...headerContent} 
+                    onAddClick={onAddClick || undefined}
+                />
                 <main className="flex-1 mt-[90px] overflow-y-auto p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                    <Outlet />
+                    <Outlet context={{ setOnAddClick }} />
                 </main>
             </div>
         </div>

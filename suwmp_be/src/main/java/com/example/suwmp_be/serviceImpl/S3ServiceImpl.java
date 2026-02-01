@@ -1,6 +1,6 @@
 package com.example.suwmp_be.serviceImpl;
 
-import com.example.suwmp_be.service.S3Service;
+import com.example.suwmp_be.service.IS3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class S3ServiceImpl implements S3Service {
+public class S3ServiceImpl implements IS3Service {
     private final S3Client s3Client;
     private final S3Presigner presigner;
 

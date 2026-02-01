@@ -11,8 +11,11 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { useAppSelector } from "@/redux/hooks"
+import { roleNavigation } from "@/pages/authentication/LoginPage"
 
 function Header() {
+    const { user } = useAppSelector(state => state.user)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const location = { pathname: "/" } // Mock for demo
 
@@ -59,17 +62,17 @@ function Header() {
                 <div className="hidden md:flex flex-1 items-center justify-end">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-10 w-10 rounded-full border border-primary/20 bg-primary/5 hover:bg-primary/10 hover:border-primary/30 transition-all shadow-sm"
                             >
                                 <User className="h-6 w-6 text-primary" />
                                 <span className="sr-only">Toggle user menu</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent 
-                            align="end" 
+                        <DropdownMenuContent
+                            align="end"
                             className="w-64 p-3"
                             sideOffset={8}
                         >
@@ -82,27 +85,45 @@ function Header() {
                                 </div>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator className="my-2" />
-                            
+
                             {/* Sign In */}
-                            <DropdownMenuItem className="p-0 focus:bg-transparent hover:bg-transparent">
-                                <Link 
-                                    to="/signin" 
-                                    className="flex items-center gap-3 w-full p-3 hover:bg-primary focus:bg-primary transition-colors duration-200 group rounded-md"
-                                >
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 group-hover:bg-white/20 transition-colors duration-200">
-                                        <LogIn className="h-4.5 w-4.5 text-primary group-hover:text-white" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-semibold text-foreground group-hover:text-white transition-colors duration-200">Sign In</span>
-                                        <span className="text-xs text-muted-foreground group-hover:text-white/80">Access your account</span>
-                                    </div>
-                                </Link>
-                            </DropdownMenuItem>
-                            
+                            {!user && (
+                                <DropdownMenuItem className="p-0 focus:bg-transparent hover:bg-transparent">
+                                    <Link
+                                        to="/signin"
+                                        className="flex items-center gap-3 w-full p-3 hover:bg-primary focus:bg-primary transition-colors duration-200 group rounded-md"
+                                    >
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 group-hover:bg-white/20 transition-colors duration-200">
+                                            <LogIn className="h-4.5 w-4.5 text-primary group-hover:text-white" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold text-foreground group-hover:text-white transition-colors duration-200">Sign In</span>
+                                            <span className="text-xs text-muted-foreground group-hover:text-white/80">Access your account</span>
+                                        </div>
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
+
+                            {user && (
+                                <DropdownMenuItem className="p-0 focus:bg-transparent hover:bg-transparent">
+                                    <Link
+                                        to={roleNavigation[user.role]}
+                                        className="flex items-center gap-3 w-full p-3 hover:bg-primary focus:bg-primary transition-colors duration-200 group rounded-md"
+                                    >
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 group-hover:bg-white/20 transition-colors duration-200">
+                                            <LogIn className="h-4.5 w-4.5 text-primary group-hover:text-white" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold text-foreground group-hover:text-white transition-colors duration-200">Go to dashboard</span>
+                                            <span className="text-xs text-muted-foreground group-hover:text-white/80">Manage your account</span>
+                                        </div>
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
                             {/* Get Started */}
                             <DropdownMenuItem className="p-0 focus:bg-transparent hover:bg-transparent mt-1">
-                                <Link 
-                                    to="/signup" 
+                                <Link
+                                    to="/signup"
                                     className="flex items-center gap-3 w-full p-3 hover:bg-primary focus:bg-primary transition-colors duration-200 group rounded-md"
                                 >
                                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 group-hover:bg-white/20 transition-colors duration-200">
@@ -145,8 +166,8 @@ function Header() {
                                     to={item.path}
                                     className={cn(
                                         "block rounded-md px-3 py-2 text-base font-medium transition-colors",
-                                        isActive 
-                                            ? "bg-primary/10 text-primary" 
+                                        isActive
+                                            ? "bg-primary/10 text-primary"
                                             : "text-foreground hover:bg-muted"
                                     )}
                                     onClick={() => setMobileMenuOpen(false)}

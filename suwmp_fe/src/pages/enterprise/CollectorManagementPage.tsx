@@ -15,7 +15,6 @@ import type {
   CreateCollectorRequest,
   UpdateCollectorRequest,
   CollectorStats,
-  PaginatedResponse,
 } from "@/types/collector";
 
 const CollectorManagementPage = () => {
@@ -121,7 +120,7 @@ const CollectorManagementPage = () => {
   }, [collectors, searchQuery]);
 
   // Debounced search (simple implementation)
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [, setDebouncedSearch] = useState("");
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -237,12 +236,6 @@ const CollectorManagementPage = () => {
     setDialogOpen(true);
   };
 
-  // Handle delete click
-  const handleDeleteClick = (collector: Collector) => {
-    setSelectedCollector(collector);
-    setDeleteDialogOpen(true);
-  };
-
   return (
     <div className="h-full bg-background overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 h-full overflow-y-auto">
@@ -279,7 +272,8 @@ const CollectorManagementPage = () => {
             placeholder="Search collectors..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 shadow-sm"
+            className="pl-10 focus-visible:ring-amber-500 focus-visible:border-amber-500 bg-white
+                      focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:shadow-md"
           />
         </motion.div>
 
@@ -374,7 +368,13 @@ const CollectorManagementPage = () => {
           onOpenChange={setDialogOpen}
           mode={dialogMode}
           collector={selectedCollector || undefined}
-          onSubmit={dialogMode === "create" ? handleCreate : handleUpdate}
+          onSubmit={async (data) => {
+            if (dialogMode === "create") {
+              await handleCreate(data as CreateCollectorRequest);
+            } else {
+              await handleUpdate(data as UpdateCollectorRequest);
+            }
+          }}
         />
 
         <DeleteCollectorDialog

@@ -16,13 +16,14 @@ import java.util.UUID;
 public class OtpService implements IOtpService {
     private final RedisTemplate<String, Object> redis;
 
-    @Value("${OTP_TTL_MILIS}")
-    private String otpTtlMs;
+    // Default 15 minutes for dev if not provided via env.
+    @Value("${OTP_TTL_MILIS:900000}")
+    private long otpTtlMs;
 
     @Override
     public String generateResetToken(String email) {
         String resetToken = UUID.randomUUID().toString();
-        redis.opsForValue().set(buildKeyReset(resetToken), email, Duration.ofMillis(Long.parseLong(otpTtlMs)));
+        redis.opsForValue().set(buildKeyReset(resetToken), email, Duration.ofMillis(otpTtlMs));
         return resetToken;
     }
 

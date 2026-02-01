@@ -2,17 +2,19 @@ import { Button } from "@/components/ui/button";
 import { Bell, Plus } from "lucide-react";
 
 interface AdminHeaderProps {
-  title: string;
-  description: string;
-  showAddButton?: boolean;
-  buttonText?: string;
+    title: string;
+    description: string;
+    showAddButton?: boolean;
+    buttonText?: string;
+    onAddClick?: () => void;
 }
 
-function AdminHeader({
-  title = "Admin Dashboard",
-  description = "Manage your platform",
-  showAddButton = false,
-  buttonText = "Add User",
+function AdminHeader({ 
+    title = 'Admin Dashboard', 
+    description = 'Manage your platform',
+    showAddButton = false,
+    buttonText = 'Add User',
+    onAddClick
 }: AdminHeaderProps) {
   return (
     <header
@@ -36,19 +38,19 @@ function AdminHeader({
           <Bell size={20} className="text-gray-600" />
         </div>
 
-        {/* Dynamic Action Button */}
-        {showAddButton && (
-          <Button
-            className="rounded-lg px-5 py-5 bg-purple-600 hover:bg-purple-700 text-white cursor-pointer
-                    shadow-sm transition-all duration-200"
-          >
-            <Plus size={18} className="mr-2" />
-            {buttonText}
-          </Button>
-        )}
-      </div>
-    </header>
-  );
+                {/* Dynamic Action Button */}
+                {showAddButton && (
+                    <Button 
+                        onClick={onAddClick}
+                        className='rounded-lg px-5 py-5 bg-green-600 hover:bg-green-700 text-white
+                    shadow-sm transition-all duration-200'>
+                        <Plus size={18} className="mr-2" />
+                        {buttonText}
+                    </Button>
+                )}
+            </div>
+        </header>
+    )
 }
 
 export default AdminHeader;

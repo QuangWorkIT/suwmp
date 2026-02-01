@@ -50,6 +50,8 @@ export const CollectorCard = ({
                 {collector.fullName}
               </h3>
             </div>
+            {/* Status Badge */}
+            <StatusBadge status={collector.status} />
           </div>
 
           {/* Contact Info */}
@@ -74,10 +76,7 @@ export const CollectorCard = ({
             </div>
           </div>
 
-          {/* Status Badge */}
-          <div className="mb-4">
-            <StatusBadge status={collector.status} />
-          </div>
+
 
           {/* Today's Tasks */}
           <div className="space-y-3 mb-4 pt-4 border-t border-border">

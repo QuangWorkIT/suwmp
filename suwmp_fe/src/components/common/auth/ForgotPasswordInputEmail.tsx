@@ -14,6 +14,7 @@ import {
 } from "../../ui/card";
 import { FormInput } from "./FormInput";
 import { AuthService } from "@/services/AuthService";
+import { Link } from "react-router";
 
 const forgotPasswordSchema = z.object({
   email: z.email("Invalid email address"),
@@ -91,12 +92,12 @@ const ForgotPasswordInputEmail = () => {
 
           <p className="text-center text-sm text-muted-foreground">
             Remember your password?{" "}
-            <a
-              href="/signin"
+            <Link
+              to="/signin"
               className="text-primary hover:underline font-medium transition-colors"
             >
               Sign in
-            </a>
+            </Link>
           </p>
         </form>
       </CardContent>
