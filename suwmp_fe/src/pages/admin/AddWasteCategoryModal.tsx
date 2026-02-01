@@ -45,13 +45,13 @@ export default function AddWasteCategoryModal({
 
       setName("");
       setDescription("");
+
+      toast.success("Waste category created successfully");
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-
-    toast.success("Waste category created successfully");
   };
 
   return (

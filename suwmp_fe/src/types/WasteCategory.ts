@@ -7,7 +7,7 @@ export type WasteCategory = {
   deletedAt?: string;
 };
 
-export type CreateWasteTypeRequest = {
+export type CreateWasteCategoryRequest = {
   name: string;
   description?: string;
 };
