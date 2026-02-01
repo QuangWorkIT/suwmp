@@ -4,11 +4,11 @@ import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.request.CreateUserRequest;
 import com.example.suwmp_be.dto.request.UpdateUserRequest;
 import com.example.suwmp_be.dto.response.UserResponse;
-import com.example.suwmp_be.entity.User;
 import com.example.suwmp_be.service.IUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,6 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<BaseResponse<Page<UserResponse>>> getAllUsers(
-            @PageableDefault(size = 6)
             Pageable pageable)
     {
         Page<UserResponse> allUsers = userService.getAllUsers(pageable);
@@ -36,7 +35,6 @@ public class UserController {
 
     @GetMapping("/search")
     public ResponseEntity<BaseResponse<Page<UserResponse>>> searchUsers(
-            @PageableDefault(size = 6)
             Pageable pageable,
             @RequestParam(required = false) String keyword
     ) {
