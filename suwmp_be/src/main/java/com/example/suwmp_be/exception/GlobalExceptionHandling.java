@@ -77,6 +77,20 @@ public class GlobalExceptionHandling {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
+    @ExceptionHandler(value = BadRequestException.class)
+    ResponseEntity<ErrorResponse> handlingBadRequestException(BadRequestException exception) {
+        ErrorCode errorCode = exception.getErrorCode();
+
+        log.warn(errorCode.getTitle(), exception);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .title(errorCode.getTitle())
+                .message(errorCode.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
     @ExceptionHandler(value = HttpMessageNotReadableException.class)
     ResponseEntity<ErrorResponse> handlingHttpMessageNotReadableException(HttpMessageNotReadableException exception) {
         ErrorCode errorCode = ErrorCode.BAD_REQUEST_BODY_MISSING;
@@ -112,6 +126,20 @@ public class GlobalExceptionHandling {
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(value = RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handlingRuntimeException(RuntimeException exception) {
+        ErrorCode errorCode = ErrorCode.ERROR_SYSTEM;
+
+        log.warn(errorCode.getTitle(), exception);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .title(errorCode.getTitle())
+                .message(errorCode.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
     private Map<String, String[]> getValidationError(MethodArgumentNotValidException exception) {

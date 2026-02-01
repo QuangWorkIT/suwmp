@@ -101,7 +101,9 @@ CREATE TABLE enterprise_capacity (
     id BIGSERIAL PRIMARY KEY,
     enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
     waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
-    daily_capacity_kg INT NOT NULL
+    daily_capacity_kg INT NOT NULL,
+    warning_threshold INT NOT NULL,
+    active BOOLEAN NOT NULL
 );
 
 -- ===========================================
@@ -125,6 +127,7 @@ CREATE TABLE waste_reports
     ai_suggested_type_id BIGINT REFERENCES waste_types (id),
     created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 -- ===========================================
 -- COLLECTION ASSIGNMENT & STATUS TRACKING
 -- ===========================================
