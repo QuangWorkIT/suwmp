@@ -1,32 +1,64 @@
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/redux/hooks';
 import { Bell, Plus } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
+
+interface PageConfig {
+    title: string;
+    subtitle: string;
+    showNewReportButton: boolean;
+}
+
+const pageConfigs: Record<string, PageConfig> = {
+    '/citizen/leaderboard': {
+        title: 'Community Leaderboard',
+        subtitle: 'Compete with fellow eco-warriors',
+        showNewReportButton: false,
+    },
+    '/citizen/dashboard': {
+        title: 'Welcome back, {username}',
+        subtitle: "Here's your environmental impact overview",
+        showNewReportButton: true,
+    },
+};
+
+const defaultConfig: PageConfig = {
+    title: 'Welcome back, {username}',
+    subtitle: "Here's your environmental impact overview",
+    showNewReportButton: true,
+};
 
 function Header() {
-    const { user } = useAppSelector(state => state.user)
+    const { user } = useAppSelector(state => state.user);
+    const location = useLocation();
+
+    const config = pageConfigs[location.pathname] || defaultConfig;
+    const displayTitle = config.title.replace('{username}', user ? user.fullName : 'Guest');
 
     return (
         <header className="fixed top-0 left-[250px] w-[calc(100%-250px)]
         bg-white/50 px-6 py-5 border-b border-foreground/20 flex 
         justify-between items-center backdrop-blur-xl backdrop-saturate-200">
             <div className="cursor-default">
-                <h1 className='text-2xl font-bold'>Welcome back, {user ? user.fullName : "Guest"}</h1>
-                <p className="text-muted-foreground text-sm">Here's your environmental impact overview</p>
+                <h1 className='text-2xl font-bold'>{displayTitle}</h1>
+                <p className="text-muted-foreground text-sm">{config.subtitle}</p>
             </div>
             <div className="flex items-center gap-4">
                 <div className='hover:cursor-pointer p-3 rounded-[10px] hover:bg-foreground/5
                 transition-all duration-200 ease-in-out'>
                     <Bell size={22} />
                 </div>
-                <Link to="/citizen/new-report" >
-                    <Button className='rounded-[10px] px-6 py-5'>
-                        <Plus /> New Report
-                    </Button>
-                </Link>
+                {config.showNewReportButton && (
+                    <Link to="/citizen/new-report" >
+                        <Button className='rounded-[10px] px-6 py-5'>
+                            <Plus /> New Report
+                        </Button>
+                    </Link>
+                )}
             </div>
         </header>
     )
 }
 
 export default Header
+
