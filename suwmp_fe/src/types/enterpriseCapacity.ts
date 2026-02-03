@@ -15,7 +15,6 @@ export interface EnterpriseCapacity {
   wasteTypeId: number;
   wasteTypeName: string;
   enterpriseId: number;
-  enterpriseName: string;
   dailyCapacityKg: number;
   warningThreshold: number;
   active: boolean;

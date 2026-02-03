@@ -63,6 +63,7 @@ export default function CapacityManagementPage() {
     const capacityItems = await fetchCapacities();
     await fetchWasteTypes(capacityItems);
   };
+  
   // Fetch data
   useEffect(() => { 
     fetchAll();
