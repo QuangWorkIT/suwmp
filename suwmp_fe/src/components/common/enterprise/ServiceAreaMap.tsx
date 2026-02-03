@@ -89,7 +89,7 @@ export default function ServiceAreaMap({ areas, onMapClick, focusAreaId }: Props
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !focusAreaId) return;
+    if (!map || focusAreaId == null) return;
 
     const area = areas.find((a) => a.id === focusAreaId);
     if (!area) return;

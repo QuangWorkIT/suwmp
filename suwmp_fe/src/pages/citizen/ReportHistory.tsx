@@ -49,10 +49,13 @@ function formatVolume(volume: number | null) {
 function ReportHistory() {
   const user = useAppSelector((state) => state.user.user);
   const [reports, setReports] = useState<CitizenWasteReport[]>([]);
+  const [allReports, setAllReports] = useState<CitizenWasteReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [displayCount, setDisplayCount] = useState(10);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -61,7 +64,9 @@ function ReportHistory() {
         setLoading(true);
         setError(null);
         const data = await wasteReportService.getReportsByCitizen(user.id);
-        setReports(data);
+        setAllReports(data);
+        setDisplayCount(10);
+        setHasMore(data.length > 10);
       } catch (err) {
         console.error(err);
         setError("Unable to load your reports right now.");
@@ -72,8 +77,8 @@ function ReportHistory() {
     fetchReports();
   }, [user?.id]);
 
-  const filteredReports = useMemo(() => {
-    return reports.filter((r) => {
+  useEffect(() => {
+    const filtered = allReports.filter((r) => {
       const matchesStatus =
         statusFilter === "ALL" ? true : r.status === statusFilter;
       const term = search.trim().toLowerCase();
@@ -84,7 +89,14 @@ function ReportHistory() {
           formatDate(r.createdAt).toLowerCase().includes(term))
       );
     });
-  }, [reports, search, statusFilter]);
+    setReports(filtered.slice(0, displayCount));
+    setHasMore(filtered.length > displayCount);
+  }, [allReports, statusFilter, search, displayCount]);
+
+  const handleLoadMore = () => {
+    setDisplayCount((prev) => prev + 10);
+  };
+
 
   return (
     <div className="px-6 pb-10">
@@ -109,7 +121,7 @@ function ReportHistory() {
           </div>
 
           <div className="flex items-center gap-2">
-            {(["ALL", "PENDING", "ASSIGNED", "COLLECTED"] as StatusFilter[]).map(
+            {(["ALL", "PENDING", "ACCEPTED", "ASSIGNED", "COLLECTED"] as StatusFilter[]).map(
               (status) => (
                 <Button
                   key={status}
@@ -139,14 +151,16 @@ function ReportHistory() {
         </div>
       )}
 
-      {!loading && !error && filteredReports.length === 0 && (
+      {!loading && !error && reports.length === 0 && (
         <div className="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
-          You haven&apos;t submitted any reports yet.
+          {search || statusFilter !== "ALL"
+            ? "No reports match your filters."
+            : "You haven&apos;t submitted any reports yet."}
         </div>
       )}
 
       <div className="space-y-3">
-        {filteredReports.map((report) => {
+        {reports.map((report) => {
           const status = getStatusBadgeVariant(report.status);
           return (
             <Card
@@ -198,14 +212,26 @@ function ReportHistory() {
         })}
       </div>
 
-      {!loading && filteredReports.length > 0 && (
+      {!loading && reports.length > 0 && (
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            Showing {filteredReports.length} of {reports.length} reports
+            Showing {reports.length} of {allReports.filter((r) => {
+              const matchesStatus =
+                statusFilter === "ALL" ? true : r.status === statusFilter;
+              const term = search.trim().toLowerCase();
+              if (!term) return matchesStatus;
+              return (
+                matchesStatus &&
+                (r.wasteTypeName.toLowerCase().includes(term) ||
+                  formatDate(r.createdAt).toLowerCase().includes(term))
+              );
+            }).length} reports
           </span>
-          <Button variant="outline" size="sm">
-            Load More
-          </Button>
+          {hasMore && (
+            <Button variant="outline" size="sm" onClick={handleLoadMore}>
+              Load More
+            </Button>
+          )}
         </div>
       )}
     </div>

@@ -15,4 +15,6 @@ public interface IWasteReportService {
     WasteReportStatusResponse getReportStatus(Long reportId);
 
     List<CitizenReportView> getWasteReportsByCitizen(UUID citizenId);
+
+    UUID getReportOwner(Long reportId);
 }

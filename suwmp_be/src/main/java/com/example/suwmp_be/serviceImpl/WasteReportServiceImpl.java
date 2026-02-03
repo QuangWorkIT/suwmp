@@ -54,4 +54,11 @@ public class WasteReportServiceImpl implements IWasteReportService {
     public List<CitizenReportView> getWasteReportsByCitizen(UUID citizenId) {
         return wasteReportRepo.getReportsByCitizen(citizenId);
     }
+
+    @Override
+    public UUID getReportOwner(Long reportId) {
+        WasteReport report = wasteReportRepo.findById(reportId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_DATA));
+        return report.getCitizen().getId();
+    }
 }
