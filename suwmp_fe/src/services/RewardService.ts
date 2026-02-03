@@ -1,8 +1,8 @@
 import authClient from "@/config/axios";
-import type { RewardHistory } from "@/types/RewardHistory";
+import type { RewardTransaction } from "@/types/RewardTransaction";
 
 export const RewardService = {
-  async getMyRewards(): Promise<RewardHistory[]> {
+  async getMyRewards(): Promise<RewardTransaction[]> {
     const res = await authClient.get("citizen/rewards");
     return res.data;
   },

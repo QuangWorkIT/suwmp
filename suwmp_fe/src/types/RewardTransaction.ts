@@ -1,4 +1,4 @@
-export interface RewardHistory {
+export interface RewardTransaction {
   id: number;
   points: number;
   reason: string;

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/citizen/rewards")
+@RequestMapping("/api/citizen")
 @RequiredArgsConstructor
 public class RewardController {
 
@@ -22,7 +22,15 @@ public class RewardController {
 
     @GetMapping("/rewards")
     public List<RewardHistoryDto> getMyRewards(Authentication authentication) {
-        UUID userId = UUID.fromString(authentication.getPrincipal().toString());
+
+        Object principal = authentication.getPrincipal();
+        UUID userId;
+        if (principal instanceof UUID) {
+            userId = (UUID) principal;
+        } else {
+            userId = UUID.fromString(principal.toString());
+        }
+
         return repository.findRewardTransaction(userId);
     }
 

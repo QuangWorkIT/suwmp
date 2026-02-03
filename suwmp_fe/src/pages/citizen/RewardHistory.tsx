@@ -1,5 +1,6 @@
+import { Input } from "@/components/ui/input";
 import { RewardService } from "@/services/RewardService";
-import type { RewardHistory } from "@/types/RewardHistory";
+import type { RewardTransaction } from "@/types/RewardTransaction";
 import {
   Calendar,
   ChevronRight,
@@ -22,9 +23,9 @@ const RewardHistory = () => {
   >("All");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
-  const [rewardTransactions, setRewardTransactions] = useState<RewardHistory[]>(
-    []
-  );
+  const [rewardTransactions, setRewardTransactions] = useState<
+    RewardTransaction[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -142,7 +143,7 @@ const RewardHistory = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <div className="relative">
-                <input
+                <Input
                   type="text"
                   placeholder="Search by waste type or location..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-80"
