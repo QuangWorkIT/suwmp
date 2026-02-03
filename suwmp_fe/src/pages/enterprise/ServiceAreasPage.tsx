@@ -25,6 +25,7 @@ const ServiceAreasPage = () => {
   );
   const [radius, setRadius] = useState<string>("1000");
   const [saving, setSaving] = useState(false);
+  const [focusedAreaId, setFocusedAreaId] = useState<number | null>(null);
 
   const fetchAreas = async () => {
     setLoading(true);
@@ -151,6 +152,7 @@ const ServiceAreasPage = () => {
             <div className="mt-4 h-80 rounded-xl bg-muted/30 border border-border relative overflow-hidden">
               <ServiceAreaMap
                 areas={areas}
+                focusAreaId={focusedAreaId}
                 onMapClick={(lng, lat) => setPendingPoint({ lng, lat })}
               />
 
@@ -282,7 +284,11 @@ const ServiceAreasPage = () => {
                   <Separator />
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFocusedAreaId(a.id)}
+                    >
                       View
                     </Button>
                     <Button variant="outline" size="sm">

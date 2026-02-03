@@ -2,6 +2,8 @@ package com.example.suwmp_be.serviceImpl;
 
 import com.example.suwmp_be.dto.mapper.WasteReportMapper;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
+import com.example.suwmp_be.dto.response.WasteReportStatusResponse;
+import com.example.suwmp_be.dto.view.CitizenReportView;
 import com.example.suwmp_be.dto.view.CollectionRequestView;
 import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.repository.WasteReportRepository;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,5 +36,22 @@ public class WasteReportServiceImpl implements IWasteReportService {
             throw new NotFoundException(ErrorCode.ENTERPRISE_NOT_FOUND);
         }
         return wasteReportRepo.getRequestsByEnterprise(enterpriseId);
+    }
+
+    @Override
+    public WasteReportStatusResponse getReportStatus(Long reportId) {
+        WasteReport report = wasteReportRepo.findById(reportId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_DATA));
+
+        return WasteReportStatusResponse.builder()
+                .id(report.getId())
+                .status(report.getStatus())
+                .createdAt(report.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public List<CitizenReportView> getWasteReportsByCitizen(UUID citizenId) {
+        return wasteReportRepo.getReportsByCitizen(citizenId);
     }
 }

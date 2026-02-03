@@ -1,5 +1,5 @@
 import authClient from "@/config/axios";
-import type {WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { CitizenWasteReport, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
 
 const wasteReportService = {
@@ -23,6 +23,24 @@ const wasteReportService = {
             return arr;
         } catch (error) {
             throw new Error("Failed to get waste reports by enterprise" + error);
+        }
+    },
+    getReportsByCitizen: async (citizenId: string): Promise<CitizenWasteReport[]> => {
+        try {
+            const response = await authClient.get(`/waste-report/citizen/${citizenId}`);
+            return response.data.data ?? [];
+        } catch (error) {
+            console.error("Failed to get reports by citizen", error);
+            throw new Error("Failed to get reports by citizen");
+        }
+    },
+    getReportStatus: async (reportId: number) => {
+        try {
+            const response = await authClient.get(`/waste-report/${reportId}/status`);
+            return response.data.data as { id: number; status: CitizenWasteReport["status"]; createdAt: string };
+        } catch (error) {
+            console.error("Failed to get report status", error);
+            throw new Error("Failed to get report status");
         }
     }
 }

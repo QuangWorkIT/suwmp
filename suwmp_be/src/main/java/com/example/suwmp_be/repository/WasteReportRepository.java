@@ -1,11 +1,13 @@
 package com.example.suwmp_be.repository;
 
+import com.example.suwmp_be.dto.view.CitizenReportView;
 import com.example.suwmp_be.dto.view.CollectionRequestView;
 import com.example.suwmp_be.entity.WasteReport;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface WasteReportRepository extends JpaRepository<WasteReport, Long> {
 
@@ -36,4 +38,21 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
         ORDER BY wr.created_at DESC
         """, nativeQuery = true)
     List<CollectionRequestView> getRequestsByEnterprise(Long enterpriseId);
+
+    @Query(value = """
+        SELECT
+            wr.id            AS reportId,
+            wt.name          AS wasteTypeName,
+            wr.longitude     AS longitude,
+            wr.latitude      AS latitude,
+            wr.volume        AS volume,
+            wr.status        AS status,
+            wr.created_at    AS createdAt
+        FROM waste_reports wr
+        JOIN waste_types wt
+            ON wt.id = wr.waste_type_id
+        WHERE wr.citizen_id = :citizenId
+        ORDER BY wr.created_at DESC
+        """, nativeQuery = true)
+    List<CitizenReportView> getReportsByCitizen(UUID citizenId);
 }

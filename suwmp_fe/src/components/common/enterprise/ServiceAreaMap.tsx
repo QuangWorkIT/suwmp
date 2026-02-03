@@ -8,12 +8,13 @@ import { circlePolygon } from "@/utilities/geoCircle";
 type Props = {
   areas: ServiceArea[];
   onMapClick?: (lng: number, lat: number) => void;
+  focusAreaId?: number | null;
 };
 
 const TRACKASIA_STYLE =
   "https://maps.track-asia.com/styles/v2/streets.json?key=public_key";
 
-export default function ServiceAreaMap({ areas, onMapClick }: Props) {
+export default function ServiceAreaMap({ areas, onMapClick, focusAreaId }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<trackasiagl.Map | null>(null);
   const onMapClickRef = useRef<typeof onMapClick>();
@@ -85,6 +86,20 @@ export default function ServiceAreaMap({ areas, onMapClick }: Props) {
       source.setData(geojson as any);
     }
   }, [geojson]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focusAreaId) return;
+
+    const area = areas.find((a) => a.id === focusAreaId);
+    if (!area) return;
+
+    map.flyTo({
+      center: { lng: area.longitude, lat: area.latitude },
+      zoom: 13,
+      essential: true,
+    });
+  }, [focusAreaId, areas]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }

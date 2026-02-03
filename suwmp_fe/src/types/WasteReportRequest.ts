@@ -27,3 +27,13 @@ export type WasteReportEnterprise = {
     createdAt: string;
     enterpriseId: number;
 }
+
+export type CitizenWasteReport = {
+    reportId: number;
+    wasteTypeName: string;
+    longitude: number;
+    latitude: number;
+    volume: number | null;
+    status: "PENDING" | "ACCEPTED" | "ASSIGNED" | "COLLECTED";
+    createdAt: string;
+}

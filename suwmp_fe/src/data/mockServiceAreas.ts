@@ -1,7 +1,8 @@
 import type { ServiceArea } from "@/types/serviceArea";
 
-// Flip this to false to use real BE endpoints.
-export const USE_MOCK_DATA = true;
+// Flip this to true if you ever need local mock data again.
+// In normal operation we use real backend APIs.
+export const USE_MOCK_DATA = false;
 
 export const mockServiceAreas: ServiceArea[] = [
   {

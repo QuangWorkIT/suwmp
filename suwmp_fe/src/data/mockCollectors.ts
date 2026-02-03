@@ -64,6 +64,6 @@ export const mockCollectors: Collector[] = [
 
 /**
  * Flag to enable/disable mock data
- * Set to false when ready to use real API data
+ * Set to true only for local UI prototyping; default is real API data.
  */
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
