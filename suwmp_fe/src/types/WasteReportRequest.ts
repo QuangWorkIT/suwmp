@@ -27,3 +27,20 @@ export type WasteReportEnterprise = {
     createdAt: string;
     enterpriseId: number;
 }
+
+export type NearbyEnterpriseRequest = {
+    longitude: number;
+    latitude: number;
+    wasteTypeId: number;
+}
+
+export type NearbyEnterpriseResponse = {
+    id: number;
+    name: string;
+    description: string;
+    rating: number;
+    photoUrl: string;
+    createdAt: string;
+    distance: number;
+    rewardPoints: number;
+}

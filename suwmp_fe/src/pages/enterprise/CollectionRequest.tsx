@@ -24,6 +24,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/WasteReportService";
+import { useAppSelector } from "@/redux/hooks";
+import { EnterpriseUserService } from "@/services/EnterpriseUserService";
 
 const statusConfig = {
     PENDING: { label: "Pending", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Circle },
@@ -41,6 +43,7 @@ const priorityConfig = {
 };
 
 function CollectionRequest() {
+    const user = useAppSelector(state => state.user)    
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
@@ -49,14 +52,18 @@ function CollectionRequest() {
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const response = await wasteReportService.getWasteReportsByEnterprise(2)
+                // find enterprise id
+                const enterpriseData = await EnterpriseUserService.getEnterpriseUserByUserId(user.user?.id || "")
+                console.log(enterpriseData)
+                // get waste reports by enterprise id
+                const response = await wasteReportService.getWasteReportsByEnterprise(enterpriseData.data.enterpriseId)
                 setFetchRequests(response);
             } catch (error) {
-                console.log("Error fetching requests:", error);
+                console.log(error);
             }
         };
         fetchRequests();
-    }, [])
+    }, [user.user?.id])
 
     const filteredRequests = fetchedRequests.filter((req) => {
         if (statusFilter !== "all" && req.currentStatus !== statusFilter) return false;

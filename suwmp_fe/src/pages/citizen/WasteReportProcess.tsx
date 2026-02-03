@@ -6,9 +6,11 @@ import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload"
 import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep"
 import ReportHeader from "@/components/layout/citizen/ReportHeader"
 import { useAppSelector } from "@/redux/hooks";
+import { collectionAssignmentService } from "@/services/CollectionAssignmentService";
 import s3Service from "@/services/S3Service";
 import wasteReportService from "@/services/WasteReportService";
 import { useState } from "react";
+import { toast } from "sonner";
 
 function WasteReportProcess() {
     const user = useAppSelector(state => state.user)
@@ -40,35 +42,70 @@ function WasteReportProcess() {
         }
     }
 
+    const getWasteReportPayload = (photoUrl: string) => {
+        if (!selectedType || !user.user || !selectedEnterprise) return null
+        return {
+            photoUrl: photoUrl,
+            longitude: location[0],
+            latitude: location[1],
+            description: notes,
+            enterprisesId: selectedEnterprise,
+            citizenId: user.user?.id,
+            wasteTypeId: Number(selectedType.id),
+            aiSuggestedTypeId: Number(selectedType.id),
+            status: "PENDING"
+        }
+    }
+
+    const getCollectionAssignmentPayload = (wasteReportId: number) => {
+        if (!selectedEnterprise || !wasteReportId) return null
+        return {
+            wasteReportId: wasteReportId,
+            enterpriseId: selectedEnterprise,
+            collectorId: null,
+            assignedAt: null,
+            startCollectAt: null
+        }
+    }
+
     const handleSubmit = async () => {
         if (!imageUploaded || !selectedType || location.length !== 2
-            || !notes || !selectedEnterprise || !user.user) return
+            || !selectedEnterprise || !user.user) {
+            return
+        }
 
         try {
             setSubmitting(true)
-            const photoResponse = await s3Service.uploadImage(imageUploaded)
 
+            const photoResponse = await s3Service.uploadImage(imageUploaded)
             if (!photoResponse) return
 
-            const payload = {
-                photoUrl: photoResponse.data,
-                longitude: location[0],
-                latitude: location[1],
-                description: notes,
-                enterprisesId: selectedEnterprise,
-                citizenId: user.user?.id,
-                wasteTypeId: Number(selectedType.id),
-                aiSuggestedTypeId: Number(selectedType.id),
-                status: "PENDING"
-            }
-            const data = await wasteReportService.createWasteReport(payload)
-            console.log("Create report data: ", data)
 
+            const payload = getWasteReportPayload(photoResponse.data)
+            if (!payload) {
+                throw new Error("Missing waste reportdata")
+            }
+
+            const wasteReportResponse = await wasteReportService.createWasteReport(payload)
+
+            const caPayload = getCollectionAssignmentPayload(wasteReportResponse.data)
+            if (!caPayload) {
+                throw new Error("Missing collection assignment data")
+            }
+
+            await collectionAssignmentService.createAssignment(caPayload)
+
+            toast.success("Report submitted successfully", {
+                position: "top-right"
+            })
             setSubmitting(false)
             resetData()
         } catch (error) {
-            console.log(error)
             setSubmitting(false)
+            console.log(error)
+            toast.error("Fail to submit report!", {
+                position: "top-right"
+            })
         }
     }
 
@@ -138,10 +175,13 @@ function WasteReportProcess() {
                     {currentStep === 4 && (
                         isSubmitting ? (
                             <div className="fixed inset-0 flex items-center justify-center z-50">
-                                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+                                <div className="animate-spin rounded-full h-28 w-28 border-b-2 border-primary"></div>
                             </div>
                         ) : (
                             <EnterpriseList
+                                longitude={location[0]}
+                                latitude={location[1]}
+                                wasteTypeId={Number(selectedType?.id) || 1}
                                 handleSubmit={handleSubmit}
                                 handlePreviousStep={handlePreviousStep}
                                 selectedEnterprise={selectedEnterprise}

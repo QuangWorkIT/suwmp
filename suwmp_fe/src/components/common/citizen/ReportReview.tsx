@@ -24,7 +24,6 @@ function ReportReview({ handleNextStep, handlePreviousStep, location, notes, sel
             setAddress(await reverseGeocode(location[0], location[1]))
         }
         getAddress()
-        console.log("type selected:", selectedType);
     }, [])
 
     return (
@@ -124,25 +123,6 @@ function ReportReview({ handleNextStep, handlePreviousStep, location, notes, sel
                                 )}
                             </AnimatePresence>
                         </div>
-
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.6, duration: 0.3, type: "spring", stiffness: 150 }}
-                            className="p-5 rounded-2xl bg-primary/5 border border-primary/20 flex items-center gap-4"
-                        >
-                            <motion.div
-                                animate={{ rotate: [0, -10, 10, -10, 0] }}
-                                transition={{ delay: 1, duration: 0.5 }}
-                                className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"
-                            >
-                                <Award className="w-6 h-6 text-primary" />
-                            </motion.div>
-                            <div>
-                                <p className="text-sm font-bold text-primary">Estimated Reward</p>
-                                <p className="text-xs text-muted-foreground">+50 points upon collection</p>
-                            </div>
-                        </motion.div>
                     </div>
                 </div>
 

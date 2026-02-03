@@ -4,17 +4,24 @@
 CREATE
 EXTENSION IF NOT EXISTS pgcrypto;
 
+CREATE EXTENSION postgis;
 -- ===========================================
 -- DROP ALL TABLES (CLEAN INIT)
 -- ===========================================
-DO
-$$ DECLARE
+DO $$
+DECLARE
 r RECORD;
 BEGIN
-FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+FOR r IN (
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+          AND tablename NOT IN ('spatial_ref_sys')
+    ) LOOP
         EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
 END LOOP;
 END $$;
+
 
 -- ===========================================
 -- CORE IDENTITY & ACCESS MANAGEMENT
@@ -136,7 +143,7 @@ CREATE TABLE collection_assignments(
     id               BIGSERIAL PRIMARY KEY,
     waste_report_id  BIGINT NOT NULL REFERENCES waste_reports (id),
     enterprise_id    BIGINT NOT NULL REFERENCES enterprises (id),
-    collector_id     UUID   NOT NULL REFERENCES users (id),
+    collector_id     UUID  REFERENCES users (id),
     assigned_at      TIMESTAMP,
     start_collect_at TIMESTAMP,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -147,9 +154,7 @@ CREATE TABLE report_collection_status_logs (
     id BIGSERIAL PRIMARY KEY,
     waste_report_id BIGINT NOT NULL REFERENCES waste_reports(id),
     collection_assignment_id BIGINT NOT NULL REFERENCES collection_assignments(id),
-    status VARCHAR(30) CHECK (
-        status IN ('ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
-    ),
+    photo_url VARCHAR(500),
     created_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -164,7 +169,6 @@ CREATE TABLE reward_rules (
     waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
     base_points INT NOT NULL,
     quality_multiplier DECIMAL(3,2),
-    time_bonus INT,
     active BOOLEAN DEFAULT TRUE
 );
 
