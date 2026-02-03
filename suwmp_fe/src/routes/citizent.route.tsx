@@ -6,28 +6,30 @@ import ReportHistory from "@/pages/citizen/ReportHistory";
 import LeaderBoard from "@/pages/citizen/LeaderBoard";
 import FeedBack from "@/pages/citizen/FeedBack";
 import WasteReportProcess from "@/pages/citizen/WasteReportProcess";
+import RewardHistory from "@/pages/citizen/RewardHistory";
 
 export const citizenRoutes = [
-    {
-        element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
+  {
+    element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
+    children: [
+      {
+        path: "/citizen",
+        element: <CitizenMain />,
         children: [
-            {
-                path: "/citizen",
-                element: <CitizenMain />,
-                children: [
-                    { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: "dashboard", element: <CitizenHome /> },
-                    { path: "reports", element: <ReportHistory /> },
-                    { path: "leaderboard", element: <LeaderBoard /> },
-                    { path: "feedback", element: <FeedBack /> },
-                ]
-            }
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: "dashboard", element: <CitizenHome /> },
+          { path: "reports", element: <ReportHistory /> },
+          { path: "rewards", element: <RewardHistory /> },
+          { path: "leaderboard", element: <LeaderBoard /> },
+          { path: "feedback", element: <FeedBack /> },
         ],
-    },
-    {
-        element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
-        children: [
-            { path: "/citizen/new-report", element: <WasteReportProcess /> },
-        ],
-    },
-]
+      },
+    ],
+  },
+  {
+    element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
+    children: [
+      { path: "/citizen/new-report", element: <WasteReportProcess /> },
+    ],
+  },
+];
