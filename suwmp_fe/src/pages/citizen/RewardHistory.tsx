@@ -1,116 +1,53 @@
+import { RewardService } from "@/services/RewardService";
+import type { RewardHistory } from "@/types/RewardHistory";
 import {
   Calendar,
   ChevronRight,
   CircleCheck,
   Clock,
+  LayoutGrid,
   MapPin,
   Package,
   Scale,
+  Search,
   Star,
+  TextAlignJustify,
   Truck,
 } from "lucide-react";
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 
-interface RewardTransaction {
-  id: number;
-  citizen_id: string;
-  waste_report_id: number;
-  points: number;
-  reason: string;
-  created_at: string;
-  // Additional display data
-  wasteType: string;
-  location: string;
-  weight: number;
-  status: "Collected" | "In Progress" | "Pending";
-}
-
-const RewardHistory: React.FC = () => {
+const RewardHistory = () => {
   const [activeFilter, setActiveFilter] = useState<
     "All" | "Pending" | "In Progress" | "Collected"
   >("All");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
-  // Hardcoded data matching the database schema
-  const rewardTransactions: RewardTransaction[] = [
-    {
-      id: 1,
-      citizen_id: "c1234567-89ab-cdef-0123-456789abcdef",
-      waste_report_id: 1001,
-      points: 50,
-      reason: "Recyclables collection reward",
-      created_at: "2026-01-10T14:30:00",
-      wasteType: "Recyclables",
-      location: "123 Green Street",
-      weight: 2.5,
-      status: "Collected",
-    },
-    {
-      id: 2,
-      citizen_id: "c1234567-89ab-cdef-0123-456789abcdef",
-      waste_report_id: 1002,
-      points: 35,
-      reason: "Organic waste collection reward",
-      created_at: "2026-01-11T09:15:00",
-      wasteType: "Organic Waste",
-      location: "456 Eco Lane",
-      weight: 1.8,
-      status: "In Progress",
-    },
-    {
-      id: 3,
-      citizen_id: "c1234567-89ab-cdef-0123-456789abcdef",
-      waste_report_id: 1003,
-      points: 75,
-      reason: "E-waste collection reward",
-      created_at: "2026-01-12T16:45:00",
-      wasteType: "E-Waste",
-      location: "789 Tech Road",
-      weight: 4.2,
-      status: "Pending",
-    },
-    {
-      id: 4,
-      citizen_id: "c1234567-89ab-cdef-0123-456789abcdef",
-      waste_report_id: 1004,
-      points: 100,
-      reason: "Hazardous waste collection reward",
-      created_at: "2026-01-08T11:20:00",
-      wasteType: "Hazardous",
-      location: "321 Safe Ave",
-      weight: 0.5,
-      status: "Collected",
-    },
-    {
-      id: 5,
-      citizen_id: "c1234567-89ab-cdef-0123-456789abcdef",
-      waste_report_id: 1005,
-      points: 45,
-      reason: "Recyclables collection reward",
-      created_at: "2026-01-06T13:00:00",
-      wasteType: "Recyclables",
-      location: "555 Park Blvd",
-      weight: 3.1,
-      status: "Collected",
-    },
-    {
-      id: 6,
-      citizen_id: "c1234567-89ab-cdef-0123-456789abcdef",
-      waste_report_id: 1006,
-      points: 30,
-      reason: "Organic waste collection reward",
-      created_at: "2026-01-13T10:30:00",
-      wasteType: "Organic Waste",
-      location: "777 Garden St",
-      weight: 2.0,
-      status: "Pending",
-    },
-  ];
+  const [rewardTransactions, setRewardTransactions] = useState<RewardHistory[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const totalPoints = rewardTransactions.reduce(
     (sum, transaction) => sum + transaction.points,
     0
   );
+
+  useEffect(() => {
+    const loadRewards = async () => {
+      try {
+        setLoading(true);
+        const data = await RewardService.getMyRewards();
+        setRewardTransactions(data);
+      } catch {
+        setError("Failed to load reward history");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRewards();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -210,19 +147,7 @@ const RewardHistory: React.FC = () => {
                   placeholder="Search by waste type or location..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-80"
                 />
-                <svg
-                  className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
             </div>
 
@@ -254,17 +179,7 @@ const RewardHistory: React.FC = () => {
                       : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <TextAlignJustify className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
@@ -274,18 +189,20 @@ const RewardHistory: React.FC = () => {
                       : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
+                  <LayoutGrid className="w-5 h-5" />
                 </button>
               </div>
             </div>
           </div>
         </div>
+
+        {loading && (
+          <div className="text-center py-12 text-gray-500">
+            Loading reward history...
+          </div>
+        )}
+
+        {error && <div className="text-center py-12 text-red-500">{error}</div>}
 
         {/* Transactions List */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -325,17 +242,17 @@ const RewardHistory: React.FC = () => {
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
-                          <span>{transaction.location}</span>
+                          <span>{`${transaction.latitude}, ${transaction.longitude}`}</span>
                         </div>
 
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
-                          <span>{formatDate(transaction.created_at)}</span>
+                          <span>{formatDate(transaction.createdAt)}</span>
                         </div>
 
                         <div className="flex items-center gap-1">
                           <Scale className="w-4 h-4" />
-                          <span>{transaction.weight} kg</span>
+                          <span>{transaction.volume} kg</span>
                         </div>
                       </div>
                     </div>
