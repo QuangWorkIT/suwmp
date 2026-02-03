@@ -28,7 +28,7 @@ export interface UpdateEnterpriseCapacityRequest {
 }
 
 export interface CreateEnterpriseCapacityRequest {
-  enterpriseId: number;
+  enterpriseId: number | null;
   wasteTypeId: number;
   dailyCapacityKg: number;
   warningThreshold: number;

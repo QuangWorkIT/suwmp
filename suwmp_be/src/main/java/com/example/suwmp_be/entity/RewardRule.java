@@ -31,11 +31,8 @@ public class RewardRule {
     @Column(nullable = false)
     private int basePoints;
 
-    @Column(nullable = false, precision = 3, scale = 2)
+    @Column(precision = 3, scale = 2)
     private BigDecimal qualityMultiplier;
-
-    @Column
-    private int timeBonus;
 
     @Column(nullable = false)
     private boolean active;

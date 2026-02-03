@@ -17,7 +17,5 @@ public class GetRewardRuleByEnterpriseAndWasteTypeResponse {
 
     BigDecimal qualityMultiplier;
 
-    int timeBonus;
-
     boolean active;
 }

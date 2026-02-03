@@ -20,6 +20,8 @@ public enum ErrorCode {
     ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found"),
     DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
     NOT_FOUND_DATA("Not Found", "Data is not found"),
+
+    CAPACITY_NOT_EXISTED("Bad Request", "Corresponding enterprise capacity is not existed"),
     ;
 
     ErrorCode(String title, String message) {

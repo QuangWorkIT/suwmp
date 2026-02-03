@@ -6,6 +6,7 @@ import com.example.suwmp_be.dto.reward_rule.AddNewRewardRuleRequest;
 import com.example.suwmp_be.dto.reward_rule.GetRewardRuleByEnterpriseAndWasteTypeResponse;
 import com.example.suwmp_be.exception.BadRequestException;
 import com.example.suwmp_be.exception.NotFoundException;
+import com.example.suwmp_be.repository.EnterpriseCapacityRepository;
 import com.example.suwmp_be.repository.RewardRuleRepository;
 import com.example.suwmp_be.service.IRewardRuleService;
 import lombok.AccessLevel;
@@ -21,10 +22,15 @@ import org.springframework.stereotype.Service;
 public class RewardRuleServiceImpl implements IRewardRuleService {
     RewardRuleRepository rewardRuleRepository;
 
+    EnterpriseCapacityRepository enterpriseCapacityRepository;
+
     IRewardRuleMapper rewardRuleMapper;
 
     @Override
     public void addNewRewardRule(AddNewRewardRuleRequest request) {
+        var isExistedCapacity = enterpriseCapacityRepository.existsByEnterpriseIdAndWasteTypeId(request.enterpriseId(), request.wasteTypeId());
+        if (!isExistedCapacity) throw new BadRequestException(ErrorCode.CAPACITY_NOT_EXISTED);
+
         var isDuplicatedRewardRule = rewardRuleRepository.existsByEnterpriseIdAndWasteTypeId(request.enterpriseId(), request.wasteTypeId());
         if (isDuplicatedRewardRule) throw new BadRequestException(ErrorCode.DUPLICATED_DATA);
 

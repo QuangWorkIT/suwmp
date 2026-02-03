@@ -15,8 +15,5 @@ public record AddNewRewardRuleRequest(
         int basePoints,
 
         @Positive
-        BigDecimal qualityMultiplier,
-
-        @Positive
-        int timeBonus) {
+        BigDecimal qualityMultiplier) {
 }
