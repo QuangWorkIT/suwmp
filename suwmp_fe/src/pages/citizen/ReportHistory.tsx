@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, CalendarDays, Scale, Loader2, AlertCircle } from "lucide-react";
+import { MapPin, CalendarDays, Scale, Loader2, AlertCircle, ChevronRight, Recycle } from "lucide-react";
 
 type StatusFilter = "ALL" | "PENDING" | "ACCEPTED" | "ASSIGNED" | "COLLECTED";
 
@@ -20,16 +20,35 @@ const STATUS_LABEL: Record<Exclude<StatusFilter, "ALL">, string> = {
 function getStatusBadgeVariant(status: CitizenWasteReport["status"]): { label: string; className: string } {
   switch (status) {
     case "PENDING":
-      return { label: "Pending", className: "bg-amber-100 text-amber-800 border-amber-200" };
+      return { label: "Pending", className: "bg-orange-100 text-orange-800 border-orange-200" };
     case "ACCEPTED":
       return { label: "Accepted", className: "bg-sky-100 text-sky-800 border-sky-200" };
     case "ASSIGNED":
-      return { label: "In Progress", className: "bg-sky-100 text-sky-800 border-sky-200" };
+      return { label: "In Progress", className: "bg-blue-100 text-blue-800 border-blue-200" };
     case "COLLECTED":
-      return { label: "Collected", className: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+      return { label: "Collected", className: "bg-green-100 text-green-800 border-green-200" };
     default:
       return { label: status, className: "" };
   }
+}
+
+function getWasteTypeColor(wasteTypeName: string): string {
+  const colors = [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-red-500",
+    "bg-amber-500",
+    "bg-cyan-500",
+  ];
+  const hash = wasteTypeName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+}
+
+function calculatePoints(volume: number | null, status: CitizenWasteReport["status"]): number {
+  if (status !== "COLLECTED" || volume == null) return 0;
+  // Simple calculation: 20 points per kg, minimum 10 points
+  return Math.max(10, Math.round(volume * 20));
 }
 
 function formatDate(iso: string) {
@@ -182,55 +201,62 @@ function ReportHistory() {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-0 divide-y divide-border">
         {reports.map((report) => {
           const status = getStatusBadgeVariant(report.status);
+          const iconColor = getWasteTypeColor(report.wasteTypeName);
+          const points = calculatePoints(report.volume, report.status);
+          
           return (
-            <Card
+            <div
               key={report.reportId}
-              className="flex flex-col border border-muted shadow-none md:flex-row md:items-center md:justify-between"
+              className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer group"
             >
-              <CardHeader className="border-none px-4 py-3 md:px-6 md:py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-white text-sm font-semibold">
-                    {report.wasteTypeName.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-medium">
-                      {report.wasteTypeName}
-                    </CardTitle>
-                    <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        <span>
-                          {report.latitude.toFixed(4)}, {report.longitude.toFixed(4)}
-                        </span>
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <CalendarDays className="h-3 w-3" />
-                        <span>{formatDate(report.createdAt)}</span>
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Scale className="h-3 w-3" />
-                        <span>{formatVolume(report.volume)}</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
+              {/* Icon */}
+              <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${iconColor} text-white shrink-0`}>
+                <Recycle className="h-6 w-6" />
+              </div>
 
-              <CardContent className="flex items-center justify-between gap-3 border-t px-4 py-3 text-sm md:border-l md:border-t-0 md:px-6 md:py-4">
-                <Badge
-                  variant="outline"
-                  className={status.className}
-                >
-                  {status.label}
-                </Badge>
-                <span className="text-xs font-medium text-emerald-600">
-                  +0 pts
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1.5">
+                  <h3 className="text-base font-medium text-foreground">
+                    {report.wasteTypeName}
+                  </h3>
+                  <Badge
+                    variant="outline"
+                    className={`${status.className} rounded-full px-2.5 py-0.5 text-xs font-medium`}
+                  >
+                    {status.label}
+                  </Badge>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span>
+                      {report.latitude.toFixed(4)}, {report.longitude.toFixed(4)}
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    <span>{formatDate(report.createdAt)}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Scale className="h-3.5 w-3.5" />
+                    <span>{formatVolume(report.volume)}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Points and Arrow */}
+              <div className="flex items-center gap-4 shrink-0">
+                <span className={`text-sm font-medium ${points > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
+                  {points > 0 ? `+${points} pts` : "+0 pts"}
                 </span>
-              </CardContent>
-            </Card>
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              </div>
+            </div>
           );
         })}
       </div>

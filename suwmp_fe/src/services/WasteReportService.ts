@@ -33,15 +33,6 @@ const wasteReportService = {
             console.error("Failed to get reports by citizen", error);
             throw new Error("Failed to get reports by citizen");
         }
-    },
-    getReportStatus: async (reportId: number) => {
-        try {
-            const response = await authClient.get(`/waste-report/${reportId}/status`);
-            return response.data.data as { id: number; status: CitizenWasteReport["status"]; createdAt: string };
-        } catch (error) {
-            console.error("Failed to get report status", error);
-            throw new Error("Failed to get report status");
-        }
     }
 }
 

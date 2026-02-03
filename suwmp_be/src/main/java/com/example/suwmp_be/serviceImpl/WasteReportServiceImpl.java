@@ -2,7 +2,6 @@ package com.example.suwmp_be.serviceImpl;
 
 import com.example.suwmp_be.dto.mapper.WasteReportMapper;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
-import com.example.suwmp_be.dto.response.WasteReportStatusResponse;
 import com.example.suwmp_be.dto.view.CitizenReportView;
 import com.example.suwmp_be.dto.view.CollectionRequestView;
 import com.example.suwmp_be.entity.WasteReport;
@@ -39,26 +38,7 @@ public class WasteReportServiceImpl implements IWasteReportService {
     }
 
     @Override
-    public WasteReportStatusResponse getReportStatus(Long reportId) {
-        WasteReport report = wasteReportRepo.findById(reportId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_DATA));
-
-        return WasteReportStatusResponse.builder()
-                .id(report.getId())
-                .status(report.getStatus())
-                .createdAt(report.getCreatedAt())
-                .build();
-    }
-
-    @Override
     public List<CitizenReportView> getWasteReportsByCitizen(UUID citizenId) {
         return wasteReportRepo.getReportsByCitizen(citizenId);
-    }
-
-    @Override
-    public UUID getReportOwner(Long reportId) {
-        WasteReport report = wasteReportRepo.findById(reportId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_DATA));
-        return report.getCitizen().getId();
     }
 }
