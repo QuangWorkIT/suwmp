@@ -7,15 +7,20 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum ErrorCode {
+    BAD_REQUEST_BODY_MISSING("Bad Request", "Required request body is missing"),
+    VALIDATION_FAILED("Validation Failed", "Validation failed"),
+    ERROR_SYSTEM("Error System", "A system error occurred"),
+
     EMAIL_NOT_EXIST("Not Found", "Email does not exist"),
     RESET_TOKEN_INVALID("Unauthenticated", "Reset password token expired or not valid"),
     ACCESS_TOKEN_INVALID("Unauthenticated","Invalid or expired JWT"),
 
     USER_ID_INVALID("Bad Request","Invalid user ID in token"),
-    BAD_REQUEST_BODY_MISSING("Bad Request", "Required request body is missing"),
 
-    VALIDATION_FAILED("Validation Failed", "Validation failed"),
-    ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found");
+    ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found"),
+    DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
+    NOT_FOUND_DATA("Not Found", "Data is not found"),
+    ;
 
     ErrorCode(String title, String message) {
         this.title = title;

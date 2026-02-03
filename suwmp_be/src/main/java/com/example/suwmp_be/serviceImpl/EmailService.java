@@ -29,8 +29,8 @@ public class EmailService implements IEmailService {
 
     private static final String ROUTE = "/reset-password?resetToken=";
 
-    @Value("${app.fe-url}")
-    private String FE_URL;
+    @Value("${allowed.origin}")
+    private String FE_URLS;
 
     @Async
     @Override
@@ -43,10 +43,11 @@ public class EmailService implements IEmailService {
             message.setSubject(EmailService.SEND_OTP_SUBJECT);
 
             String resetToken = otpService.generateResetToken(sendLinkResetDto.to());
-            String url = FE_URL + ROUTE + resetToken;
+            String feUrl = FE_URLS.split(",")[0];
+            String url = feUrl + ROUTE + resetToken;
 
             // build content
-            String html = readFile("html/send-otp.html");
+            String html = readFile("html/send-reset-password.html");
             String content = html.replace("${CustomerName}", sendLinkResetDto.fullName());
             content = content.replace("${LINK_RESET}", url);
             message.setContent(content, "text/html; charset=utf-8");

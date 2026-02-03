@@ -30,7 +30,7 @@ import { UserDialog } from "@/components/users/UserDialog";
 import { type UserFormValues } from "@/components/users/UserForm";
 import { toast } from "sonner"; // Assuming sonner is used for toasts based on package.json
 import { useOutletContext } from 'react-router';
-import { UserService } from "@/services/UserService";
+import { UserService, type UserResponse } from "@/services/UserService";
 
 interface User {
     id: string;
@@ -45,6 +45,8 @@ interface User {
     avatar: string;
 }
 
+
+
 interface UserManagementContext {
     setOnAddClick: (handler: () => void) => void;
 }
@@ -53,6 +55,7 @@ export default function UserManagementPage() {
     const { setOnAddClick } = useOutletContext<UserManagementContext>();
 
     const [users, setUsers] = useState<User[]>([]);
+    const [allUsers, setAllUsers] = useState<User[]>([]); // For role filtering
     const [isLoading, setIsLoading] = useState(true);
     const [pagination, setPagination] = useState({
         pageNumber: 0,
@@ -69,6 +72,27 @@ export default function UserManagementPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+    // Map API response to User type
+    const mapUsers = (content: UserResponse[]): User[] => {
+        return content.map((u: UserResponse) => ({
+            id: u.id,
+            fullName: u.fullName,
+            email: u.email,
+            phone: u.phone ?? '',
+            roleId: '',
+            role: u.role && typeof u.role === 'string' 
+                ? u.role.charAt(0).toUpperCase() + u.role.slice(1).toLowerCase() as any 
+                : u.role,
+            status: u.status && typeof u.status === 'string'
+                ? u.status.charAt(0).toUpperCase() + u.status.slice(1).toLowerCase() as any
+                : u.status,
+            activity: u.activityStatus || 'No activity',
+            joined: new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            avatar: u.fullName.charAt(0).toUpperCase()
+        }));
+    };
+
+    // Fetch paginated users (for normal view without role filter)
     const fetchUsers = async (page: number = 0, query: string = searchQuery) => {
         setIsLoading(true);
         try {
@@ -80,22 +104,11 @@ export default function UserManagementPage() {
             }
             const { content, totalPages, totalElements, number, first, last } = response.data;
             
-            const mappedUsers: User[] = content.map((u: any) => ({
-                id: u.id,
-                fullName: u.fullName,
-                email: u.email,
-                phone: u.phone,
-                roleId: '',
-                role: u.role,
-                status: u.status,
-                activity: u.activityStatus || 'No activity',
-                joined: new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                avatar: u.fullName.charAt(0).toUpperCase()
-            }));
+            const mappedUsers = mapUsers(content);
 
             setUsers(mappedUsers);
             setPagination({
-                ...pagination,
+                pageSize: pagination.pageSize,
                 pageNumber: number,
                 totalPages,
                 totalElements,
@@ -110,21 +123,109 @@ export default function UserManagementPage() {
         }
     };
 
+    // Fetch all users for role filtering
+    const fetchAllUsersForFilter = async () => {
+        setIsLoading(true);
+        try {
+            const response = await UserService.getAllUsers();
+            const { content } = response.data;
+            const mappedUsers = mapUsers(content);
+            setAllUsers(mappedUsers);
+        } catch (error) {
+            console.error("Failed to fetch all users", error);
+            toast.error("Failed to load users");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Effect for search query changes (debounced)
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchUsers(0, searchQuery);
+            // Reset to page 0 when search changes
+            setPagination(prev => ({ ...prev, pageNumber: 0 }));
+            if (roleFilter === 'all') {
+                fetchUsers(0, searchQuery);
+            } else {
+                fetchAllUsersForFilter();
+            }
         }, 500);
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    const handlePageChange = (newPage: number) => {
-        fetchUsers(newPage, searchQuery);
+    // Effect for role filter changes
+    useEffect(() => {
+        // Reset to page 0 when role filter changes
+        setPagination(prev => ({ ...prev, pageNumber: 0 }));
+        if (roleFilter === 'all') {
+            fetchUsers(0, searchQuery);
+        } else {
+            fetchAllUsersForFilter();
+        }
+    }, [roleFilter]);
+
+    // Client-side filtered and paginated users
+    const getDisplayUsers = (): User[] => {
+        if (roleFilter === 'all') {
+            return users;
+        }
+        // Filter all users by role AND search query
+        const filtered = allUsers.filter(user => {
+            const matchesRole = user.role.toLowerCase() === roleFilter.toLowerCase();
+            const matchesSearch = !searchQuery.trim() || 
+                user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                user.email.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesRole && matchesSearch;
+        });
+        // Client-side pagination
+        const startIndex = pagination.pageNumber * pagination.pageSize;
+        return filtered.slice(startIndex, startIndex + pagination.pageSize);
     };
 
-    const filteredUsers = users.filter(user => {
-        if (roleFilter === 'all') return true;
-        return user.role.toLowerCase() === roleFilter.toLowerCase();
-    });
+    // Get total for filtered view
+    const getFilteredTotal = (): number => {
+        if (roleFilter === 'all') {
+            return pagination.totalElements;
+        }
+        return allUsers.filter(user => {
+            const matchesRole = user.role.toLowerCase() === roleFilter.toLowerCase();
+            const matchesSearch = !searchQuery.trim() || 
+                user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                user.email.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesRole && matchesSearch;
+        }).length;
+    };
+
+    // Check if on first/last page for filtered view
+    const isFirstPage = (): boolean => {
+        if (roleFilter === 'all') {
+            return pagination.first;
+        }
+        return pagination.pageNumber === 0;
+    };
+
+    const isLastPage = (): boolean => {
+        if (roleFilter === 'all') {
+            return pagination.last;
+        }
+        const filteredTotal = getFilteredTotal();
+        const totalPages = Math.ceil(filteredTotal / pagination.pageSize);
+        return pagination.pageNumber >= totalPages - 1;
+    };
+
+    const handlePageChange = (newPage: number) => {
+        if (roleFilter === 'all') {
+            fetchUsers(newPage, searchQuery);
+        } else {
+            // Client-side pagination
+            setPagination(prev => ({
+                ...prev,
+                pageNumber: newPage
+            }));
+        }
+    };
+
+    const displayUsers = getDisplayUsers();
 
     const getRoleColor = (role: string) => {
         switch (role.toUpperCase()) {
@@ -336,8 +437,8 @@ export default function UserManagementPage() {
                                         Loading users...
                                     </td>
                                 </tr>
-                            ) : filteredUsers.length > 0 ? (
-                                filteredUsers.map((user, index) => (
+                            ) : displayUsers.length > 0 ? (
+                                displayUsers.map((user: User, index: number) => (
                                     <tr key={user.id} className="hover:bg-gray-50/80 transition-colors group">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
@@ -399,14 +500,14 @@ export default function UserManagementPage() {
 
                 {/* Pagination Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white">
-                    <p className="text-sm text-gray-500">Showing {filteredUsers.length} of {pagination.totalElements} users</p>
+                    <p className="text-sm text-gray-500">Showing {displayUsers.length} of {getFilteredTotal()} users</p>
                     <div className="flex gap-2">
                         <Button 
                             variant="outline" 
                             size="sm" 
                             className="h-8 text-xs border-gray-200 text-gray-600"
                             onClick={() => handlePageChange(pagination.pageNumber - 1)}
-                            disabled={pagination.first}
+                            disabled={isFirstPage()}
                         >
                             Previous
                         </Button>
@@ -415,7 +516,7 @@ export default function UserManagementPage() {
                             size="sm" 
                             className="h-8 text-xs border-gray-200 text-gray-600"
                             onClick={() => handlePageChange(pagination.pageNumber + 1)}
-                            disabled={pagination.last}
+                            disabled={isLastPage()}
                         >
                             Next
                         </Button>

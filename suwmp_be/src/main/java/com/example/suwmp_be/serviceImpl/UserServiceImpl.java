@@ -68,10 +68,10 @@ public class UserServiceImpl implements IUserService {
     public UserResponse updateUser(UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        if(userRepository.existsByPhone(request.getPhone())) {
+        if(userRepository.existsByPhoneAndIdNot(request.getPhone(), userId)) {
             throw new RuntimeException("Phone number already exists: " + request.getPhone());
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailAndIdNot(request.getEmail(), userId)) {
             throw new RuntimeException("Email already exists: " + request.getEmail());
         }
 

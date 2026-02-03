@@ -71,6 +71,15 @@ public class DataSeeder implements CommandLineRunner {
                 .status("ACTIVE")
                 .build());
 
+        users.add(User.builder()
+                .fullName("Nguyen Huy")
+                .email("nguyenhuyak781@gmail.com")
+                .phone("0934686868")
+                .passwordHash(passwordEncoder.encode("Huy12345@"))
+                .role(roleCacheService.get(RoleEnum.ENTERPRISE))
+                .status("ACTIVE")
+                .build());
+
         /* ============================
            COLLECTORS (2)
         ============================ */

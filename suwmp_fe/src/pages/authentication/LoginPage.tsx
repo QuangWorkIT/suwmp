@@ -64,7 +64,8 @@ export default function Login() {
     setErrors({ ...errors, [field]: error });
   };
 
-  const submit = async () => {
+  const submit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     const emailError = validateEmail(form.email);
     const passwordError = validatePassword(form.password);
 
@@ -101,8 +102,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <div className="w-full max-w-md">
-        {/* Login Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
+        <form onSubmit={submit} className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
           {/* Logo */}
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -246,7 +246,7 @@ export default function Login() {
               </Link>
             </p>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
