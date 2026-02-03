@@ -94,11 +94,19 @@ export default function ServiceAreaMap({ areas, onMapClick, focusAreaId }: Props
     const area = areas.find((a) => a.id === focusAreaId);
     if (!area) return;
 
-    map.flyTo({
-      center: { lng: area.longitude, lat: area.latitude },
-      zoom: 13,
-      essential: true,
-    });
+    const flyToArea = () => {
+      map.flyTo({
+        center: { lng: area.longitude, lat: area.latitude },
+        zoom: 13,
+        essential: true,
+      });
+    };
+
+    if (map.isStyleLoaded()) {
+      flyToArea();
+    } else {
+      map.once("load", flyToArea);
+    }
   }, [focusAreaId, areas]);
 
   return <div ref={containerRef} className="h-full w-full" />;

@@ -58,23 +58,46 @@ function ReportHistory() {
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchReports = async () => {
-      if (!user?.id) return;
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await wasteReportService.getReportsByCitizen(user.id);
-        setAllReports(data);
+      if (!user?.id) {
+        setAllReports([]);
         setDisplayCount(10);
-        setHasMore(data.length > 10);
+        setHasMore(false);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        if (!cancelled) {
+          setLoading(true);
+          setError(null);
+        }
+        const data = await wasteReportService.getReportsByCitizen(user.id);
+        if (!cancelled) {
+          setAllReports(data);
+          setDisplayCount(10);
+          setHasMore(data.length > 10);
+        }
       } catch (err) {
         console.error(err);
-        setError("Unable to load your reports right now.");
+        if (!cancelled) {
+          setError("Unable to load your reports right now.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
+
     fetchReports();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id]);
 
   useEffect(() => {

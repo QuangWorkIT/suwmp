@@ -60,7 +60,13 @@ public class WasteReportController {
                     .body(new BaseResponse<>(false, "Authentication required", null));
         }
 
-        UUID currentUserId = (UUID) authentication.getPrincipal();
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UUID)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new BaseResponse<>(false, "Invalid authentication principal", null));
+        }
+
+        UUID currentUserId = (UUID) principal;
         boolean isAdmin = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(auth -> auth.equals("ROLE_ADMIN"));
@@ -87,7 +93,13 @@ public class WasteReportController {
                     .body(new BaseResponse<>(false, "Authentication required", null));
         }
 
-        UUID currentUserId = (UUID) authentication.getPrincipal();
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UUID)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new BaseResponse<>(false, "Invalid authentication principal", null));
+        }
+
+        UUID currentUserId = (UUID) principal;
         boolean isAdmin = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(auth -> auth.equals("ROLE_ADMIN"));
