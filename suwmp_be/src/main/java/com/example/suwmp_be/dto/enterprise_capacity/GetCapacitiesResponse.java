@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GetCapacitiesResponse {
     long id;
+    long enterpriseId;
     int wasteTypeId;
     String wasteTypeName;
     int dailyCapacityKg;
