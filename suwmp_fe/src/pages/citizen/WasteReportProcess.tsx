@@ -119,7 +119,7 @@ function WasteReportProcess() {
     }
 
     return (
-        <div className="min-h-screen w-full bg-background relative p-15">
+        <div className="min-h-screen w-full bg-background relative p-16">
             <ReportHeader />
             <div className="flex flex-col gap-10 items-center justify-center pt-10">
 

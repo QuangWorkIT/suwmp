@@ -18,8 +18,8 @@ public class CollectionAssignmentServiceImpl implements ICollectionAssignmentSer
     private final CollectionAssignmentRepository collectionAssignmentRepository;
     private final ICollectionAssignmentMapper mapper;
     private final WasteReportRepository wasteReportRepository;
-    EnterpriseRepository enterpriseRepository;
-    UserRepository userRepository;
+    private final EnterpriseRepository enterpriseRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional

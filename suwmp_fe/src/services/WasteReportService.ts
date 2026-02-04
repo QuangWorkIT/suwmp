@@ -8,8 +8,8 @@ const wasteReportService = {
             const response = await authClient.post("/waste-reports", data);
             return response.data;
         } catch (error) {
-            console.log("Error creating waste report:", error);
-            throw new Error("Failed to create waste report");
+            console.error("Error creating waste report:", error);
+            throw error;
         }
     },
     getWasteReportsByEnterprise: async (enterpriseId: number) => {
@@ -22,8 +22,8 @@ const wasteReportService = {
             }
             return arr;
         } catch (error) {
-            console.log(error)
-            throw new Error("Failed to get waste reports by enterprise" + error);
+            console.error("Error getting waste reports by enterprise:", error);
+            throw error;
         }
     },
     getEnterprisesNearbyCitizen: async (payload: NearbyEnterpriseRequest) => {
@@ -33,8 +33,8 @@ const wasteReportService = {
             );
             return response.data;
         } catch (error) {
-            console.log(error)
-            throw new Error("Failed to get enterprises nearby citizen" + error);
+            console.error("Error getting enterprises nearby citizen:", error);
+            throw error;
         }
     }
 }
