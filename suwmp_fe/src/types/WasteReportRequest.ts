@@ -7,9 +7,8 @@ export type WasteReportRequest = {
     citizenId: string;
     wasteTypeId: number;
     aiSuggestedTypeId: number;
-    status: string
-}
-
+    status: string;
+};
 
 export type WasteReportEnterprise = {
     requestId: number;
@@ -26,4 +25,19 @@ export type WasteReportEnterprise = {
     collectorName: string;
     createdAt: string;
     enterpriseId: number;
-}
+};
+
+export type CitizenWasteReportStatus = {
+    id: number;
+    referenceCode: string;
+    status: "PENDING" | "ACCEPTED" | "ASSIGNED" | "COLLECTED";
+    createdAt: string;
+    wasteTypeName: string | null;
+    enterpriseName: string | null;
+    collectorName: string | null;
+    latitude: number;
+    longitude: number;
+    volume?: number | null;
+    photoUrl: string;
+    description?: string | null;
+};

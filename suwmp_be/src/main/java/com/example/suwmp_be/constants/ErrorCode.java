@@ -18,6 +18,7 @@ public enum ErrorCode {
     USER_ID_INVALID("Bad Request","Invalid user ID in token"),
 
     ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found"),
+    WASTE_REPORT_NOT_FOUND("Not Found", "Waste report not found"),
     DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
     NOT_FOUND_DATA("Not Found", "Data is not found"),
     ;

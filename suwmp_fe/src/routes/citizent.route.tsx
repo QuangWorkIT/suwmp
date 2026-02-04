@@ -6,6 +6,7 @@ import ReportHistory from "@/pages/citizen/ReportHistory";
 import LeaderBoard from "@/pages/citizen/LeaderBoard";
 import FeedBack from "@/pages/citizen/FeedBack";
 import WasteReportProcess from "@/pages/citizen/WasteReportProcess";
+import ReportStatusPage from "@/pages/citizen/ReportStatusPage";
 
 export const citizenRoutes = [
     {
@@ -18,6 +19,7 @@ export const citizenRoutes = [
                     { index: true, element: <Navigate to="dashboard" replace /> },
                     { path: "dashboard", element: <CitizenHome /> },
                     { path: "reports", element: <ReportHistory /> },
+                    { path: "reports/:id", element: <ReportStatusPage /> },
                     { path: "leaderboard", element: <LeaderBoard /> },
                     { path: "feedback", element: <FeedBack /> },
                 ]
