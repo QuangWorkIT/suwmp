@@ -2,6 +2,7 @@ package com.example.suwmp_be.controller;
 
 
 import com.example.suwmp_be.dto.BaseResponse;
+import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
@@ -106,4 +107,16 @@ public class WasteReportController {
                         wasteTypeId)
         ));
     }
+
+    @PatchMapping("/enterprises/cancellation")
+    public ResponseEntity<BaseResponse<Long>> cancelWasteReportRequest(
+            @Valid @RequestBody CancelWasteReportRequest rq
+    ) {
+        return ResponseEntity.status(200).body(new BaseResponse<>(
+                true,
+                "Canceled waste report request",
+                wasteService.cancelWasteReport(rq.getWasteReportId(), rq.getNote()))
+        );
+    }
+
 }

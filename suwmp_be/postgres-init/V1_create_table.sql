@@ -129,9 +129,10 @@ CREATE TABLE waste_reports
     photo_url            VARCHAR(500),
     volume               DOUBLE PRECISION,
     status               VARCHAR(20) CHECK (
-        status IN ('PENDING', 'ACCEPTED', 'ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
+        status IN ('PENDING', 'REJECTED','ACCEPTED', 'ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
         ),
     ai_suggested_type_id BIGINT REFERENCES waste_types (id),
+    enterprise_note      VARCHAR(500),
     created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -13,5 +13,5 @@ public interface ICollectionRequestView {
     String getCitizenName();
     String getCitizenPhone();
     String getCollectorName();
-    Instant getCreateAt();
+    Instant getCreatedAt();
 }

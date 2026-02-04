@@ -1,5 +1,6 @@
 package com.example.suwmp_be.serviceImpl;
 
+import com.example.suwmp_be.constants.WasteReportStatus;
 import com.example.suwmp_be.dto.mapper.WasteReportMapper;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
@@ -62,5 +63,16 @@ public class WasteReportServiceImpl implements IWasteReportService {
                             e.getDistance(),
                             rewardPoint);
                 }).toList();
+    }
+
+    @Override
+    public long cancelWasteReport(Long wasteReportId, String note) {
+        WasteReport wasteReport = wasteReportRepo.findById(wasteReportId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOTFOUND));
+
+        wasteReport.setStatus(WasteReportStatus.REJECTED);
+        wasteReport.setEnterpriseNote(note);
+
+        return wasteReportRepo.save(wasteReport).getId();
     }
 }

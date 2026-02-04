@@ -23,7 +23,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
                 u1.full_name              AS citizenName,
                 u1.phone                  AS citizenPhone,
                 u2.full_name              AS collectorName,
-                wr.created_at             AS createAt
+                wr.created_at             AS createdAt
             FROM waste_reports wr
             JOIN waste_types wt
                 ON wt.id = wr.waste_type_id

@@ -15,4 +15,6 @@ public interface IWasteReportService {
     List<ICollectionRequestView> getWasteReportRequestsByEnterprise(Long enterpriseId);
 
     List<EnterpriseNearbyResponse> getEnterprisesNearbyCitizen(Double citizenLong, Double citizenLat, Long wasteTypeId);
+
+    long cancelWasteReport(Long wasteReportId, String note);
 }

@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Award, MapPin } from 'lucide-react'
+import { ArrowLeft, ArrowRight, MapPin } from 'lucide-react'
 import type { WasteType } from './WasteClassification'
 import { reverseGeocode } from '@/utilities/geocoding'
 import { useEffect, useState } from 'react'

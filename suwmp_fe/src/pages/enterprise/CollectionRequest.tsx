@@ -13,19 +13,29 @@ import {
     Circle,
     Bell,
     Eye,
-    Edit,
     UserPlus,
     Inbox,
     ClipboardCheck,
     User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/WasteReportService";
-import { useAppSelector } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { EnterpriseUserService } from "@/services/EnterpriseUserService";
+import { dateTimeFormat } from "@/utilities/format";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import RejectRequestForm from "@/components/common/enterprise/RejectRequestForm";
+import { updateUserInfo } from "@/redux/features/userSlice"
+
 
 const statusConfig = {
     PENDING: { label: "Pending", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Circle },
@@ -43,35 +53,60 @@ const priorityConfig = {
 };
 
 function CollectionRequest() {
-    const user = useAppSelector(state => state.user)    
+    const user = useAppSelector(state => state.user)
+    const dispatch = useAppDispatch()
+
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
-    const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
+    const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
     const [fetchedRequests, setFetchRequests] = useState<WasteReportEnterprise[]>([]);
+    const [isRejectFormOpen, setIsRejectFormOpen] = useState(false);
+    const [selectedRejectRequestId, setSelectedRejectRequestId] = useState<number | null>(null);
+    const [isFetchingRequests, setIsFetchingRequests] = useState(false)
 
-    useEffect(() => {
-        const fetchRequests = async () => {
-            try {
+    const fetchRequests = useCallback(async () => {
+        if (!user.user) return
+
+        try {
+            setIsFetchingRequests(true)
+            let currentEnterpriseId = user.user.enterpriseId
+
+            if (!currentEnterpriseId) {
                 // find enterprise id
                 const enterpriseData = await EnterpriseUserService.getEnterpriseUserByUserId(user.user?.id || "")
-                console.log(enterpriseData)
-                // get waste reports by enterprise id
-                const response = await wasteReportService.getWasteReportsByEnterprise(enterpriseData.data.enterpriseId)
-                setFetchRequests(response);
-            } catch (error) {
-                console.log(error);
+                currentEnterpriseId = enterpriseData.data.enterpriseId
+
+                dispatch(updateUserInfo({
+                    user: {
+                        ...user.user,
+                        enterpriseId: currentEnterpriseId
+                    }
+                }))
             }
-        };
-        fetchRequests();
-    }, [user.user?.id])
+
+            if (currentEnterpriseId) {
+                // get waste reports by enterprise id
+                const response = await wasteReportService.getWasteReportsByEnterprise(currentEnterpriseId)
+                setFetchRequests(response);
+            }
+            setIsFetchingRequests(false)
+        } catch (error) {
+            console.log(error);
+            setIsFetchingRequests(false)
+        }
+    }, [user.user, dispatch])
+
+    useEffect(() => {
+        fetchRequests()
+    }, [fetchRequests])
 
     const filteredRequests = fetchedRequests.filter((req) => {
         if (statusFilter !== "all" && req.currentStatus !== statusFilter) return false;
-        if (searchQuery && !req.requestId.toString().toLowerCase().includes(searchQuery.toLowerCase()) && !req.address.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        if (searchQuery && !req.requestId.toString().includes(searchQuery.toLowerCase()) && !req.address.toLowerCase().includes(searchQuery.toLowerCase())) return false;
         return true;
     });
 
-    const toggleSelect = (id: string) => {
+    const toggleSelect = (id: number) => {
         setSelectedRequests(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
     };
 
@@ -79,7 +114,7 @@ function CollectionRequest() {
         if (selectedRequests.length === filteredRequests.length) {
             setSelectedRequests([]);
         } else {
-            setSelectedRequests(filteredRequests.map(r => r.requestId.toString()));
+            setSelectedRequests(filteredRequests.map(r => r.requestId));
         }
     };
 
@@ -183,10 +218,17 @@ function CollectionRequest() {
                                         <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Collector</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Priority</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
                                         <th className="text-right py-3 pr-6 text-sm font-medium text-muted-foreground">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {isFetchingRequests && (
+                                        <div className="fixed inset-0 flex items-center justify-center z-50 left-50">
+                                            <div className="animate-spin rounded-full h-26 w-26 border-b-2 border-primary"></div>
+                                        </div>
+                                    )}
+
                                     {filteredRequests.map((req, index) => {
                                         const status = statusConfig[req.currentStatus as keyof typeof statusConfig] || { label: req.currentStatus, color: "bg-gray-100 text-gray-700", icon: Circle };
                                         const priority = priorityConfig[req.priority as keyof typeof priorityConfig] || { label: "Normal", color: "bg-gray-100 text-gray-700" };
@@ -202,8 +244,8 @@ function CollectionRequest() {
                                             >
                                                 <td className="py-4 px-4">
                                                     <Checkbox
-                                                        checked={selectedRequests.includes(req.requestId.toString())}
-                                                        onCheckedChange={() => toggleSelect(req.requestId.toString())}
+                                                        checked={selectedRequests.includes(req.requestId)}
+                                                        onCheckedChange={() => toggleSelect(req.requestId)}
                                                         className="border-2 border-black/50"
                                                     />
                                                 </td>
@@ -221,7 +263,7 @@ function CollectionRequest() {
                                                 </td>
                                                 <td className="py-3 px-4 text-sm">{req.volume}</td>
                                                 <td className="py-5 px-6 max-w-[200px]">
-                                                    <div className="text-sm">
+                                                    <div className="text-xs">
                                                         <p className="font-medium line-clamp-2">
                                                             {req.address}
                                                         </p>
@@ -262,17 +304,20 @@ function CollectionRequest() {
                                                         {status.label}
                                                     </Badge>
                                                 </td>
+                                                <td className="py-3 px-4">
+                                                    <Badge variant="outline" className={`text-xs`}>
+                                                        {dateTimeFormat(req.createdAt)}
+                                                    </Badge>
+                                                </td>
                                                 <td className="py-3 pr-6">
                                                     <div className="flex items-center justify-end gap-1">
                                                         <Button variant="ghost" size="icon" className="h-8 w-8">
                                                             <Eye className="w-4 h-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                            <Edit className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                            <MoreHorizontal className="w-4 h-4" />
-                                                        </Button>
+                                                        <ActionDropdown
+                                                            selectedRejectRequestId={req.requestId}
+                                                            setSelectedRejectRequestId={setSelectedRejectRequestId}
+                                                            setIsRejectFormOpen={setIsRejectFormOpen} />
                                                     </div>
                                                 </td>
                                             </motion.tr>
@@ -326,9 +371,58 @@ function CollectionRequest() {
                             </div>
                         </div>
                     </Card>
+
+                    <AnimatePresence>
+                        {isRejectFormOpen && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                            >
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    <RejectRequestForm
+                                        wasteReportId={selectedRejectRequestId}
+                                        setIsRejectFormOpen={setIsRejectFormOpen}
+                                        onSuccess={fetchRequests} />
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </main>
             </div>
-        </motion.div >)
+        </motion.div >
+    )
 }
 
 export default CollectionRequest
+
+
+const ActionDropdown = ({ selectedRejectRequestId, setSelectedRejectRequestId, setIsRejectFormOpen }: { selectedRejectRequestId: number, setSelectedRejectRequestId: (id: number) => void, setIsRejectFormOpen: (open: boolean) => void }) => {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost">
+                    <MoreHorizontal />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="bottom" align="end">
+                <DropdownMenuGroup>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive 
+                    focus:bg-destructive/10 font-semibold whitespace-nowrap"
+                        onClick={() => {
+                            setSelectedRejectRequestId(selectedRejectRequestId);
+                            setIsRejectFormOpen(true);
+                        }}>
+                        Cancel Request
+                    </DropdownMenuItem>
+                </DropdownMenuGroup>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}

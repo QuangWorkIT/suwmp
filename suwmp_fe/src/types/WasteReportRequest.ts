@@ -44,3 +44,9 @@ export type NearbyEnterpriseResponse = {
     distance: number;
     rewardPoints: number;
 }
+
+
+export type CancelWasteReportRequest = {
+    wasteReportId: number;
+    note: string;
+}

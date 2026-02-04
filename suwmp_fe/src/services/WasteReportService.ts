@@ -1,5 +1,5 @@
 import authClient from "@/config/axios";
-import type { NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { CancelWasteReportRequest, NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
 
 const wasteReportService = {
@@ -34,6 +34,15 @@ const wasteReportService = {
             return response.data;
         } catch (error) {
             console.error("Error getting enterprises nearby citizen:", error);
+            throw error;
+        }
+    },
+    cancelWasteReport: async (payload: CancelWasteReportRequest) => {
+        try {
+            const response = await authClient.patch("/waste-reports/enterprises/cancellation", payload);
+            return response.data;
+        } catch (error) {
+            console.error("Error canceling waste report:", error);
             throw error;
         }
     }
