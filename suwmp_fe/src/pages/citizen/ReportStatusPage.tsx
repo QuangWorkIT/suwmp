@@ -49,49 +49,6 @@ function ReportStatusPage() {
     fetchStatus();
   }, [id]);
 
-  const timelineItems = [
-    {
-      id: 0,
-      label: "Report Submitted",
-      status: "PENDING" as CitizenWasteReportStatus["status"],
-      description: null as string | null,
-      timestamp: report.createdAt,
-    },
-    {
-      id: 1,
-      label: "Assigned to Collector",
-      status: "ASSIGNED" as CitizenWasteReportStatus["status"],
-      description: report.collectorName
-        ? `Assigned to ${report.collectorName}`
-        : null,
-      timestamp: null as string | null,
-    },
-    {
-      id: 2,
-      label: "In Progress",
-      status: "ACCEPTED" as CitizenWasteReportStatus["status"],
-      description: null as string | null,
-      timestamp: null as string | null,
-    },
-    {
-      id: 3,
-      label: "Collected",
-      status: "COLLECTED" as CitizenWasteReportStatus["status"],
-      description: null as string | null,
-      timestamp: null as string | null,
-    },
-  ];
-
-  const currentIndex =
-    report != null
-      ? (() => {
-          const idx = timelineItems.findIndex(
-            (item) => item.status === report.status,
-          );
-          return idx === -1 ? 0 : idx;
-        })()
-      : 0;
-
   const handleSubmitRating = async () => {
     if (!id || rating == null) return;
 
@@ -125,6 +82,46 @@ function ReportStatusPage() {
       </div>
     );
   }
+
+  const timelineItems = [
+    {
+      id: 0,
+      label: "Report Submitted",
+      status: "PENDING" as CitizenWasteReportStatus["status"],
+      description: null as string | null,
+      timestamp: report.createdAt,
+    },
+    {
+      id: 1,
+      label: "Assigned to Collector",
+      status: "ASSIGNED" as CitizenWasteReportStatus["status"],
+      description: report.collectorName
+        ? `Assigned to ${report.collectorName}`
+        : null,
+      timestamp: null as string | null,
+    },
+    {
+      id: 2,
+      label: "In Progress",
+      status: "ACCEPTED" as CitizenWasteReportStatus["status"],
+      description: null as string | null,
+      timestamp: null as string | null,
+    },
+    {
+      id: 3,
+      label: "Collected",
+      status: "COLLECTED" as CitizenWasteReportStatus["status"],
+      description: null as string | null,
+      timestamp: null as string | null,
+    },
+  ];
+
+  const currentIndex = (() => {
+    const idx = timelineItems.findIndex(
+      (item) => item.status === report.status,
+    );
+    return idx === -1 ? 0 : idx;
+  })();
 
   const createdAt = new Date(report.createdAt);
   const createdAtLabel = createdAt.toLocaleString();
