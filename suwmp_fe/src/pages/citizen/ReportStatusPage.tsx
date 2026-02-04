@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,13 +17,6 @@ import {
   Star,
 } from "lucide-react";
 
-const statusOrder: Record<CitizenWasteReportStatus["status"], number> = {
-  PENDING: 0,
-  ACCEPTED: 1,
-  ASSIGNED: 2,
-  COLLECTED: 3,
-};
-
 function ReportStatusPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -33,6 +26,8 @@ function ReportStatusPage() {
   const [error, setError] = useState<string | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratingMessage, setRatingMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -54,10 +49,65 @@ function ReportStatusPage() {
     fetchStatus();
   }, [id]);
 
-  const currentIndex = useMemo(() => {
-    if (!report) return 0;
-    return statusOrder[report.status] ?? 0;
-  }, [report]);
+  const timelineItems = [
+    {
+      id: 0,
+      label: "Report Submitted",
+      status: "PENDING" as CitizenWasteReportStatus["status"],
+      description: null as string | null,
+      timestamp: report.createdAt,
+    },
+    {
+      id: 1,
+      label: "Assigned to Collector",
+      status: "ASSIGNED" as CitizenWasteReportStatus["status"],
+      description: report.collectorName
+        ? `Assigned to ${report.collectorName}`
+        : null,
+      timestamp: null as string | null,
+    },
+    {
+      id: 2,
+      label: "In Progress",
+      status: "ACCEPTED" as CitizenWasteReportStatus["status"],
+      description: null as string | null,
+      timestamp: null as string | null,
+    },
+    {
+      id: 3,
+      label: "Collected",
+      status: "COLLECTED" as CitizenWasteReportStatus["status"],
+      description: null as string | null,
+      timestamp: null as string | null,
+    },
+  ];
+
+  const currentIndex =
+    report != null
+      ? (() => {
+          const idx = timelineItems.findIndex(
+            (item) => item.status === report.status,
+          );
+          return idx === -1 ? 0 : idx;
+        })()
+      : 0;
+
+  const handleSubmitRating = async () => {
+    if (!id || rating == null) return;
+
+    setSubmittingRating(true);
+    setRatingMessage(null);
+
+    try {
+      await wasteReportService.submitRating(Number(id), rating);
+      setRatingMessage("Thanks for your feedback!");
+    } catch (err) {
+      console.error(err);
+      setRatingMessage("Failed to submit rating. Please try again.");
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
 
   if (loading) return <PageLoading />;
 
@@ -79,31 +129,6 @@ function ReportStatusPage() {
   const createdAt = new Date(report.createdAt);
   const createdAtLabel = createdAt.toLocaleString();
   const displayWasteType = report.wasteTypeName ?? "Recyclables";
-
-  const timelineItems = [
-    {
-      id: 0,
-      label: "Report Submitted",
-      description: null as string | null,
-    },
-    {
-      id: 1,
-      label: "Assigned to Collector",
-      description: report.collectorName
-        ? `Assigned to ${report.collectorName}`
-        : null,
-    },
-    {
-      id: 2,
-      label: "In Progress",
-      description: null as string | null,
-    },
-    {
-      id: 3,
-      label: "Collected",
-      description: null as string | null,
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background py-6 px-4 lg:px-10 flex justify-center">
@@ -173,13 +198,21 @@ function ReportStatusPage() {
                   <p className="text-xs text-muted-foreground uppercase">
                     Reward points
                   </p>
-                  <p className="font-medium text-emerald-600">50 points</p>
+                  <p className="font-medium text-emerald-600">
+                    {report.rewardPoints != null
+                      ? `${report.rewardPoints} points`
+                      : "—"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground uppercase">
                     Classification confidence
                   </p>
-                  <p className="font-medium">94% Accuracy</p>
+                  <p className="font-medium">
+                    {report.classificationConfidence != null
+                      ? `${report.classificationConfidence}% Accuracy`
+                      : "—"}
+                  </p>
                 </div>
               </div>
               </div>
@@ -248,12 +281,17 @@ function ReportStatusPage() {
                           {item.description}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground flex items-center gap-2">
-                        <Clock className="w-3 h-3" />
-                        Jan 12, 2026
-                        <span>•</span>
-                        09:30 AM
-                      </p>
+                      {item.timestamp && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-2">
+                          <Clock className="w-3 h-3" />
+                          {new Date(item.timestamp).toLocaleDateString()}
+                          <span>•</span>
+                          {new Date(item.timestamp).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      )}
                     </div>
                   </div>
                 );
@@ -285,6 +323,19 @@ function ReportStatusPage() {
                 </button>
               ))}
             </div>
+            <Button
+              size="sm"
+              className="mt-2"
+              disabled={rating == null || submittingRating}
+              onClick={handleSubmitRating}
+            >
+              {submittingRating ? "Submitting..." : "Submit rating"}
+            </Button>
+            {ratingMessage && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {ratingMessage}
+              </p>
+            )}
           </Card>
         </div>
       </div>
@@ -309,9 +360,6 @@ function CollectorAndHelpCards({
               </div>
               <div>
                 <p className="text-sm font-medium">{collectorName}</p>
-                <p className="text-xs text-muted-foreground">
-                  ID: #COL-827 • 4.9★
-                </p>
               </div>
             </div>
           </div>

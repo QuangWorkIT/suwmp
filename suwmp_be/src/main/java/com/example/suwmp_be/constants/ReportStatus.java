@@ -7,7 +7,16 @@ public enum ReportStatus {
     COLLECTED;
 
     public static ReportStatus from(String value) {
-        return ReportStatus.valueOf(value.toUpperCase());
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("ReportStatus value must not be null or blank");
+        }
+
+        String normalized = value.trim().toUpperCase();
+        try {
+            return ReportStatus.valueOf(normalized);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Unknown ReportStatus value: " + value, ex);
+        }
     }
 }
 

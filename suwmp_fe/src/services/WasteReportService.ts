@@ -44,6 +44,10 @@ const wasteReportService = {
     const response = await authClient.get("/waste-report/citizen/me");
     return response.data.data as CitizenWasteReportStatus[];
   },
+
+  submitRating: async (reportId: number, rating: number): Promise<void> => {
+    await authClient.post(`/waste-report/${reportId}/rating`, { rating });
+  },
 };
 
 export default wasteReportService;

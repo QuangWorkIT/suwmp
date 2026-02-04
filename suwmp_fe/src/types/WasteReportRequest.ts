@@ -1,5 +1,5 @@
 export type WasteReportRequest = {
-    photoUrl: string;
+    photoUrl: string | null;
     longitude: number;
     latitude: number;
     description: string;
@@ -38,6 +38,8 @@ export type CitizenWasteReportStatus = {
     latitude: number;
     longitude: number;
     volume?: number | null;
-    photoUrl: string;
+    photoUrl: string | null;
     description?: string | null;
+    rewardPoints?: number | null;
+    classificationConfidence?: number | null;
 };
