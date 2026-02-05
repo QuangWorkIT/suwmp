@@ -1,6 +1,6 @@
 import { Trophy, Flame } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import type { LeaderboardUser } from '@/data/leaderboardData';
+import type { LeaderboardUser } from '@/types/leaderboard';
 
 interface LeaderboardTopThreeProps {
     topThree: LeaderboardUser[];
