@@ -164,7 +164,6 @@ CREATE TABLE reward_rules (
     waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
     base_points INT NOT NULL,
     quality_multiplier DECIMAL(3,2),
-    time_bonus INT,
     active BOOLEAN DEFAULT TRUE
 );
 

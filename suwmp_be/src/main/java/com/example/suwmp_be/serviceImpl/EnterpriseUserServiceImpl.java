@@ -27,7 +27,7 @@ public class EnterpriseUserServiceImpl implements IEnterpriseUserService {
     @Override
     public GetEnterpriseUserByUserIdResponse getEnterpriseUserByUserIdResponse(UUID userId) {
         var enterpriseUser = enterpriseUserRepository.findByUserId(userId)
-                .orElseGet(EnterpriseUser::new);
+                        .orElse(null);
         log.info("Get successfully enterprise user by user id: {}", userId);
         return enterpriseUserMapper.toGetEnterpriseUserByUserIdResponse(enterpriseUser);
     }

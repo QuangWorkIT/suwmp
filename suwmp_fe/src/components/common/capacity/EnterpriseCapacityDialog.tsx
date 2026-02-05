@@ -77,7 +77,7 @@ export default function EnterpriseCapacityDialog({
   mode: Mode;
   value?: EnterpriseCapacity;
   onSubmit: (payload: CreateEnterpriseCapacityRequest) => void;
-  enterpriseId: number;
+  enterpriseId: number | null;
   wasteTypes: WasteTypeEnterpriseCapacity[];
 }) {
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
