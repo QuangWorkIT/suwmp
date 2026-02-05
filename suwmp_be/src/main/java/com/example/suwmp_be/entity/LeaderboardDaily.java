@@ -9,11 +9,11 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "leaderboard_daily")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "leaderboard_daily")
 public class LeaderboardDaily {
 
     @Id

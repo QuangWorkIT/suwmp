@@ -178,6 +178,23 @@ CREATE TABLE reward_transactions
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE leaderboard_daily (
+    id BIGSERIAL PRIMARY KEY,
+    citizen_id UUID NOT NULL REFERENCES users(id),
+    rank INT NOT NULL,
+    total_points BIGINT NOT NULL,
+    snapshot_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (citizen_id, snapshot_date)
+);
+
+CREATE INDEX idx_leaderboard_daily_date
+    ON leaderboard_daily (snapshot_date);
+
+CREATE INDEX idx_leaderboard_daily_user_date
+    ON leaderboard_daily (citizen_id, snapshot_date);
+
+
 -- ===========================================
 -- FEEDBACK, COMPLAINTS & DISPUTES
 -- ===========================================
