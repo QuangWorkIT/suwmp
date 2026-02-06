@@ -126,7 +126,7 @@ public class DataSeeder implements CommandLineRunner {
 
         System.out.println("✅ Seed completed:");
         System.out.println("   - 10 CITIZENS");
-        System.out.println("   - 2 ENTERPRISES");
+        System.out.println("   - 3 ENTERPRISES");
         System.out.println("   - 2 COLLECTORS");
         System.out.println("   - 2 ADMINS");
     }

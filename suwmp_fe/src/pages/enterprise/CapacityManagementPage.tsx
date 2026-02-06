@@ -25,7 +25,7 @@ export default function CapacityManagementPage() {
   const [wasteTypes, setWasteTypes] = useState<WasteTypeEnterpriseCapacity[]>([]);
 
   const [usedKg, setUsedKg] = useState(200);
-  const [enterpriseId, setEnterpriseId] = useState<number>(0);
+  const [enterpriseId, setEnterpriseId] = useState<number | null>(null);
 
   const fetchCapacities = async () => {
     if (!user?.id) return [];
@@ -33,7 +33,11 @@ export default function CapacityManagementPage() {
     try {
       setIsLoading(true);
 
-      const enterpriseId = (await EnterpriseUserService.getEnterpriseUserByUserId(user.id)).data.enterpriseId;
+      const enterpriseId = (await EnterpriseUserService.getEnterpriseUserByUserId(user.id)).data?.enterpriseId;
+      if (!enterpriseId) {
+        toast.error("Need to be registered as an enterprise");
+        return [];
+      }
       setEnterpriseId(enterpriseId);
 
       const response = await CapacityService.getCapacitiesByEnterpriseId(enterpriseId);
@@ -41,6 +45,7 @@ export default function CapacityManagementPage() {
       return response.data;
     } catch (e) {
       console.error(e);
+      toast.error("Load enterprise capacities failed")
       return [];
     } finally {
       setIsLoading(false);
@@ -63,6 +68,7 @@ export default function CapacityManagementPage() {
     const capacityItems = await fetchCapacities();
     await fetchWasteTypes(capacityItems);
   };
+  
   // Fetch data
   useEffect(() => { 
     fetchAll();
@@ -87,6 +93,10 @@ export default function CapacityManagementPage() {
   });
 
   const handleAdd = () => {
+    if (!enterpriseId) {
+      toast.error("Need to be registered as an enterprise");
+      return;
+    }
     setDialogMode("create");
     setSelected(undefined);
     setDialogOpen(true);
