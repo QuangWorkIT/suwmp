@@ -1,9 +1,11 @@
 package com.example.suwmp_be.serviceImpl;
 
+import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.dto.leaderboard.MyLeaderBoardDto;
 import com.example.suwmp_be.dto.leaderboard.PodiumDto;
 import com.example.suwmp_be.dto.leaderboard.RankingDto;
 import com.example.suwmp_be.entity.LeaderboardDaily;
+import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.LeaderboardDailyRepository;
 import com.example.suwmp_be.service.ILeaderBoardService;
 import lombok.RequiredArgsConstructor;
@@ -81,7 +83,7 @@ public class LeaderBoardService implements ILeaderBoardService {
         LeaderboardDaily ld =
                 leaderboardDailyRepository
                         .findByCitizen_IdAndSnapshotDate(me, date)
-                        .orElseThrow();
+                        .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_DATA));
 
         return new MyLeaderBoardDto(
                 ld.getRank(),
