@@ -4,7 +4,6 @@ import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.leaderboard.MyLeaderBoardDto;
 import com.example.suwmp_be.dto.leaderboard.PodiumDto;
 import com.example.suwmp_be.dto.leaderboard.RankingDto;
-import com.example.suwmp_be.security.CustomUserPrincipal;
 import com.example.suwmp_be.service.ILeaderBoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
