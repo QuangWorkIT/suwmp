@@ -53,4 +53,6 @@ public interface LeaderboardDailyRepository extends JpaRepository<LeaderboardDai
             @Param("citizenIds") List<UUID> citizenIds,
             @Param("date") LocalDate date
     );
+
+    void deleteBySnapshotDate(LocalDate snapshotDate);
 }

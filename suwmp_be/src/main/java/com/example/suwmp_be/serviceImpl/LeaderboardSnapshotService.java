@@ -21,6 +21,8 @@ public class LeaderboardSnapshotService {
     @Transactional
     public void generateSnapshot(LocalDate date) {
 
+        leaderboardDailyRepository.deleteBySnapshotDate(date);
+
         // 1️⃣ Aggregate points
         List<CitizenPointSum> results =
                 rewardTransactionRepository.sumPointsUntil(date);
