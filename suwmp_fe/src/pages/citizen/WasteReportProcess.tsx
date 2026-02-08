@@ -2,16 +2,18 @@ import EnterpriseList from "@/components/common/citizen/EnterpriseList";
 import LocationDetail from "@/components/common/citizen/LocationDetail";
 import ReportReview from "@/components/common/citizen/ReportReview";
 import WasteClassification, { type WasteType } from "@/components/common/citizen/WasteClassification";
-import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload"
-import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep"
-import ReportHeader from "@/components/layout/citizen/ReportHeader"
+import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload";
+import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep";
+import ReportHeader from "@/components/layout/citizen/ReportHeader";
 import { useAppSelector } from "@/redux/hooks";
 import s3Service from "@/services/S3Service";
 import wasteReportService from "@/services/WasteReportService";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
 function WasteReportProcess() {
     const user = useAppSelector(state => state.user)
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0);
     const [imageUploaded, setImageUploaded] = useState<File | null>(null);
     const [selectedType, setSelectedType] = useState<WasteType | null>(null);
@@ -63,6 +65,11 @@ function WasteReportProcess() {
             }
             const data = await wasteReportService.createWasteReport(payload)
             console.log("Create report data: ", data)
+
+            const reportId = data?.data
+            if (reportId) {
+                navigate(`/citizen/reports/${reportId}`)
+            }
 
             setSubmitting(false)
             resetData()

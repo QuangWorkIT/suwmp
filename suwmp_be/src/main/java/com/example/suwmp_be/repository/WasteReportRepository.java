@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface WasteReportRepository extends JpaRepository<WasteReport, Long> {
 
@@ -36,4 +38,9 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
         ORDER BY wr.created_at DESC
         """, nativeQuery = true)
     List<CollectionRequestView> getRequestsByEnterprise(Long enterpriseId);
+
+    Optional<WasteReport> findByIdAndCitizen_Id(Long id, UUID citizenId);
+
+    List<WasteReport> findAllByCitizen_IdOrderByCreatedAtDesc(UUID citizenId);
 }
+
