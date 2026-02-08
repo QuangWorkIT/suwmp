@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface ILeaderBoardService {
     List<PodiumDto> getPodium(LocalDate date);
-    MyLeaderBoardDto getMyStats(UUID me, LocalDate date);
+    //MyLeaderBoardDto getMyStats(UUID me, LocalDate date);
 
     List<RankingDto> getRankings(
             LocalDate date,

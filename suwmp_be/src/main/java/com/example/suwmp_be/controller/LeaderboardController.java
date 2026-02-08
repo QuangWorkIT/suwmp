@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.file.attribute.UserPrincipal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -58,20 +57,20 @@ public class LeaderboardController {
         );
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<BaseResponse<MyLeaderBoardDto>> me(
-            @AuthenticationPrincipal UUID userId
-    ) {
-        MyLeaderBoardDto myLeaderBoardDto = leaderboardService.getMyStats(
-                userId,
-                LocalDate.now()
-        );
-        return ResponseEntity.ok(
-                new BaseResponse<>(
-                        true,
-                        "Fetched my leaderboard stats successfully",
-                        myLeaderBoardDto
-                )
-        );
-    }
+//    @GetMapping("/me")
+//    public ResponseEntity<BaseResponse<MyLeaderBoardDto>> me(
+//            @AuthenticationPrincipal UUID userId
+//    ) {
+//        MyLeaderBoardDto myLeaderBoardDto = leaderboardService.getMyStats(
+//                userId,
+//                LocalDate.now()
+//        );
+//        return ResponseEntity.ok(
+//                new BaseResponse<>(
+//                        true,
+//                        "Fetched my leaderboard stats successfully",
+//                        myLeaderBoardDto
+//                )
+//        );
+//    }
 }

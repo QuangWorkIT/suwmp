@@ -1,6 +1,7 @@
 package com.example.suwmp_be.repository;
 
 import com.example.suwmp_be.entity.LeaderboardDaily;
+import com.example.suwmp_be.repository.projection.CitizenDateProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -38,4 +39,18 @@ public interface LeaderboardDailyRepository extends JpaRepository<LeaderboardDai
         ORDER BY ld.snapshotDate DESC
     """)
     List<LocalDate> findDatesForStreak(@Param("citizenId") UUID citizenId);
+
+    @Query("""
+        select
+            ld.citizen.id as citizenId,
+            ld.snapshotDate as snapshotDate
+        from LeaderboardDaily ld
+        where ld.citizen.id in :citizenIds
+          and ld.snapshotDate <= :date
+        order by ld.citizen.id, ld.snapshotDate desc
+    """)
+    List<CitizenDateProjection> findDatesForStreakBatch(
+            @Param("citizenIds") List<UUID> citizenIds,
+            @Param("date") LocalDate date
+    );
 }
