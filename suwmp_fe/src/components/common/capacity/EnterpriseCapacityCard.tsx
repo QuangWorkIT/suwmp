@@ -14,6 +14,8 @@ import {
   getUtilizationPct,
   safePct,
 } from "@/utilities/capacityUtils";
+import RewardRuleDialog from "./RewardRuleDialog"; // Import the new dialog
+import { Settings } from "lucide-react"; // Import Settings icon
 
 function statusPill(status: ReturnType<typeof getCapacityStatus>) {
   switch (status) {
@@ -49,6 +51,7 @@ export default function EnterpriseCapacityCard({
   const [localCapacity, setLocalCapacity] = useState(item.dailyCapacityKg);
   const [localThreshold, setLocalThreshold] = useState(item.warningThreshold);
   const [localIsActive, setLocalIsActive] = useState(item.active);
+  const [rewardDialogOpen, setRewardDialogOpen] = useState(false);
 
   useEffect(() => {
     setLocalCapacity(item.dailyCapacityKg);
@@ -145,15 +148,26 @@ export default function EnterpriseCapacityCard({
             )}
             
             {!isDirty && (
-                <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => onDelete(item)}
-                    title="Delete"
-                    className="text-muted-foreground hover:text-destructive ml-1"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center">
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setRewardDialogOpen(true)}
+                        title="Configure Reward Rule"
+                        className="text-muted-foreground hover:text-primary ml-1"
+                    >
+                        <Settings className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => onDelete(item)}
+                        title="Delete"
+                        className="text-muted-foreground hover:text-destructive ml-1"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
             )}
           </div>
         </div>
@@ -226,6 +240,15 @@ export default function EnterpriseCapacityCard({
           </button>
         </div>
       </CardContent>
+
+      <RewardRuleDialog 
+        open={rewardDialogOpen} 
+        onOpenChange={setRewardDialogOpen}
+        wasteTypeName={item.wasteTypeName}
+        wasteTypeId={item.wasteTypeId}
+        enterpriseId={item.enterpriseId} 
+        onSave={() => {}}
+      />
     </Card>
   );
 }
