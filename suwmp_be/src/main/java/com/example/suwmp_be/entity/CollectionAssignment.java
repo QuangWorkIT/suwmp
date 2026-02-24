@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "collection_assignments")
@@ -36,28 +36,29 @@ public class CollectionAssignment {
     @JoinColumn(name = "collector_id")
     private User collector;
 
-    /* ===== Fields ===== */
+    /* ===== Time Fields ===== */
 
     @Column(name = "assigned_at")
-    private LocalDateTime assignedAt;
+    private OffsetDateTime assignedAt;
 
     @Column(name = "start_collect_at")
-    private LocalDateTime startCollectAt;
+    private OffsetDateTime startCollectAt;
 
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "last_updated_at")
-    private LocalDateTime lastUpdatedAt;
+    private OffsetDateTime lastUpdatedAt;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.lastUpdatedAt = this.createdAt;
+        OffsetDateTime now = OffsetDateTime.now();
+        this.createdAt = now;
+        this.lastUpdatedAt = now;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.lastUpdatedAt = LocalDateTime.now();
+        this.lastUpdatedAt = OffsetDateTime.now();
     }
 }

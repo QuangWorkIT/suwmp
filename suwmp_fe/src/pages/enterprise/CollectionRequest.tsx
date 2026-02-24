@@ -24,7 +24,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/WasteReportService";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { EnterpriseUserService } from "@/services/EnterpriseUserService";
 import { dateTimeFormat } from "@/utilities/format";
 import {
     DropdownMenu,
@@ -34,7 +33,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import RejectRequestForm from "@/components/common/enterprise/RejectRequestForm";
-import { updateUserInfo } from "@/redux/features/userSlice"
+import AssignCollectorForm from "@/components/common/enterprise/AssignCollectorForm";
 
 
 const statusConfig = {
@@ -61,6 +60,7 @@ function CollectionRequest() {
     const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
     const [fetchedRequests, setFetchRequests] = useState<WasteReportEnterprise[]>([]);
     const [isRejectFormOpen, setIsRejectFormOpen] = useState(false);
+    const [isAssignFormOpen, setIsAssignFormOpen] = useState(true);
     const [selectedRejectRequestId, setSelectedRejectRequestId] = useState<number | null>(null);
     const [isFetchingRequests, setIsFetchingRequests] = useState(false)
 
@@ -69,26 +69,10 @@ function CollectionRequest() {
 
         try {
             setIsFetchingRequests(true)
-            let currentEnterpriseId = user.user.enterpriseId
+            // get waste reports by enterprise id
+            const response = await wasteReportService.getWasteReportsByEnterprise(user.user.enterpriseId)
 
-            if (!currentEnterpriseId) {
-                // find enterprise id
-                const enterpriseData = await EnterpriseUserService.getEnterpriseUserByUserId(user.user?.id || "")
-                currentEnterpriseId = enterpriseData.data.enterpriseId
-
-                dispatch(updateUserInfo({
-                    user: {
-                        ...user.user,
-                        enterpriseId: currentEnterpriseId
-                    }
-                }))
-            }
-
-            if (currentEnterpriseId) {
-                // get waste reports by enterprise id
-                const response = await wasteReportService.getWasteReportsByEnterprise(currentEnterpriseId)
-                setFetchRequests(response);
-            }
+            setFetchRequests(response);
             setIsFetchingRequests(false)
         } catch (error) {
             console.log(error);
@@ -164,9 +148,9 @@ function CollectionRequest() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="processing">Processing</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
+                                        <SelectItem value="Pending">Pending</SelectItem>
+                                        <SelectItem value="Processing">Processing</SelectItem>
+                                        <SelectItem value="Completed">Completed</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Button variant="outline">
@@ -183,6 +167,7 @@ function CollectionRequest() {
                                         exit={{ opacity: 0, x: 10 }}
                                         transition={{ duration: 0.2 }}
                                         className="flex items-center gap-2"
+                                        onClick={() => setIsAssignFormOpen(true)}
                                     >
                                         <span className="text-sm text-muted-foreground">
                                             {selectedRequests.length} selected
@@ -224,12 +209,12 @@ function CollectionRequest() {
                                 </thead>
                                 <tbody>
                                     {isFetchingRequests && (
-                                        <div className="fixed inset-0 flex items-center justify-center z-50 left-50">
-                                            <div className="animate-spin rounded-full h-26 w-26 border-b-2 border-primary"></div>
-                                        </div>
+                                        <tr className="fixed inset-0 flex items-center justify-center z-50 left-50">
+                                            <td className="animate-spin rounded-full h-26 w-26 border-b-2 border-primary"></td>
+                                        </tr>
                                     )}
 
-                                    {filteredRequests.map((req, index) => {
+                                    {!isFetchingRequests && filteredRequests.map((req, index) => {
                                         const status = statusConfig[req.currentStatus as keyof typeof statusConfig] || { label: req.currentStatus, color: "bg-gray-100 text-gray-700", icon: Circle };
                                         const priority = priorityConfig[req.priority as keyof typeof priorityConfig] || { label: "Normal", color: "bg-gray-100 text-gray-700" };
                                         return (
@@ -253,10 +238,11 @@ function CollectionRequest() {
                                                     <span className="font-mono text-sm font-medium">{req.requestId}</span>
                                                 </td>
                                                 <td className="py-3 px-4">
-                                                    <Badge variant="outline" className={`text-xs ${req.wasteTypeName === "Recyclables" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                                                        req.wasteTypeName === "Organic" ? "bg-green-50 text-green-700 border-green-200" :
-                                                            req.wasteTypeName === "E-Waste" ? "bg-violet-50 text-violet-700 border-violet-200" :
-                                                                "bg-red-50 text-red-700 border-red-200"
+                                                    <Badge variant="outline" className={`text-xs 
+                                                        ${req.wasteTypeName === "RECYCLABLE" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                                            req.wasteTypeName === "ORGANIC" ? "bg-green-50 text-green-700 border-green-200" :
+                                                                req.wasteTypeName === "E-WASTE" ? "bg-violet-50 text-violet-700 border-violet-200" :
+                                                                    "bg-red-50 text-red-700 border-red-200"
                                                         }`}>
                                                         {req.wasteTypeName}
                                                     </Badge>
@@ -323,7 +309,7 @@ function CollectionRequest() {
                                             </motion.tr>
                                         );
                                     })}
-                                    {filteredRequests.length === 0 && (
+                                    {!isFetchingRequests && filteredRequests.length === 0 && (
                                         <motion.tr
                                             key="no-requests"
                                             initial={{ opacity: 0, scale: 0.5 }}
@@ -389,6 +375,29 @@ function CollectionRequest() {
                                     <RejectRequestForm
                                         wasteReportId={selectedRejectRequestId}
                                         setIsRejectFormOpen={setIsRejectFormOpen}
+                                        onSuccess={fetchRequests} />
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {isAssignFormOpen && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                            >
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    <AssignCollectorForm
+                                        selectedRequests={selectedRequests}
+                                        setIsAssignFormOpen={setIsAssignFormOpen}
                                         onSuccess={fetchRequests} />
                                 </motion.div>
                             </motion.div>

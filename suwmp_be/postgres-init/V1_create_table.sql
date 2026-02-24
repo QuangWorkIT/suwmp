@@ -4,11 +4,13 @@
 CREATE
 EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE EXTENSION postgis;
+CREATE
+EXTENSION postgis;
 -- ===========================================
 -- DROP ALL TABLES (CLEAN INIT)
 -- ===========================================
-DO $$
+DO
+$$
 DECLARE
 r RECORD;
 BEGIN
@@ -64,23 +66,25 @@ CREATE TABLE enterprises
 
 -- Link ENTERPRISE users (in users table) to an enterprise they manage
 -- This is required to enforce enterprise-scoped authorization for enterprise endpoints.
-CREATE TABLE enterprise_users (
-    id BIGSERIAL PRIMARY KEY,
-    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    user_id UUID NOT NULL REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE enterprise_users
+(
+    id            BIGSERIAL PRIMARY KEY,
+    enterprise_id BIGINT NOT NULL REFERENCES enterprises (id),
+    user_id       UUID   NOT NULL REFERENCES users (id),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (enterprise_id, user_id)
 );
 
 CREATE INDEX idx_enterprise_users_enterprise_user
     ON enterprise_users (enterprise_id, user_id);
 
-CREATE TABLE service_area (
-    id BIGSERIAL PRIMARY KEY,
-    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    longitude DOUBLE PRECISION,
-    latitude DOUBLE PRECISION,
-    radius BIGINT
+CREATE TABLE service_area
+(
+    id            BIGSERIAL PRIMARY KEY,
+    enterprise_id BIGINT NOT NULL REFERENCES enterprises (id),
+    longitude     DOUBLE PRECISION,
+    latitude      DOUBLE PRECISION,
+    radius        BIGINT
 );
 
 CREATE TABLE enterprise_collectors
@@ -95,22 +99,24 @@ CREATE TABLE enterprise_collectors
 -- WASTE CATEGORIES & CAPACITY
 -- ===========================================
 
-CREATE TABLE waste_types (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL, -- Organic, Recyclable, Hazardous
+CREATE TABLE waste_types
+(
+    id          BIGSERIAL PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL, -- Organic, Recyclable, Hazardous
     description TEXT,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP,
     deleted_at  TIMESTAMP
 );
 
-CREATE TABLE enterprise_capacity (
-    id BIGSERIAL PRIMARY KEY,
-    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
-    daily_capacity_kg INT NOT NULL,
-    warning_threshold INT NOT NULL,
-    active BOOLEAN NOT NULL
+CREATE TABLE enterprise_capacity
+(
+    id                BIGSERIAL PRIMARY KEY,
+    enterprise_id     BIGINT  NOT NULL REFERENCES enterprises (id),
+    waste_type_id     BIGINT  NOT NULL REFERENCES waste_types (id),
+    daily_capacity_kg INT     NOT NULL,
+    warning_threshold INT     NOT NULL,
+    active            BOOLEAN NOT NULL
 );
 
 -- ===========================================
@@ -129,7 +135,7 @@ CREATE TABLE waste_reports
     photo_url            VARCHAR(500),
     volume               DOUBLE PRECISION,
     status               VARCHAR(20) CHECK (
-        status IN ('PENDING', 'REJECTED','ACCEPTED', 'ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
+        status IN ('PENDING', 'REJECTED', 'ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
         ),
     ai_suggested_type_id BIGINT REFERENCES waste_types (id),
     enterprise_note      VARCHAR(500),
@@ -140,37 +146,40 @@ CREATE TABLE waste_reports
 -- COLLECTION ASSIGNMENT & STATUS TRACKING
 -- ===========================================
 
-CREATE TABLE collection_assignments(
+CREATE TABLE collection_assignments
+(
     id               BIGSERIAL PRIMARY KEY,
     waste_report_id  BIGINT NOT NULL REFERENCES waste_reports (id),
     enterprise_id    BIGINT NOT NULL REFERENCES enterprises (id),
-    collector_id     UUID  REFERENCES users (id),
-    assigned_at      TIMESTAMP,
-    start_collect_at TIMESTAMP,
-    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_at  TIMESTAMP
+    collector_id     UUID REFERENCES users (id),
+    assigned_at      TIMESTAMPTZ,
+    start_collect_at TIMESTAMPTZ,
+    created_at       TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    last_updated_at  TIMESTAMPTZ
 );
 
-CREATE TABLE report_collection_status_logs (
-    id BIGSERIAL PRIMARY KEY,
-    waste_report_id BIGINT NOT NULL REFERENCES waste_reports(id),
-    collection_assignment_id BIGINT NOT NULL REFERENCES collection_assignments(id),
-    photo_url VARCHAR(500),
-    created_by UUID NOT NULL REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE report_collection_status_logs
+(
+    id                       BIGSERIAL PRIMARY KEY,
+    waste_report_id          BIGINT NOT NULL REFERENCES waste_reports (id),
+    collection_assignment_id BIGINT NOT NULL REFERENCES collection_assignments (id),
+    photo_url                VARCHAR(500),
+    created_by               UUID   NOT NULL REFERENCES users (id),
+    created_at               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ===========================================
 -- REWARD & GAMIFICATION SYSTEM
 -- ===========================================
 
-CREATE TABLE reward_rules (
-    id BIGSERIAL PRIMARY KEY,
-    enterprise_id BIGINT NOT NULL REFERENCES enterprises(id),
-    waste_type_id BIGINT NOT NULL REFERENCES waste_types(id),
-    base_points INT NOT NULL,
-    quality_multiplier DECIMAL(3,2),
-    active BOOLEAN DEFAULT TRUE
+CREATE TABLE reward_rules
+(
+    id                 BIGSERIAL PRIMARY KEY,
+    enterprise_id      BIGINT NOT NULL REFERENCES enterprises (id),
+    waste_type_id      BIGINT NOT NULL REFERENCES waste_types (id),
+    base_points        INT    NOT NULL,
+    quality_multiplier DECIMAL(3, 2),
+    active             BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE reward_transactions
@@ -217,16 +226,15 @@ VALUES (1, 'CITIZEN'),
 -- SEED DATA: WASTE TYPES
 -- ===========================================
 
-INSERT INTO waste_types (
-    name,
-    description,
-    created_at,
-    updated_at,
-    deleted_at
-) VALUES
-('ORGANIC', 'Biodegradable waste such as food scraps and garden waste', NOW(), NOW(), NULL),
-('RECYCLABLE', 'Waste materials that can be recycled such as plastic, paper, and metal', NOW(), NOW(), NULL),
-('HAZARDOUS', 'Waste that poses a risk to health or the environment, including chemicals and batteries', NOW(), NOW(), NULL);
+INSERT INTO waste_types (name,
+                         description,
+                         created_at,
+                         updated_at,
+                         deleted_at)
+VALUES ('ORGANIC', 'Biodegradable waste such as food scraps and garden waste', NOW(), NOW(), NULL),
+       ('RECYCLABLE', 'Waste materials that can be recycled such as plastic, paper, and metal', NOW(), NOW(), NULL),
+       ('HAZARDOUS', 'Waste that poses a risk to health or the environment, including chemicals and batteries', NOW(),
+        NOW(), NULL);
 
 -- ===========================================
 -- SEED DATA: ENTERPRISES

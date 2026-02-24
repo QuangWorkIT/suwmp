@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { decodePayLoad } from "@/utilities/jwt";
 import { useAppDispatch } from "@/redux/hooks";
 import { login } from "@/redux/features/userSlice";
+import { EnterpriseUserService } from "@/services/EnterpriseUserService";
+import type { UserInterface } from "@/types/Users";
 
 export const roleNavigation = {
   "ENTERPRISE": "/enterprise",
@@ -85,7 +87,11 @@ export default function Login() {
         toast.success("Login successfully");
 
         const payload = decodePayLoad(res.data.accessToken)
-        dispatch(login({ user: payload, token: res.data.accessToken }))
+        if (payload.role === "ENTERPRISE") {
+          fetchEnterpriseId(payload.id, payload, res.data.accessToken)
+        } else {
+          dispatch(login({ user: payload, token: res.data.accessToken }))
+        }
 
         nav(roleNavigation[payload.role], { replace: true })
 
@@ -98,6 +104,12 @@ export default function Login() {
     }
     return null;
   };
+
+  const fetchEnterpriseId = async (id: string, payload: UserInterface, token: string) => {
+    const enterpriseData = await EnterpriseUserService.getEnterpriseUserByUserId(id)
+    payload.enterpriseId = enterpriseData.data.id
+    dispatch(login({ user: payload, token: token }))
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">

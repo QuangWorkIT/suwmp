@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -18,6 +19,6 @@ public class CreateCollectionAssignment {
     private Long enterpriseId;
 
     private UUID collectorId;
-    private LocalDateTime assignedAt;
-    private LocalDateTime startCollectAt;
+    private OffsetDateTime assignedAt;
+    private OffsetDateTime startCollectAt;
 }

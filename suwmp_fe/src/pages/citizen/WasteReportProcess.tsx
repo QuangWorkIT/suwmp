@@ -6,7 +6,6 @@ import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload"
 import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep"
 import ReportHeader from "@/components/layout/citizen/ReportHeader"
 import { useAppSelector } from "@/redux/hooks";
-import { collectionAssignmentService } from "@/services/CollectionAssignmentService";
 import s3Service from "@/services/S3Service";
 import wasteReportService from "@/services/WasteReportService";
 import { useState } from "react";
@@ -57,16 +56,6 @@ function WasteReportProcess() {
         }
     }
 
-    const getCollectionAssignmentPayload = (wasteReportId: number) => {
-        if (!selectedEnterprise || !wasteReportId) return null
-        return {
-            wasteReportId: wasteReportId,
-            enterpriseId: selectedEnterprise,
-            collectorId: null,
-            assignedAt: null,
-            startCollectAt: null
-        }
-    }
 
     const handleSubmit = async () => {
         if (!imageUploaded || !selectedType || location.length !== 2
@@ -86,15 +75,8 @@ function WasteReportProcess() {
                 throw new Error("Missing waste reportdata")
             }
 
-            const wasteReportResponse = await wasteReportService.createWasteReport(payload)
-
-            const caPayload = getCollectionAssignmentPayload(wasteReportResponse.data)
-            if (!caPayload) {
-                throw new Error("Missing collection assignment data")
-            }
-
-            await collectionAssignmentService.createAssignment(caPayload)
-
+            await wasteReportService.createWasteReport(payload)
+            
             toast.success("Report submitted successfully", {
                 position: "top-right"
             })

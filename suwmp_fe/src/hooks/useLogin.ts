@@ -1,11 +1,14 @@
 import { authInitialized, login } from "@/redux/features/userSlice"
 import { useAppDispatch } from "@/redux/hooks"
 import { AuthService } from "@/services/AuthService"
+import { EnterpriseUserService } from "@/services/EnterpriseUserService"
+import type { UserInterface } from "@/types/Users"
 import { decodePayLoad, isTokenExpired } from "@/utilities/jwt"
 import { useEffect } from "react"
 
+
+const dispatch = useAppDispatch()
 function useLogin() {
-    const dispatch = useAppDispatch()
     useEffect(() => {
         const reLogin = async () => {
             const token = localStorage.getItem("token")
@@ -19,7 +22,11 @@ function useLogin() {
                 const res = await AuthService.refreshToken()
                 if (res.success) {
                     const payload = decodePayLoad(res.data.accessToken)
-                    dispatch(login({ user: payload, token: res.data.accessToken }))
+                    if (payload.role === "ENTERPRISE") {
+                        fetchEnterpriseId(payload.id, payload, res.data.accessToken)
+                    } else {
+                        dispatch(login({ user: payload, token: res.data.accessToken }))
+                    }
                 } else {
                     dispatch(authInitialized())
                 }
@@ -31,6 +38,12 @@ function useLogin() {
 
         reLogin()
     }, [])
+}
+
+const fetchEnterpriseId = async (id: string, payload: UserInterface, token: string) => {
+    const enterpriseData = await EnterpriseUserService.getEnterpriseUserByUserId(id)
+    payload.enterpriseId = enterpriseData.data.id
+    dispatch(login({ user: payload, token: token }))
 }
 
 export default useLogin

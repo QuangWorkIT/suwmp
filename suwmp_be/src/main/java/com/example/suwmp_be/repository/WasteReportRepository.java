@@ -34,7 +34,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             LEFT JOIN users u2
                 ON u2.id = ca.collector_id
             WHERE u1.deleted_at IS NULL
-              AND ca.enterprise_id = :enterpriseId
+              AND wr.enterprise_id = :enterpriseId
             ORDER BY wr.created_at DESC
             """, nativeQuery = true)
     List<ICollectionRequestView> getRequestsByEnterprise(Long enterpriseId);
