@@ -42,6 +42,7 @@ import { format, formatISO } from "date-fns"
 import type { Collector } from "@/types/collector"
 import { CollectorService } from "@/services/CollectorService"
 import { useAppSelector } from "@/redux/hooks"
+import { collectionAssignmentService } from "@/services/CollectionAssignmentService"
 
 const formSchema = z.object({
     collectorId: z.string().min(1, "Please select a collector"),
@@ -54,7 +55,7 @@ type FormValues = z.infer<typeof formSchema>
 interface AssignCollectorFormProps {
     selectedRequests: number[]
     setIsAssignFormOpen: (v: boolean) => void
-    onSuccess?: () => void
+    onSuccess: () => void
 }
 
 function AssignCollectorForm({
@@ -87,19 +88,27 @@ function AssignCollectorForm({
     }, [user])
 
     const onSubmit = async (data: FormValues) => {
+        if (!user) return
         try {
             const [hours, minutes] = data.time.split(":").map(Number)
             const scheduledDate = new Date(data.date)
             scheduledDate.setHours(hours, minutes, 0, 0)
 
-            console.log("scheduledDate", formatISO(scheduledDate))
-            console.log("collectorId", data.collectorId)
-            console.log("selectedRequests", selectedRequests)
+            const payload = {
+                wasteReportId: selectedRequests,
+                collectorId: data.collectorId,
+                startCollectAt: formatISO(scheduledDate),
+                enterpriseId: user.enterpriseId
+            }
 
-            onSuccess?.()
-            toast.success("Request assigned successfully")
+            await collectionAssignmentService.assignCollection(payload)
+        
+            onSuccess()
+            setIsAssignFormOpen(false)
+            toast.success("Requests assigned successfully")
         } catch (error) {
-            toast.error("Failed to assign request")
+            toast.error("Failed to assign requests")
+            console.log(error)
         }
     }
 
@@ -197,7 +206,7 @@ function AssignCollectorForm({
                                     >
                                         <FormControl>
                                             <SelectTrigger className="w-full">
-                                                <SelectValue placeholder= {collectors.length > 0 ? "Select a collector" : "No collector found"} />
+                                                <SelectValue placeholder={collectors.length > 0 ? "Select a collector" : "No collector found"} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>

@@ -1,14 +1,14 @@
 import authClient from "@/config/axios";
-import type { CreateCollectionAssignment } from "@/types/collectionAssignment";
+import type { AssignCollectionAssignment } from "@/types/collectionAssignment";
 
 export const collectionAssignmentService = {
-    createAssignment: async (payload: CreateCollectionAssignment) => {
+    assignCollection: async (payload: AssignCollectionAssignment) => {
         try {
-            const response = await authClient.post("/ca", payload)
+            const response = await authClient.post("/ca/assignments", payload)
             return response.data
         } catch (error) {
             console.log(error)
-            throw new Error("Failed to create collection assignment")
+            throw new Error("Failed to assign collection")
         }
     }
 }

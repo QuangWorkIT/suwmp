@@ -152,9 +152,8 @@ CREATE TABLE collection_assignments
     waste_report_id  BIGINT NOT NULL REFERENCES waste_reports (id),
     enterprise_id    BIGINT NOT NULL REFERENCES enterprises (id),
     collector_id     UUID REFERENCES users (id),
-    assigned_at      TIMESTAMPTZ,
+    assigned_at      TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     start_collect_at TIMESTAMPTZ,
-    created_at       TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     last_updated_at  TIMESTAMPTZ
 );
 

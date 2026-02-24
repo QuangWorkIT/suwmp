@@ -1,7 +1,6 @@
-export type CreateCollectionAssignment = {
-    wasteReportId: number;
+export type AssignCollectionAssignment = {
+    wasteReportId: number[];
     enterpriseId: number;
     collectorId: string | null;
-    assignedAt: Date | null;
-    startCollectAt: Date | null;
+    startCollectAt: string | null;
 }

@@ -44,16 +44,13 @@ public class CollectionAssignment {
     @Column(name = "start_collect_at")
     private OffsetDateTime startCollectAt;
 
-    @Column(name = "created_at", updatable = false)
-    private OffsetDateTime createdAt;
-
     @Column(name = "last_updated_at")
     private OffsetDateTime lastUpdatedAt;
 
     @PrePersist
     protected void onCreate() {
         OffsetDateTime now = OffsetDateTime.now();
-        this.createdAt = now;
+        this.assignedAt = now;
         this.lastUpdatedAt = now;
     }
 

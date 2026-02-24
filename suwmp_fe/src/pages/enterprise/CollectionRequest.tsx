@@ -60,7 +60,7 @@ function CollectionRequest() {
     const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
     const [fetchedRequests, setFetchRequests] = useState<WasteReportEnterprise[]>([]);
     const [isRejectFormOpen, setIsRejectFormOpen] = useState(false);
-    const [isAssignFormOpen, setIsAssignFormOpen] = useState(true);
+    const [isAssignFormOpen, setIsAssignFormOpen] = useState(false);
     const [selectedRejectRequestId, setSelectedRejectRequestId] = useState<number | null>(null);
     const [isFetchingRequests, setIsFetchingRequests] = useState(false)
 
@@ -74,6 +74,7 @@ function CollectionRequest() {
 
             setFetchRequests(response);
             setIsFetchingRequests(false)
+            setSelectedRequests([])
         } catch (error) {
             console.log(error);
             setIsFetchingRequests(false)

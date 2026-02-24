@@ -1,8 +1,7 @@
 package com.example.suwmp_be.service;
 
-import com.example.suwmp_be.dto.request.CreateCollectionAssignment;
-import com.example.suwmp_be.entity.CollectionAssignment;
+import com.example.suwmp_be.dto.request.AssignCollectorRequest;
 
 public interface ICollectionAssignmentService {
-    Long createACollectionAssignment(CreateCollectionAssignment dto);
+    Long assignCollector(AssignCollectorRequest dto);
 }

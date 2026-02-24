@@ -5,9 +5,7 @@ import { AuthService } from "@/services/AuthService";
 import { toast } from "sonner";
 import { decodePayLoad } from "@/utilities/jwt";
 import { useAppDispatch } from "@/redux/hooks";
-import { login } from "@/redux/features/userSlice";
-import { EnterpriseUserService } from "@/services/EnterpriseUserService";
-import type { UserInterface } from "@/types/Users";
+import { resolveUser } from "@/hooks/useLogin";
 
 export const roleNavigation = {
   "ENTERPRISE": "/enterprise",
@@ -83,33 +81,28 @@ export default function Login() {
 
     if (!emailError && !passwordError) {
       const res = await AuthService.login(form);
+
       if (res.success) {
-        toast.success("Login successfully");
+        try {
+          const token = res.data.accessToken
+          const payload = decodePayLoad(token)
 
-        const payload = decodePayLoad(res.data.accessToken)
-        if (payload.role === "ENTERPRISE") {
-          fetchEnterpriseId(payload.id, payload, res.data.accessToken)
-        } else {
-          dispatch(login({ user: payload, token: res.data.accessToken }))
+          await resolveUser(dispatch, payload, token)
+          
+          toast.success("Login successfully")
+          nav(roleNavigation[payload.role], { replace: true })
+        } catch {
+          toast.error("Login succeeded but failed to initialize session")
         }
-
-        nav(roleNavigation[payload.role], { replace: true })
-
       } else {
         if (res.error === "User not found" || res.error === "Invalid password") {
           toast.error("Invalid credentials");
-        } else
+        } else {
           toast.error(res.error);
+        }
       }
     }
-    return null;
   };
-
-  const fetchEnterpriseId = async (id: string, payload: UserInterface, token: string) => {
-    const enterpriseData = await EnterpriseUserService.getEnterpriseUserByUserId(id)
-    payload.enterpriseId = enterpriseData.data.id
-    dispatch(login({ user: payload, token: token }))
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">

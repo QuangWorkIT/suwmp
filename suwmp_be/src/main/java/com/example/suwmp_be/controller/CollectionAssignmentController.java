@@ -1,7 +1,7 @@
 package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
-import com.example.suwmp_be.dto.request.CreateCollectionAssignment;
+import com.example.suwmp_be.dto.request.AssignCollectorRequest;
 import com.example.suwmp_be.service.ICollectionAssignmentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -17,13 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class CollectionAssignmentController {
     private final ICollectionAssignmentService caService;
 
-    @PostMapping
-    public ResponseEntity<BaseResponse<Long>> createCollectionAssignment(
-            @Valid @RequestBody CreateCollectionAssignment payload) {
+    @PostMapping("/assignments")
+    public ResponseEntity<BaseResponse<Long>> assignCollector(
+            @Valid @RequestBody AssignCollectorRequest payload) {
         return ResponseEntity.status(201)
                 .body(new BaseResponse<>(
                         true,
-                        "Create assignment successfully",
-                        caService.createACollectionAssignment(payload)));
+                        "Assign collector successfully for "
+                                +  caService.assignCollector(payload) + " waste reports")
+                );
     }
 }
