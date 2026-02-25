@@ -25,7 +25,30 @@ export type WasteReportEnterprise = {
     collectorName: string;
     createdAt: string;
     enterpriseId: number;
-};
+}
+
+export type NearbyEnterpriseRequest = {
+    longitude: number;
+    latitude: number;
+    wasteTypeId: number;
+}
+
+export type NearbyEnterpriseResponse = {
+    id: number;
+    name: string;
+    description: string;
+    rating: number;
+    photoUrl: string;
+    createdAt: string;
+    distance: number;
+    rewardPoints: number;
+}
+
+
+export type CancelWasteReportRequest = {
+    wasteReportId: number;
+    note: string;
+}
 
 export type CitizenWasteReportStatus = {
     id: number;

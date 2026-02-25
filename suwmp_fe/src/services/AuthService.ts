@@ -22,6 +22,28 @@ export const AuthService = {
       };
     }
   },
+  refreshToken: async () => {
+    try {
+      const response = await api.post("/auth/refresh-token", {}, {
+        withCredentials: true,
+      });
+
+      return {
+        success: true,
+        data: response.data.data ?? null,
+        status: response.status,
+      };
+    } catch (error: any) {
+      const message = error.response?.data?.error || "Refresh token failed";
+      console.log(error);
+
+      return {
+        success: false,
+        error: message,
+        status: error.response?.status,
+      };
+    }
+  },
   register: async (payload: RegisterRequest) => {
     try {
       const response = await api.post("/auth/register", payload);

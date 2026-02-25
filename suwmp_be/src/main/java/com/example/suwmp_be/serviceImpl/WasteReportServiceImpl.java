@@ -1,16 +1,18 @@
 package com.example.suwmp_be.serviceImpl;
 
-import com.example.suwmp_be.constants.ErrorCode;
-import com.example.suwmp_be.constants.ReportStatus;
+import com.example.suwmp_be.constants.WasteReportStatus;
 import com.example.suwmp_be.dto.mapper.WasteReportMapper;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
-import com.example.suwmp_be.dto.view.CollectionRequestView;
+import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
+import com.example.suwmp_be.dto.view.ICollectionRequestView;
+import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
 import com.example.suwmp_be.entity.Enterprise;
 import com.example.suwmp_be.entity.WasteReport;
-import com.example.suwmp_be.exception.NotFoundException;
-import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
+import com.example.suwmp_be.repository.EnterpriseRepository;
+import com.example.suwmp_be.exception.NotFoundException;
+import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,22 +32,60 @@ public class WasteReportServiceImpl implements IWasteReportService {
         WasteReport wasteReport = wasteReportMapper.toEntity(request);
 
         // Normalize and default status using enum
-        String status = wasteReport.getStatus();
+        String status = wasteReport.getStatus().toString();
         if (status == null) {
-            wasteReport.setStatus(ReportStatus.PENDING.name());
+            wasteReport.setStatus(WasteReportStatus.PENDING);
         } else {
-            wasteReport.setStatus(ReportStatus.from(status).name());
+            wasteReport.setStatus(WasteReportStatus.from(status));
         }
 
         return wasteReportRepo.save(wasteReport).getId();
     }
 
     @Override
-    public List<CollectionRequestView> getWasteReportRequestsByEnterprise(Long enterpriseId) {
+    public List<ICollectionRequestView> getWasteReportRequestsByEnterprise(Long enterpriseId) {
         if (!enterpriseRepo.existsById(enterpriseId)) {
             throw new NotFoundException(ErrorCode.ENTERPRISE_NOT_FOUND);
         }
         return wasteReportRepo.getRequestsByEnterprise(enterpriseId);
+    }
+
+    @Override
+    public List<EnterpriseNearbyResponse> getEnterprisesNearbyCitizen(Double citizenLong, Double citizenLat, Long wasteTypeId) {
+        List<IEnterpriseDistanceView> enterprisesFound = wasteReportRepo.getEnterprisesNearbyCitizen(
+                citizenLong,
+                citizenLat,
+                wasteTypeId
+        );
+
+        return enterprisesFound.stream()
+                .map(e -> {
+                    int base = e.getBasePoint();
+                    double multiplier = e.getQualityMultiplier() != null
+                            ? e.getQualityMultiplier() : 1;
+
+                    double rewardPoint = base * multiplier;
+                    return new EnterpriseNearbyResponse(
+                            e.getId(),
+                            e.getName(),
+                            e.getDescription(),
+                            e.getRating(),
+                            e.getPhotoUrl(),
+                            e.getCreatedAt(),
+                            e.getDistance(),
+                            rewardPoint);
+                }).toList();
+    }
+
+    @Override
+    public long cancelWasteReport(Long wasteReportId, String note) {
+        WasteReport wasteReport = wasteReportRepo.findById(wasteReportId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
+
+        wasteReport.setStatus(WasteReportStatus.REJECTED);
+        wasteReport.setEnterpriseNote(note);
+
+        return wasteReportRepo.save(wasteReport).getId();
     }
 
     @Override
@@ -74,7 +114,7 @@ public class WasteReportServiceImpl implements IWasteReportService {
         return new CitizenWasteReportStatusResponse(
                 report.getId(),
                 referenceCode,
-                report.getStatus(),
+                report.getStatus().toString(),
                 report.getCreatedAt(),
                 report.getWasteType() != null ? report.getWasteType().getName() : null,
                 enterprise != null ? enterprise.getName() : null,
@@ -87,4 +127,3 @@ public class WasteReportServiceImpl implements IWasteReportService {
         );
     }
 }
-

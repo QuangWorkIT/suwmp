@@ -5,7 +5,7 @@ import { AuthService } from "@/services/AuthService";
 import { toast } from "sonner";
 import { decodePayLoad } from "@/utilities/jwt";
 import { useAppDispatch } from "@/redux/hooks";
-import { login } from "@/redux/features/userSlice";
+import { resolveUser } from "@/hooks/useLogin";
 
 export const roleNavigation = {
   "ENTERPRISE": "/enterprise",
@@ -81,22 +81,29 @@ export default function Login() {
 
     if (!emailError && !passwordError) {
       const res = await AuthService.login(form);
+
       if (res.success) {
-        toast.success("Login successfully");
-
-        const payload = decodePayLoad(res.data.accessToken)
-        dispatch(login({ user: payload, token: res.data.accessToken }))
-
-        nav(roleNavigation[payload.role], { replace: true })
-
+        try {
+          const token = res.data.accessToken
+          
+          const payload = decodePayLoad(token)
+          
+          localStorage.setItem("token", token)
+          await resolveUser(dispatch, payload, token)
+          
+          toast.success("Login successfully")
+          nav(roleNavigation[payload.role], { replace: true })
+        } catch {
+          toast.error("Login succeeded but failed to initialize session")
+        }
       } else {
         if (res.error === "User not found" || res.error === "Invalid password") {
           toast.error("Invalid credentials");
-        } else
+        } else {
           toast.error(res.error);
+        }
       }
     }
-    return null;
   };
 
   return (

@@ -2,18 +2,17 @@ import EnterpriseList from "@/components/common/citizen/EnterpriseList";
 import LocationDetail from "@/components/common/citizen/LocationDetail";
 import ReportReview from "@/components/common/citizen/ReportReview";
 import WasteClassification, { type WasteType } from "@/components/common/citizen/WasteClassification";
-import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload";
-import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep";
-import ReportHeader from "@/components/layout/citizen/ReportHeader";
+import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload"
+import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep"
+import ReportHeader from "@/components/layout/citizen/ReportHeader"
 import { useAppSelector } from "@/redux/hooks";
 import s3Service from "@/services/S3Service";
 import wasteReportService from "@/services/WasteReportService";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 function WasteReportProcess() {
     const user = useAppSelector(state => state.user)
-    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0);
     const [imageUploaded, setImageUploaded] = useState<File | null>(null);
     const [selectedType, setSelectedType] = useState<WasteType | null>(null);
@@ -42,39 +41,56 @@ function WasteReportProcess() {
         }
     }
 
+    const getWasteReportPayload = (photoUrl: string) => {
+        if (!selectedType || !user.user || !selectedEnterprise) return null
+        return {
+            photoUrl: photoUrl,
+            longitude: location[0],
+            latitude: location[1],
+            description: notes,
+            enterprisesId: selectedEnterprise,
+            citizenId: user.user?.id,
+            wasteTypeId: Number(selectedType.id),
+            aiSuggestedTypeId: Number(selectedType.id),
+            status: "PENDING"
+        }
+    }
+
+
     const handleSubmit = async () => {
         if (!imageUploaded || !selectedType || location.length !== 2
-            || !notes || !selectedEnterprise || !user.user) return
+            || !selectedEnterprise || !user.user) {
+            return
+        }
 
         try {
             setSubmitting(true)
+
             const photoResponse = await s3Service.uploadImage(imageUploaded)
-
-            if (!photoResponse) return
-
-            const payload = {
-                photoUrl: photoResponse.data,
-                longitude: location[0],
-                latitude: location[1],
-                description: notes,
-                enterprisesId: selectedEnterprise,
-                citizenId: user.user?.id,
-                wasteTypeId: Number(selectedType.id),
-                aiSuggestedTypeId: Number(selectedType.id),
-                status: "PENDING"
-            }
-            const data = await wasteReportService.createWasteReport(payload)
-            console.log("Create report data: ", data)
-
-            const reportId = data?.data
-            if (reportId) {
-                navigate(`/citizen/reports/${reportId}`)
+            if (!photoResponse) {
+                toast.error("Failed too upload image", { position: "top-right" })
+                setSubmitting(false)
+                return
             }
 
-            setSubmitting(false)
+            const payload = getWasteReportPayload(photoResponse.data)
+            if (!payload) {
+                throw new Error("Missing waste report data")
+            }
+
+            await wasteReportService.createWasteReport(payload)
+
+            toast.success("Report submitted successfully", {
+                position: "top-right"
+            })
+
             resetData()
         } catch (error) {
             console.log(error)
+            toast.error("Fail to submit report!", {
+                position: "top-right"
+            })
+        } finally {
             setSubmitting(false)
         }
     }
@@ -89,7 +105,7 @@ function WasteReportProcess() {
     }
 
     return (
-        <div className="min-h-screen w-full bg-background relative p-15">
+        <div className="min-h-screen w-full bg-background relative p-16">
             <ReportHeader />
             <div className="flex flex-col gap-10 items-center justify-center pt-10">
 
@@ -145,10 +161,13 @@ function WasteReportProcess() {
                     {currentStep === 4 && (
                         isSubmitting ? (
                             <div className="fixed inset-0 flex items-center justify-center z-50">
-                                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+                                <div className="animate-spin rounded-full h-28 w-28 border-b-2 border-primary"></div>
                             </div>
                         ) : (
                             <EnterpriseList
+                                longitude={location[0]}
+                                latitude={location[1]}
+                                wasteTypeId={Number(selectedType?.id) || 1}
                                 handleSubmit={handleSubmit}
                                 handlePreviousStep={handlePreviousStep}
                                 selectedEnterprise={selectedEnterprise}
