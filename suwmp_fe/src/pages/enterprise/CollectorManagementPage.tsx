@@ -9,7 +9,6 @@ import { CollectorCard } from "@/components/common/collector/CollectorCard";
 import { CollectorDialog } from "@/components/common/collector/CollectorDialog";
 import { DeleteCollectorDialog } from "@/components/common/collector/DeleteCollectorDialog";
 import { CollectorService } from "@/services/CollectorService";
-import { mockCollectors, USE_MOCK_DATA } from "@/data/mockCollectors";
 import type {
   Collector,
   CreateCollectorRequest,
@@ -17,11 +16,11 @@ import type {
   CollectorStats,
 } from "@/types/collector";
 
+import { useAppSelector } from "@/redux/hooks";
+
 const CollectorManagementPage = () => {
-  // TODO: Get enterpriseId from auth context/Redux store
-  // For now, using a placeholder - this should be retrieved from authenticated user's profile
-  // In a real app, this would come from: const { user } = useAuth(); const enterpriseId = user.enterpriseId;
-  const enterpriseId = 1;
+  const { user } = useAppSelector((state) => state.user);
+  const enterpriseId = user?.enterpriseId || 1;
 
   const [collectors, setCollectors] = useState<Collector[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,72 +37,54 @@ const CollectorManagementPage = () => {
     totalPages: 0,
   });
 
-  // Fetch collectors - uses mock data if enabled, otherwise calls API
-  const fetchCollectors = async () => {
+  const [activeRequestCount, setActiveRequestCount] = useState(0);
+
+  // Fetch collectors and related stats - calls real APIs
+  const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
     
-    // Simulate API delay for mock data
-    if (USE_MOCK_DATA) {
-      setTimeout(() => {
-        setCollectors(mockCollectors);
-        setPagination({
-          page: 0,
-          size: 20,
-          totalElements: mockCollectors.length,
-          totalPages: 1,
-        });
-        setLoading(false);
-      }, 500); // Simulate network delay
-      return;
-    }
-
-    // Real API call
     try {
-      const response = await CollectorService.getCollectors(
-        enterpriseId,
-        pagination.page,
-        pagination.size
-      );
-      if (response.success && response.data) {
-        setCollectors(response.data.content);
+      const [collectorsRes, reportsData] = await Promise.all([
+        CollectorService.getCollectors(enterpriseId, pagination.page, pagination.size),
+        import("@/services/WasteReportService").then(m => m.default.getWasteReportsByEnterprise(enterpriseId))
+      ]);
+
+      if (collectorsRes.success && collectorsRes.data) {
+        setCollectors(collectorsRes.data.content);
         setPagination((prev) => ({
           ...prev,
-          totalElements: response.data!.totalElements,
-          totalPages: response.data!.totalPages,
+          totalElements: collectorsRes.data!.totalElements,
+          totalPages: collectorsRes.data!.totalPages,
         }));
       } else {
-        setError(response.error || "Failed to fetch collectors");
+        setError(collectorsRes.error || "Failed to fetch collectors");
+      }
+
+      if (reportsData) {
+        setActiveRequestCount(reportsData.length);
       }
     } catch (err) {
       setError("An unexpected error occurred");
-      console.error("Error fetching collectors:", err);
+      console.error("Error fetching dashboard data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCollectors();
+    fetchDashboardData();
   }, [enterpriseId, pagination.page, pagination.size]);
 
   // Calculate statistics
   const stats: CollectorStats = useMemo(() => {
-    const totalCollectors = collectors.length;
-    const activeNow = collectors.filter(
-      (c) => c.status === "ACTIVE" || c.status === "IDLE"
-    ).length;
-    // Mock data for tasks and rating - these would come from separate API endpoints
-    const tasksToday = 22;
-    const avgRating = 4.7;
-
     return {
-      totalCollectors,
-      activeNow,
-      tasksToday,
-      avgRating,
+      totalCollectors: pagination.totalElements,
+      activeNow: collectors.filter(c => c.status === "ACTIVE").length,
+      tasksToday: activeRequestCount,
+      avgRating: 0, // Placeholder: No backend API for rating yet
     };
-  }, [collectors]);
+  }, [pagination.totalElements, collectors, activeRequestCount]);
 
   // Filter collectors based on search query
   const filteredCollectors = useMemo(() => {
@@ -130,25 +111,9 @@ const CollectorManagementPage = () => {
 
   // Handle create collector
   const handleCreate = async (data: CreateCollectorRequest) => {
-    if (USE_MOCK_DATA) {
-      // Mock: Add new collector to the list
-      const newCollector: Collector = {
-        id: Date.now().toString(),
-        fullName: data.fullName,
-        email: data.email,
-        phone: data.phone,
-        status: "ACTIVE",
-        imageUrl: null,
-        createdAt: new Date().toISOString(),
-      };
-      setCollectors((prev) => [...prev, newCollector]);
-      setDialogOpen(false);
-      return;
-    }
-
     const response = await CollectorService.createCollector(enterpriseId, data);
     if (response.success) {
-      await fetchCollectors();
+      await fetchDashboardData();
       setDialogOpen(false);
     } else {
       throw new Error(response.error || "Failed to create collector");
@@ -159,31 +124,13 @@ const CollectorManagementPage = () => {
   const handleUpdate = async (data: UpdateCollectorRequest) => {
     if (!selectedCollector) return;
 
-    if (USE_MOCK_DATA) {
-      // Mock: Update collector in the list
-      setCollectors((prev) =>
-        prev.map((collector) =>
-          collector.id === selectedCollector.id
-            ? {
-                ...collector,
-                ...data,
-                status: (data.status || collector.status) as Collector["status"],
-              }
-            : collector
-        )
-      );
-      setDialogOpen(false);
-      setSelectedCollector(null);
-      return;
-    }
-
     const response = await CollectorService.updateCollector(
       enterpriseId,
       selectedCollector.id,
       data
     );
     if (response.success) {
-      await fetchCollectors();
+      await fetchDashboardData();
       setDialogOpen(false);
       setSelectedCollector(null);
     } else {
@@ -195,26 +142,12 @@ const CollectorManagementPage = () => {
   const handleDelete = async () => {
     if (!selectedCollector) return;
 
-    if (USE_MOCK_DATA) {
-      // Mock: Remove collector from the list (soft delete - set to INACTIVE)
-      setCollectors((prev) =>
-        prev.map((collector) =>
-          collector.id === selectedCollector.id
-            ? { ...collector, status: "INACTIVE" as const }
-            : collector
-        )
-      );
-      setDeleteDialogOpen(false);
-      setSelectedCollector(null);
-      return;
-    }
-
     const response = await CollectorService.deleteCollector(
       enterpriseId,
       selectedCollector.id
     );
     if (response.success) {
-      await fetchCollectors();
+      await fetchDashboardData();
       setDeleteDialogOpen(false);
       setSelectedCollector(null);
     } else {

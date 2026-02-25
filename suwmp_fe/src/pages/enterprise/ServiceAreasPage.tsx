@@ -8,18 +8,21 @@ import { Separator } from "@/components/ui/separator";
 import { ServiceAreaService } from "@/services/ServiceAreaService";
 import type { ServiceArea } from "@/types/serviceArea";
 import ServiceAreaMap from "@/components/common/enterprise/ServiceAreaMap";
-import { mockServiceAreas, USE_MOCK_DATA } from "@/data/mockServiceAreas";
 import { reverseGeocode, forwardGeocode, autocompleteAddress, type AddressSuggestion } from "@/utilities/geocoding";
 import { useDebounce } from "@/hooks/useDebouse";
 
+import { useAppSelector } from "@/redux/hooks";
+
 const ServiceAreasPage = () => {
-  // TODO: Get enterpriseId from auth context/Redux store (same pattern as CollectorManagementPage)
-  const enterpriseId = 1;
+  const { user } = useAppSelector((state) => state.user);
+  const enterpriseId = user?.enterpriseId || 1;
 
   const [areas, setAreas] = useState<ServiceArea[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<Record<number, string>>({});
+  const [collectorCount, setCollectorCount] = useState(0);
+  const [activeRequestCount, setActiveRequestCount] = useState(0);
 
   const [pendingAddress, setPendingAddress] = useState<string>("");
   const [pendingCoordinates, setPendingCoordinates] = useState<{ lng: number; lat: number } | null>(null);
@@ -38,26 +41,38 @@ const ServiceAreasPage = () => {
     setLoading(true);
     setError(null);
 
-    if (USE_MOCK_DATA) {
-      setTimeout(() => {
-        setAreas(mockServiceAreas);
-        setLoading(false);
-      }, 400);
-      return;
-    }
+    try {
+      const [areasRes, collectorsRes, reportsData] = await Promise.all([
+        ServiceAreaService.list(enterpriseId),
+        import("@/services/CollectorService").then(m => m.CollectorService.getCollectors(enterpriseId, 0, 1)),
+        import("@/services/WasteReportService").then(m => m.default.getWasteReportsByEnterprise(enterpriseId))
+      ]);
 
-    const res = await ServiceAreaService.list(enterpriseId);
-    if (res.success) {
-      setAreas(res.data ?? []);
-    } else {
-      setError(res.error || "Failed to fetch service areas");
+      if (areasRes.success) {
+        setAreas(areasRes.data ?? []);
+      } else {
+        setError(areasRes.error || "Failed to fetch service areas");
+      }
+
+      if (collectorsRes.success && collectorsRes.data) {
+        setCollectorCount(collectorsRes.data.totalElements);
+      }
+
+      if (reportsData) {
+        setActiveRequestCount(reportsData.length);
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchAreas();
-  }, []);
+    if (enterpriseId) {
+      fetchAreas();
+    }
+  }, [enterpriseId]);
 
   useEffect(() => {
     // Resolve formatted addresses for zones that don't have one yet.
@@ -90,12 +105,11 @@ const ServiceAreasPage = () => {
   const stats = useMemo(() => {
     return {
       totalZones: areas.length,
-      // placeholders to match the Figma card; hook these to real endpoints later
-      totalCollectors: 12,
-      activeRequests: 30,
-      coverageRate: 94,
+      totalCollectors: collectorCount,
+      activeRequests: activeRequestCount,
+      coverageRate: 94, // Placeholder for future logic
     };
-  }, [areas.length]);
+  }, [areas.length, collectorCount, activeRequestCount]);
 
   // Autocomplete search effect
   useEffect(() => {
@@ -184,27 +198,6 @@ const ServiceAreasPage = () => {
     const radiusValue = Number(radius);
     if (!Number.isFinite(radiusValue) || radiusValue <= 0) {
       setError("Radius must be a positive number (meters).");
-      return;
-    }
-
-    if (USE_MOCK_DATA) {
-      const newArea: ServiceArea = {
-        id: Date.now(),
-        enterpriseId,
-        latitude: pendingCoordinates.lat,
-        longitude: pendingCoordinates.lng,
-        radius: Math.round(radiusValue),
-      };
-      setAreas((prev) => [newArea, ...prev]);
-      setPendingAddress("");
-      setPendingCoordinates(null);
-      setAddressSuggestions([]);
-      try {
-        const addr = await reverseGeocode(newArea.longitude, newArea.latitude);
-        if (addr) setAddresses((prev) => ({ ...prev, [newArea.id]: addr }));
-      } catch {
-        // ignore
-      }
       return;
     }
 

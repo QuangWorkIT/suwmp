@@ -25,13 +25,13 @@ export const CollectorCard = ({
       .slice(0, 2);
   };
 
-  // Mock data for metrics (these would come from separate API endpoints)
-  const tasksCompleted = 3;
-  const tasksTotal = 5;
-  const collections = 245;
-  const rating = 4.8;
-  const efficiency = 94;
-  const zone = "Zone A"; // This would come from collector data or separate API
+  // Metrics - currently set to zero until backend provides individual collector stats
+  const tasksCompleted = 0;
+  const tasksTotal = 0;
+  const collections = 0;
+  const rating = 0;
+  const efficiency = 0;
+  const zone = "Not Assigned"; // TODO: Fetch from collector's assigned service area API
 
   return (
     <motion.div
@@ -95,7 +95,7 @@ export const CollectorCard = ({
               <motion.div
                 className="h-full bg-primary rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${(tasksCompleted / tasksTotal) * 100}%` }}
+                animate={{ width: `${tasksTotal > 0 ? (tasksCompleted / tasksTotal) * 100 : 0}%` }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
               />
             </div>
