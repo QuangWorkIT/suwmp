@@ -2,15 +2,31 @@ server:
   port: 8080
 
 spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 20MB
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:waste_collect_db}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:dev-password}
     driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000
+      password: ${REDIS_PASSWORD:dev-password}
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:25}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -18,6 +34,23 @@ spring:
         jdbc:
           time_zone: UTC
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+cloud:
+  aws:
+    credentials:
+      # Provide dev defaults so the app can start without real AWS credentials.
+      # S3 will only work if you supply real values (env vars) and a real bucket.
+      access-key: ${AWS_ACCESS_KEY:dummy}
+      secret-key: ${AWS_SECRET_KEY:dummy}
+    region:
+      static: us-east-1
+aws:
+  bucket:
+    name: ${BUCKET_NAME:dummy-bucket}
+
+allowed:
+  # Comma-separated list of allowed origins for CORS.
+  origin: ${ALLOWED_ORIGIN:http://localhost:5173,http://localhost:3000}
 
 management:
   endpoints:
@@ -34,3 +67,10 @@ management:
       enabled: true
     diskspace:
       enabled: true
+
+app:
+  jwt:
+    # Keep these as app-scoped keys to avoid circular placeholder issues if someone has
+    # JWT_SECRET=${JWT_SECRET} in their machine/user environment.
+    secret: ${JWT_SECRET:your-secret-key-here-change-this-in-production}
+    expiration: ${JWT_EXPIRATION:86400000}

@@ -1,4 +1,4 @@
-package com.example.suwmp_be.dto;
+package com.example.suwmp_be.dto.request;
 
 import com.example.suwmp_be.entity.Role;
 import jakarta.validation.constraints.Email;

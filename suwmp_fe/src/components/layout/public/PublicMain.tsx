@@ -4,9 +4,9 @@ import Footer from "./Footer"
 
 function PublicMain() {
     return (
-        <div className="min-h-screen w-full flex flex-col gap-4 bg-background p-6">
+        <div className="min-h-screen w-full flex flex-col bg-background">
             <Header />
-            <main>
+            <main className="flex-1">
                 <Outlet />
             </main>
             <Footer />

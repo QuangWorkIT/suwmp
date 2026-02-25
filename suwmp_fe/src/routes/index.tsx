@@ -1,11 +1,17 @@
-import CitizenMain from "@/components/layout/citizen/CitizenMain";
 import PublicMain from "@/components/layout/public/PublicMain";
+import ForgotPasswordPage from "@/pages/authentication/ForgotPasswordPage";
+import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
-import CitizenHome from "@/pages/citizen/CitizenHome";
 import About from "@/pages/public/About";
 import PublicHome from "@/pages/public/PublicHome";
 import WasteguidePage from "@/pages/public/WasteguidePage";
+import ResetPasswordPage from "@/pages/authentication/ResetPasswordPage";
+import { citizenRoutes } from "./citizent.route";
+import { enterpriseRoutes } from "./enterprise.route";
+import {adminRoutes} from "./admin.route";
 import { createBrowserRouter } from "react-router";
+import UnAuthorizedPage from "@/pages/error/UnAuthorizedPage";
+
 
 const router = createBrowserRouter([
   {
@@ -17,15 +23,20 @@ const router = createBrowserRouter([
       { path: "about", element: <About /> },
     ],
   },
-  {
-    path: "/citizen",
-    element: <CitizenMain />,
-    children: [{ index: true, element: <CitizenHome /> }],
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
+
+  // routes base on role
+  ...citizenRoutes,
+  ...enterpriseRoutes,
+  ...adminRoutes,
+
+  // authentication routes
+  { path: "/signup", element: <RegisterPage /> },
+  { path: "/signin", element: <LoginPage /> },
+  { path: "/forgot-password", element: <ForgotPasswordPage /> },
+  { path: "/reset-password", element: <ResetPasswordPage /> },
+
+  // error routes
+  { path: "/unauthorized", element: <UnAuthorizedPage /> }
 ]);
 
 export default router;

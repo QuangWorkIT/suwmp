@@ -1,0 +1,29 @@
+import type { UserInterface, UserRole } from "@/types/Users";
+import { jwtDecode, type JwtPayload } from "jwt-decode";
+
+interface AuthJwtPayload extends JwtPayload {
+    sub: string; // user id
+    status: "ACTIVE" | "SUSPENDED" | "INACTIVE";
+    role: UserRole;
+    email: string;
+    fullName: string;
+    exp: number
+}
+
+export const decodePayLoad = (token: string): UserInterface => {
+    const payload = jwtDecode<AuthJwtPayload>(token)
+    return {
+        id: payload.sub,
+        fullName: payload.fullName,
+        email: payload.email,
+        role: payload.role,
+        status: payload.status,
+        enterpriseId: -1
+    }
+}
+
+export const isTokenExpired = (token: string): boolean => {
+    const payload = jwtDecode<AuthJwtPayload>(token)
+    if (!payload.exp) return true
+    return payload.exp < (Date.now() / 1000)
+}

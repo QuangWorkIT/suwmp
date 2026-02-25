@@ -1,7 +1,7 @@
 
 function CitizenHome() {
     return (
-        <div>
+        <div className="px-6">
             This is Citizen Home page
         </div>
     )
