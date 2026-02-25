@@ -49,7 +49,6 @@ export type CancelWasteReportRequest = {
     wasteReportId: number;
     note: string;
 }
-};
 
 export type CitizenWasteReportStatus = {
     id: number;

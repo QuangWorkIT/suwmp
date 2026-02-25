@@ -3,7 +3,7 @@ import { jwtDecode, type JwtPayload } from "jwt-decode";
 
 interface AuthJwtPayload extends JwtPayload {
     sub: string; // user id
-    status: "ACTIVE" | "SUSPENDED";
+    status: "ACTIVE" | "SUSPENDED" | "INACTIVE";
     role: UserRole;
     email: string;
     fullName: string;
@@ -24,5 +24,6 @@ export const decodePayLoad = (token: string): UserInterface => {
 
 export const isTokenExpired = (token: string): boolean => {
     const payload = jwtDecode<AuthJwtPayload>(token)
+    if (!payload.exp) return true
     return payload.exp < (Date.now() / 1000)
 }

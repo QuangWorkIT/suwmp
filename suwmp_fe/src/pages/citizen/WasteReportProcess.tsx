@@ -67,27 +67,31 @@ function WasteReportProcess() {
             setSubmitting(true)
 
             const photoResponse = await s3Service.uploadImage(imageUploaded)
-            if (!photoResponse) return
-
+            if (!photoResponse) {
+                toast.error("Failed too upload image", { position: "top-right" })
+                setSubmitting(false)
+                return
+            }
 
             const payload = getWasteReportPayload(photoResponse.data)
             if (!payload) {
-                throw new Error("Missing waste reportdata")
+                throw new Error("Missing waste report data")
             }
 
             await wasteReportService.createWasteReport(payload)
-            
+
             toast.success("Report submitted successfully", {
                 position: "top-right"
             })
-            setSubmitting(false)
+
             resetData()
         } catch (error) {
-            setSubmitting(false)
             console.log(error)
             toast.error("Fail to submit report!", {
                 position: "top-right"
             })
+        } finally {
+            setSubmitting(false)
         }
     }
 

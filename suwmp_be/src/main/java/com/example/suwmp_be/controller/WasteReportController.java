@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -136,9 +138,9 @@ public class WasteReportController {
     })
     public ResponseEntity<BaseResponse<List<EnterpriseNearbyResponse>>> getNearByEnterprises(
             @Parameter(description = "Citizen longitude in decimal degrees", required = true, example = "106.70098")
-            @Positive @RequestParam("longitude") double longitude,
+            @DecimalMin("-180.0") @DecimalMax("180.0") @RequestParam("longitude") double longitude,
             @Parameter(description = "Citizen latitude in decimal degrees", required = true, example = "10.77689")
-            @Positive @RequestParam("latitude") double latitude,
+            @DecimalMin("-90.0") @DecimalMax("90.0") @RequestParam("latitude") double latitude,
             @Parameter(description = "Waste type ID to match enterprise capability", required = true, example = "1")
             @Positive @RequestParam("wasteTypeId") long wasteTypeId
     ) {
@@ -151,6 +153,7 @@ public class WasteReportController {
         ));
     }
 
+    @PreAuthorize("hasRole('ENTERPRISE')")
     @PatchMapping("/enterprises/cancellation")
     public ResponseEntity<BaseResponse<Long>> cancelWasteReportRequest(
             @Valid @RequestBody CancelWasteReportRequest rq

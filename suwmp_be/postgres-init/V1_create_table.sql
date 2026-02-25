@@ -5,7 +5,8 @@ CREATE
 EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE
-EXTENSION postgis;
+EXTENSION IF NOT EXISTS postgis;
+
 -- ===========================================
 -- DROP ALL TABLES (CLEAN INIT)
 -- ===========================================
