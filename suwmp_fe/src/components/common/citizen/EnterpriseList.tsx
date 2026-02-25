@@ -145,7 +145,7 @@ function EnterpriseList({
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                                            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {enterprise.distance}</span>
+                                            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {Number(enterprise.distance).toPrecision(2)} Km</span>
                                         </div>
 
                                         <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">

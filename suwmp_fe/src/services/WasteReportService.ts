@@ -1,5 +1,5 @@
 import authClient from "@/config/axios";
-import type { CancelWasteReportRequest, NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
 
 const wasteReportService = {
@@ -45,24 +45,22 @@ const wasteReportService = {
             console.error("Error canceling waste report:", error);
             throw error;
         }
-    }
-  },
-
-  getReportStatus: async (
-    reportId: number,
-  ): Promise<CitizenWasteReportStatus> => {
-    const response = await authClient.get(`/waste-reports/${reportId}/status`);
-    return response.data.data as CitizenWasteReportStatus;
-  },
-
-  getMyReports: async (): Promise<CitizenWasteReportStatus[]> => {
-    const response = await authClient.get("/waste-reports/citizen/me");
-    return response.data.data as CitizenWasteReportStatus[];
-  },
-
-  submitRating: async (reportId: number, rating: number): Promise<void> => {
-    await authClient.post(`/waste-reports/${reportId}/rating`, { rating });
-  },
-};
+    },
+    getReportStatus: async (
+        reportId: number,
+      ): Promise<CitizenWasteReportStatus> => {
+        const response = await authClient.get(`/waste-reports/${reportId}/status`);
+        return response.data.data as CitizenWasteReportStatus;
+      },
+    
+      getMyReports: async (): Promise<CitizenWasteReportStatus[]> => {
+        const response = await authClient.get("/waste-reports/citizen/me");
+        return response.data.data as CitizenWasteReportStatus[];
+      },
+    
+      submitRating: async (reportId: number, rating: number): Promise<void> => {
+        await authClient.post(`/waste-reports/${reportId}/rating`, { rating });
+      },
+  }
 
 export default wasteReportService
