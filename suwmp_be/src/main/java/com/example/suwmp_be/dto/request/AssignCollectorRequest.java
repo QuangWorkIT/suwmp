@@ -17,8 +17,7 @@ public class AssignCollectorRequest {
 
     @NotNull(message = "Waste report IDs are required")
     @Size(min = 1, message = "At least one waste report ID is required")
-    private List<@NotNull(message = "Waste report ID must not be null")
-            @Positive(message = "Waste report ID must be a positive value") Long> wasteReportId;
+    private List<@Positive(message = "Waste report ID must be a positive value") Long> wasteReportIds;
 
     @NotNull(message = "Enterprise ID is required")
     @Positive(message = "Enterprise ID must be a positive value")

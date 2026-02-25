@@ -13,15 +13,16 @@ public enum ErrorCode {
 
     EMAIL_NOT_EXIST("Not Found", "Email does not exist"),
     RESET_TOKEN_INVALID("Unauthenticated", "Reset password token expired or not valid"),
-    ACCESS_TOKEN_INVALID("Unauthenticated","Invalid or expired JWT"),
-
-    USER_ID_INVALID("Bad Request","Invalid user ID in token"),
+    ACCESS_TOKEN_INVALID("Unauthenticated", "Invalid or expired JWT"),
+    USER_ID_INVALID("Bad Request", "Invalid user ID in token"),
 
     ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found"),
-    COLLECTOR_NOT_FOUND("Not Found", "Collector not found"),
+    WASTE_REPORT_NOTFOUND("Not Found", "Waste report not found"),
+    COLLECTOR_NOT_IN_ENTERPRISE("Bad Request", "Collector does not belong to this enterprise"),
+    COLLECTOR_NOT_AVAILABLE("Bad Request", "Collector is not available for assignment"),
+
     DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
-    NOT_FOUND_DATA("Not Found", "Data is not found"),
-    WASTE_REPORT_NOTFOUND("Not Found", "Waste report not found");
+    NOT_FOUND_DATA("Not Found", "Data is not found");
 
     ErrorCode(String title, String message) {
         this.title = title;

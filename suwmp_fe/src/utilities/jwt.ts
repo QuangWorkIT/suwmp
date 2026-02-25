@@ -17,7 +17,8 @@ export const decodePayLoad = (token: string): UserInterface => {
         fullName: payload.fullName,
         email: payload.email,
         role: payload.role,
-        status: payload.status
+        status: payload.status,
+        enterpriseId: -1
     }
 }
 

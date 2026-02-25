@@ -15,7 +15,6 @@ import {
     Eye,
     UserPlus,
     Inbox,
-    ClipboardCheck,
     User,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -40,7 +39,6 @@ const statusConfig = {
     PENDING: { label: "Pending", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Circle },
     ON_THE_WAY: { label: "Processing", color: "bg-blue-100 text-blue-700 border-blue-200", icon: Truck },
     COLLECTED: { label: "Completed", color: "bg-green-100 text-green-700 border-green-200", icon: CheckCircle2 },
-    ACCEPTED: { label: "Accepted", color: "bg-purple-100 text-purple-700 border-purple-200", icon: ClipboardCheck },
     ASSIGNED: { label: "Assigned", color: "bg-cyan-100 text-cyan-700 border-cyan-200", icon: User }
 };
 
@@ -110,7 +108,7 @@ function CollectionRequest() {
             className="min-h-screen bg-background"
         >
             <div>
-                <header className="fixed top-0 left-0 w-full lg:left-[250px] lg:w-[calc(100%-250px)]
+                <header className="fixed top-0 left-0 z-50 w-full lg:left-[250px] lg:w-[calc(100%-250px)]
                  bg-white/50 px-6 py-5 border-b border-foreground/20 flex 
                  justify-between items-center backdrop-blur-xl backdrop-saturate-200">
                     <div>
@@ -149,9 +147,10 @@ function CollectionRequest() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="Pending">Pending</SelectItem>
-                                        <SelectItem value="Processing">Processing</SelectItem>
-                                        <SelectItem value="Completed">Completed</SelectItem>
+                                        <SelectItem value="PENDING">Pending</SelectItem>
+                                        <SelectItem value="ASSIGNED">Assigned</SelectItem>
+                                        <SelectItem value="ON_THE_WAY">Processing</SelectItem>
+                                        <SelectItem value="COLLECTED">Collected</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Button variant="outline">
@@ -210,8 +209,12 @@ function CollectionRequest() {
                                 </thead>
                                 <tbody>
                                     {isFetchingRequests && (
-                                        <tr className="fixed inset-0 flex items-center justify-center z-50 left-50">
-                                            <td className="animate-spin rounded-full h-26 w-26 border-b-2 border-primary"></td>
+                                        <tr>
+                                            <td colSpan={11} className="py-12">
+                                                <div className="flex items-center justify-center">
+                                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                                                </div>
+                                            </td>
                                         </tr>
                                     )}
 
@@ -261,20 +264,36 @@ function CollectionRequest() {
                                                 </td>
                                                 <td className="py-3 px-4 max-w-[200px]">
                                                     <div className="text-sm">
-                                                        <p className="font-medium line-clamp-2">{req.citizenName}</p>
+                                                        <p className="font-medium line-clamp-2 text-xs">{req.citizenName}</p>
                                                         <p className="pt-1 text-muted-foreground truncate">{req.citizenPhone}</p>
                                                     </div>
                                                 </td>
-                                                <td className="py-3 px-6">
+                                                <td className="py-3 px-4 max-w-[200px]">
                                                     {req.collectorName ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-semibold">
-                                                                {req.collectorName.charAt(0)}
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <div>
+                                                                <div
+                                                                    className="h-6 w-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center
+                                                                text-white text-xs font-semibold uppercase"
+                                                                >
+                                                                    {req.collectorName.charAt(0)}
+                                                                </div>
                                                             </div>
-                                                            <span className="text-sm">{req.collectorName}</span>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span
+                                                                    className="text-sm font-medium truncate"                                    >
+                                                                    {req.collectorName}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     ) : (
-                                                        <Button variant="outline" size="sm" className="h-7 text-xs">
+                                                        <Button variant="outline" size="sm" className="h-7 text-xs"
+                                                            disabled={selectedRequests.length > 0}
+                                                            onClick={() => {
+                                                                if (selectedRequests.length > 0) return
+                                                                setSelectedRequests([req.requestId])
+                                                                setIsAssignFormOpen(true)
+                                                            }}>
                                                             <UserPlus className="w-3 h-3 mr-1" />
                                                             Assign
                                                         </Button>

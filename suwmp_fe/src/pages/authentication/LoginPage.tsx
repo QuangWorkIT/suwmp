@@ -85,8 +85,10 @@ export default function Login() {
       if (res.success) {
         try {
           const token = res.data.accessToken
+          
           const payload = decodePayLoad(token)
-
+          
+          localStorage.setItem("token", token)
           await resolveUser(dispatch, payload, token)
           
           toast.success("Login successfully")

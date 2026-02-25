@@ -52,6 +52,7 @@ function useLogin() {
                 // If the token is still valid, reuse it directly
                 if (!isTokenExpired(storedToken)) {
                     const payload = decodePayLoad(storedToken)
+                    localStorage.setItem("token", storedToken)
                     await resolveUser(dispatch, payload, storedToken)
                     return
                 }
@@ -67,6 +68,7 @@ function useLogin() {
 
                 const newToken: string = res.data.accessToken
                 const payload = decodePayLoad(newToken)
+                localStorage.setItem("token", newToken)
                 await resolveUser(dispatch, payload, newToken)
             } catch {
                 localStorage.removeItem("token")
