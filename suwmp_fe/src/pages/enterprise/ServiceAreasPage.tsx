@@ -6,16 +6,18 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ServiceAreaService } from "@/services/ServiceAreaService";
+import WasteReportService from "@/services/WasteReportService";
 import type { ServiceArea } from "@/types/serviceArea";
 import ServiceAreaMap from "@/components/common/enterprise/ServiceAreaMap";
 import { reverseGeocode, forwardGeocode, autocompleteAddress, type AddressSuggestion } from "@/utilities/geocoding";
 import { useDebounce } from "@/hooks/useDebouse";
 
 import { useAppSelector } from "@/redux/hooks";
+import { useCallback } from "react";
 
 const ServiceAreasPage = () => {
   const { user } = useAppSelector((state) => state.user);
-  const enterpriseId = user?.enterpriseId || 1;
+  const enterpriseId = user?.enterpriseId;
 
   const [areas, setAreas] = useState<ServiceArea[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,48 +33,63 @@ const ServiceAreasPage = () => {
   const [geocodingAddress, setGeocodingAddress] = useState(false);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const mapCardRef = useRef<HTMLDivElement>(null); // Ref for map card
   const [radius, setRadius] = useState<string>("1000");
   const [saving, setSaving] = useState(false);
   const [focusedZone, setFocusedZone] = useState<{ latitude: number; longitude: number; radius: number } | null>(null);
 
   const debouncedAddress = useDebounce(pendingAddress, 400);
 
-  const fetchAreas = async () => {
+  const fetchAreas = useCallback(async () => {
+    if (!enterpriseId) return;
+
     setLoading(true);
     setError(null);
 
     try {
-      const [areasRes, collectorsRes, reportsData] = await Promise.all([
+      const results = await Promise.allSettled([
         ServiceAreaService.list(enterpriseId),
         import("@/services/CollectorService").then(m => m.CollectorService.getCollectors(enterpriseId, 0, 1)),
-        import("@/services/WasteReportService").then(m => m.default.getWasteReportsByEnterprise(enterpriseId))
+        WasteReportService.getWasteReportsByEnterprise(enterpriseId)
       ]);
 
-      if (areasRes.success) {
-        setAreas(areasRes.data ?? []);
+      // Service Areas
+      const areasResult = results[0];
+      if (areasResult.status === "fulfilled") {
+        const res = areasResult.value;
+        if (res.success) {
+          setAreas(res.data ?? []);
+        } else {
+          setError(res.error || "Failed to fetch service areas");
+        }
       } else {
-        setError(areasRes.error || "Failed to fetch service areas");
+        setError("Failed to fetch service areas due to network error");
       }
 
-      if (collectorsRes.success && collectorsRes.data) {
-        setCollectorCount(collectorsRes.data.totalElements);
+      // Collectors
+      const collectorsResult = results[1];
+      if (collectorsResult.status === "fulfilled") {
+        const res = collectorsResult.value;
+        if (res.success && res.data) {
+          setCollectorCount(res.data.totalElements);
+        }
       }
 
-      if (reportsData) {
-        setActiveRequestCount(reportsData.length);
+      // Reports
+      const reportsResult = results[2];
+      if (reportsResult.status === "fulfilled") {
+        setActiveRequestCount(reportsResult.value.length);
       }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [enterpriseId]);
 
   useEffect(() => {
-    if (enterpriseId) {
-      fetchAreas();
-    }
-  }, [enterpriseId]);
+    fetchAreas();
+  }, [fetchAreas]);
 
   useEffect(() => {
     // Resolve formatted addresses for zones that don't have one yet.
@@ -107,7 +124,7 @@ const ServiceAreasPage = () => {
       totalZones: areas.length,
       totalCollectors: collectorCount,
       activeRequests: activeRequestCount,
-      coverageRate: 94, // Placeholder for future logic
+      coverageRate: 0, // Placeholder set to 0 as it's not implemented yet
     };
   }, [areas.length, collectorCount, activeRequestCount]);
 
@@ -203,21 +220,26 @@ const ServiceAreasPage = () => {
 
     setSaving(true);
     setError(null);
-    const res = await ServiceAreaService.create(enterpriseId, {
+    try {
+    const res = await ServiceAreaService.create(enterpriseId!, {
       latitude: pendingCoordinates.lat,
       longitude: pendingCoordinates.lng,
       radius: Math.round(radiusValue),
     });
-    setSaving(false);
 
-    if (!res.success) {
-      setError(res.error || "Failed to create service area");
-      return;
+      if (!res.success) {
+        setError(res.error || "Failed to create service area");
+        return;
+      }
+      setPendingAddress("");
+      setPendingCoordinates(null);
+      setAddressSuggestions([]);
+      await fetchAreas();
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred while saving");
+    } finally {
+      setSaving(false);
     }
-    setPendingAddress("");
-    setPendingCoordinates(null);
-    setAddressSuggestions([]);
-    await fetchAreas();
   };
 
   const handleViewZone = (area: ServiceArea) => {
@@ -227,12 +249,7 @@ const ServiceAreasPage = () => {
       radius: area.radius,
     });
     // Scroll map into view if needed
-    setTimeout(() => {
-      const mapCard = document.querySelector('[class*="lg:col-span-2"]');
-      if (mapCard) {
-        mapCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-    }, 100);
+    mapCardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   };
 
   // Close suggestions when clicking outside
@@ -254,13 +271,21 @@ const ServiceAreasPage = () => {
     };
   }, []);
 
+  if (!enterpriseId) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full bg-background overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6 h-full overflow-y-auto">
         {/* Top grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Map card */}
-          <Card className="lg:col-span-2 p-6 rounded-xl border shadow-sm">
+          <Card ref={mapCardRef} className="lg:col-span-2 p-6 rounded-xl border shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-lg font-semibold tracking-tight">Zone Map</p>
               <Button variant="outline" size="sm" className="gap-2">

@@ -9,6 +9,7 @@ import { CollectorCard } from "@/components/common/collector/CollectorCard";
 import { CollectorDialog } from "@/components/common/collector/CollectorDialog";
 import { DeleteCollectorDialog } from "@/components/common/collector/DeleteCollectorDialog";
 import { CollectorService } from "@/services/CollectorService";
+import WasteReportService from "@/services/WasteReportService";
 import type {
   Collector,
   CreateCollectorRequest,
@@ -17,15 +18,26 @@ import type {
 } from "@/types/collector";
 
 import { useAppSelector } from "@/redux/hooks";
+import { useCallback } from "react";
+import { toast } from "sonner";
 
 const CollectorManagementPage = () => {
   const { user } = useAppSelector((state) => state.user);
-  const enterpriseId = user?.enterpriseId || 1;
+  const enterpriseId = user?.enterpriseId;
+
+  if (!enterpriseId) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const [collectors, setCollectors] = useState<Collector[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(""); // Correctly wired debounce
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCollector, setSelectedCollector] = useState<Collector | null>(null);
@@ -40,29 +52,44 @@ const CollectorManagementPage = () => {
   const [activeRequestCount, setActiveRequestCount] = useState(0);
 
   // Fetch collectors and related stats - calls real APIs
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
+    if (!enterpriseId) return;
+
     setLoading(true);
     setError(null);
     
     try {
-      const [collectorsRes, reportsData] = await Promise.all([
+      const results = await Promise.allSettled([
         CollectorService.getCollectors(enterpriseId, pagination.page, pagination.size),
-        import("@/services/WasteReportService").then(m => m.default.getWasteReportsByEnterprise(enterpriseId))
+        WasteReportService.getWasteReportsByEnterprise(enterpriseId)
       ]);
 
-      if (collectorsRes.success && collectorsRes.data) {
-        setCollectors(collectorsRes.data.content);
-        setPagination((prev) => ({
-          ...prev,
-          totalElements: collectorsRes.data!.totalElements,
-          totalPages: collectorsRes.data!.totalPages,
-        }));
+      // Handle Collectors result
+      const collectorsResult = results[0];
+      if (collectorsResult.status === "fulfilled") {
+        const response = collectorsResult.value;
+        if (response.success && response.data) {
+          setCollectors(response.data.content);
+          setPagination((prev) => ({
+            ...prev,
+            totalElements: response.data!.totalElements,
+            totalPages: response.data!.totalPages,
+          }));
+        } else {
+          setError(response.error || "Failed to fetch collectors");
+        }
       } else {
-        setError(collectorsRes.error || "Failed to fetch collectors");
+        setError("Failed to fetch collectors due to network error");
+        console.error("Collector fetch error:", collectorsResult.reason);
       }
 
-      if (reportsData) {
-        setActiveRequestCount(reportsData.length);
+      // Handle Reports result separately
+      const reportsResult = results[1];
+      if (reportsResult.status === "fulfilled") {
+        setActiveRequestCount(reportsResult.value.length);
+      } else {
+        console.error("Waste reports fetch error:", reportsResult.reason);
+        // We don't discard collectorsRes if this fails
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -70,38 +97,39 @@ const CollectorManagementPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [enterpriseId, pagination.page, pagination.size]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [enterpriseId, pagination.page, pagination.size]);
+  }, [fetchDashboardData]);
 
   // Calculate statistics
   const stats: CollectorStats = useMemo(() => {
     return {
       totalCollectors: pagination.totalElements,
+      // NOTE: activeNow currently only counts collectors from the currently loaded page.
+      // To obtain a true global count, a dedicated "stats" endpoint or backend status filtering is required.
       activeNow: collectors.filter(c => c.status === "ACTIVE").length,
       tasksToday: activeRequestCount,
       avgRating: 0, // Placeholder: No backend API for rating yet
     };
   }, [pagination.totalElements, collectors, activeRequestCount]);
 
-  // Filter collectors based on search query
+  // Filter collectors based on debounced search query
   const filteredCollectors = useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!debouncedSearch.trim()) {
       return collectors;
     }
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearch.toLowerCase();
     return collectors.filter(
       (collector) =>
         collector.fullName.toLowerCase().includes(query) ||
         collector.email.toLowerCase().includes(query) ||
         collector.phone.toLowerCase().includes(query)
     );
-  }, [collectors, searchQuery]);
+  }, [collectors, debouncedSearch]);
 
-  // Debounced search (simple implementation)
-  const [, setDebouncedSearch] = useState("");
+  // Correctly wired debounce effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -111,7 +139,7 @@ const CollectorManagementPage = () => {
 
   // Handle create collector
   const handleCreate = async (data: CreateCollectorRequest) => {
-    const response = await CollectorService.createCollector(enterpriseId, data);
+    const response = await CollectorService.createCollector(enterpriseId!, data);
     if (response.success) {
       await fetchDashboardData();
       setDialogOpen(false);
@@ -125,7 +153,7 @@ const CollectorManagementPage = () => {
     if (!selectedCollector) return;
 
     const response = await CollectorService.updateCollector(
-      enterpriseId,
+      enterpriseId!,
       selectedCollector.id,
       data
     );
@@ -143,7 +171,7 @@ const CollectorManagementPage = () => {
     if (!selectedCollector) return;
 
     const response = await CollectorService.deleteCollector(
-      enterpriseId,
+      enterpriseId!,
       selectedCollector.id
     );
     if (response.success) {
@@ -302,10 +330,16 @@ const CollectorManagementPage = () => {
           mode={dialogMode}
           collector={selectedCollector || undefined}
           onSubmit={async (data) => {
-            if (dialogMode === "create") {
-              await handleCreate(data as CreateCollectorRequest);
-            } else {
-              await handleUpdate(data as UpdateCollectorRequest);
+            try {
+              if (dialogMode === "create") {
+                await handleCreate(data as CreateCollectorRequest);
+                toast.success("Collector created successfully");
+              } else {
+                await handleUpdate(data as UpdateCollectorRequest);
+                toast.success("Collector updated successfully");
+              }
+            } catch (err: any) {
+              toast.error(err.message || "Operation failed");
             }
           }}
         />
