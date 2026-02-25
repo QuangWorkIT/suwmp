@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Edit, MapPin, Plus, LoaderCircle, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,9 @@ import type { ServiceArea } from "@/types/serviceArea";
 import ServiceAreaMap from "@/components/common/enterprise/ServiceAreaMap";
 import { reverseGeocode, forwardGeocode, autocompleteAddress, type AddressSuggestion } from "@/utilities/geocoding";
 import { useDebounce } from "@/hooks/useDebouse";
+import { CollectorService } from "@/services/CollectorService";
 
 import { useAppSelector } from "@/redux/hooks";
-import { useCallback } from "react";
 
 const ServiceAreasPage = () => {
   const { user } = useAppSelector((state) => state.user);
@@ -49,7 +49,7 @@ const ServiceAreasPage = () => {
     try {
       const results = await Promise.allSettled([
         ServiceAreaService.list(enterpriseId),
-        import("@/services/CollectorService").then(m => m.CollectorService.getCollectors(enterpriseId, 0, 1)),
+        CollectorService.getCollectors(enterpriseId, 0, 1),
         WasteReportService.getWasteReportsByEnterprise(enterpriseId)
       ]);
 
@@ -78,7 +78,10 @@ const ServiceAreasPage = () => {
       // Reports
       const reportsResult = results[2];
       if (reportsResult.status === "fulfilled") {
-        setActiveRequestCount(reportsResult.value.length);
+        const activeCount = reportsResult.value.filter(r => 
+          ["PENDING", "ACCEPTED", "ASSIGNED"].includes(r.currentStatus)
+        ).length;
+        setActiveRequestCount(activeCount);
       }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
@@ -235,8 +238,12 @@ const ServiceAreasPage = () => {
       setPendingCoordinates(null);
       setAddressSuggestions([]);
       await fetchAreas();
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred while saving");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err) || "An unexpected error occurred while saving");
+      }
     } finally {
       setSaving(false);
     }
@@ -271,13 +278,6 @@ const ServiceAreasPage = () => {
     };
   }, []);
 
-  if (!enterpriseId) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-full bg-background overflow-hidden">
@@ -474,7 +474,9 @@ const ServiceAreasPage = () => {
         {!loading && (
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {areas.map((a, idx) => {
-              const label = `Zone ${String.fromCharCode(65 + (idx % 26))}`;
+              const baseChar = String.fromCharCode(65 + (idx % 26));
+              const suffix = idx >= 26 ? Math.floor(idx / 26) : "";
+              const label = `Zone ${baseChar}${suffix}`;
               return (
                 <Card
                   key={a.id}

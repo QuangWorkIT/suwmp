@@ -33,8 +33,6 @@ export const CollectorCard = ({
   const efficiency = 0;
   const zone = "Not Assigned"; // TODO: Fetch from collector's assigned service area API
 
-  // Detect if any real stats are present
-  const statsAvailable = tasksTotal > 0 || collections > 0 || rating > 0 || efficiency > 0;
 
   return (
     <motion.div
@@ -82,58 +80,49 @@ export const CollectorCard = ({
 
 
           {/* Metrics Section */}
-          {statsAvailable ? (
-            <>
-              {/* Today's Tasks */}
-              <div className="space-y-3 mb-4 pt-4 border-t border-border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ClipboardList className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Today's Tasks
-                    </p>
-                  </div>
-                  <span className="text-base font-semibold text-foreground">
-                    {tasksCompleted}/{tasksTotal}
-                  </span>
-                </div>
-                <div className="relative w-full overflow-hidden rounded-full bg-primary/10 h-2">
-                  <motion.div
-                    className="h-full bg-primary rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${tasksTotal > 0 ? (tasksCompleted / tasksTotal) * 100 : 0}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
-                </div>
+          <div className="space-y-3 mb-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="w-4 h-4 text-muted-foreground" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  Today's Tasks
+                </p>
               </div>
-
-              {/* Performance Metrics */}
-              <div className="grid grid-cols-3 gap-3 text-center pt-4 border-t border-border">
-                <div>
-                  <p className="text-xl font-bold text-foreground">{collections}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Collections</p>
-                </div>
-                <div>
-                  <div className="text-xl font-bold flex items-center justify-center gap-1 text-foreground">
-                    <Star className="w-4 h-4 fill-primary text-primary" />
-                    {rating}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Rating</p>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-foreground">
-                    {efficiency}
-                    <span className="text-sm font-normal">%</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Efficiency</p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="pt-4 border-t border-border text-center">
-              <p className="text-xs text-muted-foreground italic">Performance metrics unavailable</p>
+              <span className="text-base font-semibold text-foreground">
+                {tasksCompleted}/{tasksTotal}
+              </span>
             </div>
-          )}
+            <div className="relative w-full overflow-hidden rounded-full bg-primary/10 h-2">
+              <motion.div
+                className="h-full bg-primary rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${tasksTotal > 0 ? (tasksCompleted / tasksTotal) * 100 : 0}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+
+          {/* Performance Metrics */}
+          <div className="grid grid-cols-3 gap-3 text-center pt-4 border-t border-border">
+            <div>
+              <p className="text-xl font-bold text-foreground">{collections}</p>
+              <p className="text-xs text-muted-foreground mt-1">Collections</p>
+            </div>
+            <div>
+              <div className="text-xl font-bold flex items-center justify-center gap-1 text-foreground">
+                <Star className="w-4 h-4 fill-primary text-primary" />
+                {rating}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Rating</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-foreground">
+                {efficiency}
+                <span className="text-sm font-normal">%</span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Efficiency</p>
+            </div>
+          </div>
 
           {/* Action Buttons */}
           <div className="flex gap-2 mt-4 pt-4 border-t border-border">

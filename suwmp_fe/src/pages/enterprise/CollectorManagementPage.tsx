@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Search, UserPlus, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -18,20 +18,12 @@ import type {
 } from "@/types/collector";
 
 import { useAppSelector } from "@/redux/hooks";
-import { useCallback } from "react";
 import { toast } from "sonner";
 
 const CollectorManagementPage = () => {
   const { user } = useAppSelector((state) => state.user);
   const enterpriseId = user?.enterpriseId;
 
-  if (!enterpriseId) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   const [collectors, setCollectors] = useState<Collector[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,16 +162,21 @@ const CollectorManagementPage = () => {
   const handleDelete = async () => {
     if (!selectedCollector) return;
 
-    const response = await CollectorService.deleteCollector(
-      enterpriseId!,
-      selectedCollector.id
-    );
-    if (response.success) {
-      await fetchDashboardData();
-      setDeleteDialogOpen(false);
-      setSelectedCollector(null);
-    } else {
-      throw new Error(response.error || "Failed to delete collector");
+    try {
+      const response = await CollectorService.deleteCollector(
+        enterpriseId!,
+        selectedCollector.id
+      );
+      if (response.success) {
+        await fetchDashboardData();
+        setDeleteDialogOpen(false);
+        setSelectedCollector(null);
+        toast.success("Collector deleted");
+      } else {
+        toast.error(response.error || "Failed to delete collector");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An unexpected error occurred");
     }
   };
 
