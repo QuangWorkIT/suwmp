@@ -46,6 +46,23 @@ const wasteReportService = {
             throw error;
         }
     }
-}
+  },
+
+  getReportStatus: async (
+    reportId: number,
+  ): Promise<CitizenWasteReportStatus> => {
+    const response = await authClient.get(`/waste-reports/${reportId}/status`);
+    return response.data.data as CitizenWasteReportStatus;
+  },
+
+  getMyReports: async (): Promise<CitizenWasteReportStatus[]> => {
+    const response = await authClient.get("/waste-reports/citizen/me");
+    return response.data.data as CitizenWasteReportStatus[];
+  },
+
+  submitRating: async (reportId: number, rating: number): Promise<void> => {
+    await authClient.post(`/waste-reports/${reportId}/rating`, { rating });
+  },
+};
 
 export default wasteReportService

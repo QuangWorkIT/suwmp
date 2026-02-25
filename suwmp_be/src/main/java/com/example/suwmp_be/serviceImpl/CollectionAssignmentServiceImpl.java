@@ -62,7 +62,7 @@ public class CollectionAssignmentServiceImpl implements ICollectionAssignmentSer
             // Validate waste report exists
             WasteReport wasteReport = wasteReportMap.get(wasteReportId);
             if (wasteReport == null) {
-                throw new NotFoundException(ErrorCode.WASTE_REPORT_NOTFOUND);
+                throw new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND);
             }
 
             // Update status to ASSIGNED

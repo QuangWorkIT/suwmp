@@ -17,12 +17,13 @@ public enum ErrorCode {
     USER_ID_INVALID("Bad Request", "Invalid user ID in token"),
 
     ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found"),
-    WASTE_REPORT_NOTFOUND("Not Found", "Waste report not found"),
+    WASTE_REPORT_NOT_FOUND("Not Found", "Waste report not found"),
     COLLECTOR_NOT_IN_ENTERPRISE("Bad Request", "Collector does not belong to this enterprise"),
     COLLECTOR_NOT_AVAILABLE("Bad Request", "Collector is not available for assignment"),
 
     DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
-    NOT_FOUND_DATA("Not Found", "Data is not found");
+    NOT_FOUND_DATA("Not Found", "Data is not found"),
+    CAPACITY_NOT_EXISTED("Bad Request", "Corresponding enterprise capacity is not existed");
 
     ErrorCode(String title, String message) {
         this.title = title;

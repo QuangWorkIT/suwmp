@@ -5,5 +5,13 @@ public enum WasteReportStatus {
     REJECTED,
     ASSIGNED,
     ON_THE_WAY,
-    COLLECTED
+    COLLECTED;
+
+    public static WasteReportStatus from(String status) {
+        try {
+            return WasteReportStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid waste report status: " + status);
+        }
+    }
 }

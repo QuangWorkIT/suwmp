@@ -13,7 +13,7 @@ function Header() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring", stiffness: 100, damping: 20 }}
             className="fixed top-0 left-[250px] w-[calc(100%-250px)] z-50
-            bg-white/50 px-6 py-5 border-b border-foreground/20 flex 
+            bg-white/50 px-6 py-5 border-b border-foreground/20 flex
             justify-between items-center backdrop-blur-xl backdrop-saturate-200"
         >
             <div className="cursor-default">

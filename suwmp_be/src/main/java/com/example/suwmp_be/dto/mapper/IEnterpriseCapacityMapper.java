@@ -18,5 +18,6 @@ public interface IEnterpriseCapacityMapper {
     void toEnterpriseCapacity(@MappingTarget EnterpriseCapacity capacity, UpdateEnterpriseCapacityRequest request);
 
     @Mapping(source = "wasteType.id", target = "wasteTypeId")
+    @Mapping(source = "enterprise.id", target = "enterpriseId")
     GetCapacitiesResponse toGetCapacitiesResponse(EnterpriseCapacity capacity);
 }

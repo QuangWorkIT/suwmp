@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface WasteReportRepository extends JpaRepository<WasteReport, Long> {
 
@@ -70,5 +72,8 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             @Param("citizenLat") Double citizenLat,
             @Param("wasteTypeId") Long wasteTypeId
     );
+    Optional<WasteReport> findByIdAndCitizen_Id(Long id, UUID citizenId);
+
+    List<WasteReport> findAllByCitizen_IdOrderByCreatedAtDesc(UUID citizenId);
 
 }

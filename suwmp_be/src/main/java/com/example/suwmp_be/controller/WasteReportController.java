@@ -4,6 +4,7 @@ package com.example.suwmp_be.controller;
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
+import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.service.IWasteReportService;
@@ -18,9 +19,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -29,6 +33,7 @@ import java.util.List;
 public class WasteReportController {
     private final IWasteReportService wasteService;
 
+    @PreAuthorize("hasRole('CITIZEN')")
     @PostMapping
     @Operation(
             summary = "Create a waste report",
@@ -54,6 +59,7 @@ public class WasteReportController {
                 );
     }
 
+    @PreAuthorize("hasRole('ENTERPRISE')")
     @GetMapping("/enterprises/{enterpriseId}")
     @Operation(
             summary = "Get waste reports for an enterprise",
@@ -76,6 +82,43 @@ public class WasteReportController {
                 true, "Get waste reports successfully",
                 wasteService.getWasteReportRequestsByEnterprise(enterpriseId)
         ));
+    }
+
+    @PreAuthorize("hasRole('CITIZEN')")
+    @GetMapping("/{id}/status")
+    public ResponseEntity<BaseResponse<CitizenWasteReportStatusResponse>> getCitizenReportStatus(
+            @PathVariable @Positive Long id,
+            Authentication authentication
+    ) {
+        UUID citizenId = (UUID) authentication.getPrincipal();
+        CitizenWasteReportStatusResponse response =
+                wasteService.getCitizenReportStatus(id, citizenId);
+
+        return ResponseEntity.ok(
+                new BaseResponse<>(
+                        true,
+                        "Get waste report status successfully",
+                        response
+                )
+        );
+    }
+
+    @PreAuthorize("hasRole('CITIZEN')")
+    @GetMapping("/citizen/me")
+    public ResponseEntity<BaseResponse<List<CitizenWasteReportStatusResponse>>> getMyReports(
+            Authentication authentication
+    ) {
+        UUID citizenId = (UUID) authentication.getPrincipal();
+        List<CitizenWasteReportStatusResponse> reports =
+                wasteService.getCitizenReports(citizenId);
+
+        return ResponseEntity.ok(
+                new BaseResponse<>(
+                        true,
+                        "Get citizen waste reports successfully",
+                        reports
+                )
+        );
     }
 
     @GetMapping("/enterprises/nearby/citizens")
