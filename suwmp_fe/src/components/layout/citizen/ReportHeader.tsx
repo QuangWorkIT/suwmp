@@ -4,7 +4,7 @@ import { ArrowLeft, Recycle } from 'lucide-react';
 
 function ReportHeader() {
     return (
-        <div className="fixed top-0 w-full z-50 left-0 backdrop-blur-sm backdrop-saturate-100 bg-white/50 text-black p-4 border-b border-foreground/20">
+        <div className="fixed top-0 w-full left-0 backdrop-blur-sm backdrop-saturate-100 bg-white/50 text-black p-4 border-b border-foreground/20">
             <div className="flex items-center justify-between max-w-4xl mx-auto">
                 <Link to={"/citizen"}>
                     <Button variant={"default"} className='bg-transparent hover:bg-foreground/5 text-foreground 

@@ -1,6 +1,6 @@
-import { ArrowUp, ArrowDown, Minus, Flame } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus, FileText } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import type { LeaderboardUser } from '@/types/leaderboard';
+import type { LeaderboardUser } from '@/data/leaderboardData';
 
 interface LeaderboardTableProps {
     rankings: LeaderboardUser[];
@@ -56,10 +56,10 @@ function LeaderboardTable({ rankings }: LeaderboardTableProps) {
                             <p className="text-sm text-gray-500">{user.neighborhood}</p>
                         </div>
 
-                        {/* Streak */}
-                        <div className="flex items-center gap-1 bg-[#FFF4E5] text-[#FF8A00] px-3 py-1.5 rounded-full text-sm mr-6 font-bold">
-                            <Flame size={14} fill="currentColor" />
-                            <span>{user.streakDays}</span>
+                        {/* Reports count */}
+                        <div className="flex items-center gap-1 bg-green-50 text-green-600 px-3 py-1.5 rounded-full text-sm mr-6">
+                            <FileText size={14} />
+                            <span>{user.reportsCount}</span>
                         </div>
 
                         {/* Points */}

@@ -5,6 +5,5 @@ export interface UserInterface {
     fullName: string,
     email: string,
     role: UserRole,
-    status: string,
-    enterpriseId: number
+    status: string
 }

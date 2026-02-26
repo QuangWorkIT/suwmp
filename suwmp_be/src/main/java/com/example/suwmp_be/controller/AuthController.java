@@ -78,7 +78,7 @@ public class AuthController {
     public ResponseEntity<BaseResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
         TokenResponse response = authService.login(request);
         ResponseCookie cookie = setCookieToken(response.getRefreshToken());
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .header("Set-cookie", cookie.toString())
                 .body(new BaseResponse<>(
                         true,

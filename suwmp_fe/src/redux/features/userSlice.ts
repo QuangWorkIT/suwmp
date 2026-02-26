@@ -28,11 +28,9 @@ export const userSlice = createSlice({
         },
         authInitialized: (state) => {
             state.initialized = true
-        },updateUserInfo: (state, action) => {
-            state.user = action.payload.user
         }
     }
 })
 
-export const { login, authInitialized, updateUserInfo } = userSlice.actions
+export const { login, authInitialized } = userSlice.actions
 export default userSlice.reducer

@@ -185,21 +185,3 @@
     @apply font-sans bg-background text-foreground;
   }
 }
-
-/* Custom thin scrollbar */
-.thin-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.thin-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgb(203 213 225);
-  border-radius: 9999px;
-}
-
-.thin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(148 163 184);
-}

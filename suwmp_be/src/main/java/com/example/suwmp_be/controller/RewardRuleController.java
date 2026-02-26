@@ -13,13 +13,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/reward-rules")
+@RequestMapping("/api/enterprises")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RewardRuleController {
     RewardRuleServiceImpl rewardRuleService;
 
-    @PostMapping
+    @PostMapping("/reward-rules")
     public ResponseEntity<BaseResponse<?>> addNewRewardRule(@Valid @RequestBody AddNewRewardRuleRequest request) {
         rewardRuleService.addNewRewardRule(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new BaseResponse<>(
@@ -28,7 +28,7 @@ public class RewardRuleController {
         );
     }
 
-    @GetMapping("/enterprise/{enterpriseId}/waste-type/{wasteTypeId}")
+    @GetMapping("/{enterpriseId}/waste-types/{wasteTypeId}/reward-rules")
     public ResponseEntity<BaseResponse<GetRewardRuleByEnterpriseAndWasteTypeResponse>> getRewardRuleByEnterpriseAndWasteTypeResponse(@PathVariable long enterpriseId, @PathVariable int wasteTypeId) {
         var dto = rewardRuleService.getRewardRuleByWasteTypeAndEnterprise(enterpriseId, wasteTypeId);
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(

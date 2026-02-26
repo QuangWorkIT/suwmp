@@ -1,6 +1,5 @@
 package com.example.suwmp_be.dto.history;
 
-import com.example.suwmp_be.constants.WasteReportStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -38,29 +37,7 @@ public class RewardHistoryDto {
         this.longitude = longitude;
         this.latitude = latitude;
         this.volume = volume;
-            this.status = status;
-    }
-
-    public RewardHistoryDto(
-            Long id,
-            Integer points,
-            String reason,
-            LocalDateTime createdAt,
-            String wasteType,
-            double longitude,
-            double latitude,
-            double volume,
-            WasteReportStatus status
-    ) {
-        this.id = id;
-        this.points = points;
-        this.reason = reason;
-        this.createdAt = createdAt;
-        this.wasteType = wasteType;
-        this.longitude = longitude;
-        this.latitude = latitude;
-        this.volume = volume;
-        this.status = status != null ? status.name() : null;
+        this.status = status;
     }
 
 }

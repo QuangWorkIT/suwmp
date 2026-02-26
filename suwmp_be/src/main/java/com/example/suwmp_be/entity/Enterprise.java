@@ -10,6 +10,11 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Minimal Enterprise entity stub.
+ * Full implementation will be provided by another team member.
+ * This stub is only for compilation purposes to support EnterpriseCollector relationships.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

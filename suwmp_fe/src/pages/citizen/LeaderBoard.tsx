@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
-import { MapPin, Building2, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LeaderboardTopThree from '@/components/common/LeaderboardTopThree';
 import LeaderboardTable from '@/components/common/LeaderboardTable';
-import { LeaderboardService } from '@/services/LeaderboardService';
-import type { LeaderboardUser } from '@/types/leaderboard';
+import { mockLeaderboardData, getCurrentUserPosition, getPointsToNextRank } from '@/data/leaderboardData';
 import { Link } from 'react-router';
 
 type TimeFilter = 'week' | 'month' | 'all';
@@ -13,60 +12,12 @@ type ScopeFilter = 'neighborhood' | 'city';
 function LeaderBoard() {
     const [timeFilter, setTimeFilter] = useState<TimeFilter>('week');
     const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('neighborhood');
-    
-    // Data states
-    const [podium, setPodium] = useState<LeaderboardUser[]>([]);
-    const [rankings, setRankings] = useState<LeaderboardUser[]>([]);
-    const [myRank, setMyRank] = useState<number | null>(null);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                // Fetch all data in parallel
-                const [podiumData, rankingsData, myRankData] = await Promise.all([
-                    LeaderboardService.getPodium(),
-                    LeaderboardService.getRankings(),
-                    LeaderboardService.getMyRank()
-                ]);
+    const topThree = mockLeaderboardData.slice(0, 3);
+    const restRankings = mockLeaderboardData.slice(3);
 
-                setPodium(podiumData);
-                setRankings(rankingsData);
-                setMyRank(myRankData.rank);
-            } catch (error) {
-                console.error("Failed to fetch leaderboard data", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    const restRankings = rankings.slice(3);
-
-    const getPointsToNextRank = () => {
-        if (!myRank || myRank === 1) return 0;
-        
-        // Find current user stats
-        const currentUser = rankings.find(r => r.rank === myRank);
-        if (!currentUser) return 0;
-        
-        // Find user above
-        const userAbove = rankings.find(r => r.rank === myRank - 1);
-        return userAbove ? userAbove.points - currentUser.points : 0;
-    };
-
+    const userPosition = getCurrentUserPosition();
     const pointsToNext = getPointsToNextRank();
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-[60vh]">
-                <Loader2 className="animate-spin text-primary" size={48} />
-            </div>
-        );
-    }
 
     return (
         <div className="px-6 pb-6">
@@ -134,7 +85,7 @@ function LeaderBoard() {
             </div>
 
             {/* Top 3 Podium */}
-            <LeaderboardTopThree topThree={podium} />
+            <LeaderboardTopThree topThree={topThree} />
 
             {/* Rankings Table */}
             <div className="mt-6">
@@ -144,11 +95,9 @@ function LeaderBoard() {
             {/* User Position Footer */}
             <div className="mt-6 bg-white rounded-xl shadow-md p-4 flex justify-between items-center">
                 <div>
-                    <p className="font-semibold text-gray-900">Your Position: #{myRank}</p>
+                    <p className="font-semibold text-gray-900">Your Position: #{userPosition}</p>
                     <p className="text-sm text-gray-500">
-                        {pointsToNext > 0 
-                            ? `You need ${pointsToNext.toLocaleString()} more points to reach #${myRank ? myRank - 1 : ''}!`
-                            : "You are currently at the top!"}
+                        You need {pointsToNext.toLocaleString()} more points to reach #{userPosition ? userPosition - 1 : ''}!
                     </p>
                 </div>
                 <Link to="/citizen/new-report">

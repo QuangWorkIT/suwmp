@@ -9,7 +9,6 @@ import {
   Medal,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
-import { motion } from "framer-motion";
 
 function Sidebar() {
   const location = useLocation();

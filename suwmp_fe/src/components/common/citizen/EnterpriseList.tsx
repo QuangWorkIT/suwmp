@@ -1,10 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowLeft, Check, MapPin, Star, ExternalLink, Plus, Loader2, Building2 } from "lucide-react"
+import { ArrowLeft, Check, MapPin, Star, ExternalLink } from "lucide-react"
 import { motion } from "framer-motion"
-import { useEffect, useState } from "react"
-import wasteReportService from "@/services/WasteReportService"
-import type { NearbyEnterpriseResponse } from "@/types/WasteReportRequest"
 
 /* Animation config using CSS variables from index.css */
 const motionDuration = 0.35
@@ -30,9 +27,6 @@ const itemVariants = {
 }
 
 interface EnterpriseListProps {
-    longitude: number,
-    latitude: number,
-    wasteTypeId: number,
     handleSubmit: () => void,
     handlePreviousStep: () => void,
     selectedEnterprise: number | null,
@@ -43,33 +37,17 @@ function EnterpriseList({
     handleSubmit,
     handlePreviousStep,
     selectedEnterprise,
-    setSelectedEnterprise,
-    longitude,
-    latitude,
-    wasteTypeId
+    setSelectedEnterprise
 }: EnterpriseListProps) {
-    const [enterprises, setEnterprises] = useState<NearbyEnterpriseResponse[]>([])
-    const [isFinding, setIsFinding] = useState(false)
-    useEffect(() => {
-        const fetchEnterprises = async () => {
-            try {
-                setIsFinding(true)
-                const res = await wasteReportService.getEnterprisesNearbyCitizen(
-                    {
-                        longitude,
-                        latitude,
-                        wasteTypeId
-                    }
-                )
-                setEnterprises(res.data)
-                setIsFinding(false)
-            } catch (error) {
-                console.log(error)
-                setIsFinding(false)
-            }
+    const mockEnterprises = [
+        {
+            id: 1,
+            name: "Enterprise 1",
+            image: "",
+            rating: 4.5,
+            distance: "1.2 km",
         }
-        fetchEnterprises()
-    }, [longitude, latitude, wasteTypeId])
+    ]
 
     return (
         <motion.div
@@ -98,21 +76,7 @@ function EnterpriseList({
                     initial="hidden"
                     animate="visible"
                 >
-                    {isFinding ? (
-                        <div className="flex items-center justify-center">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                        </div>
-                    ) : enterprises.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-6 text-center">
-                            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                                <Building2 className="w-8 h-8 text-muted-foreground/50" />
-                            </div>
-                            <h3 className="font-semibold text-lg mb-1">No enterprises found</h3>
-                            <p className="text-sm text-muted-foreground max-w-[250px]">
-                                We couldn't find any waste collection enterprises in your area.
-                            </p>
-                        </div>
-                    ) : enterprises.map((enterprise) => {
+                    {mockEnterprises.map((enterprise) => {
                         const isSelected = selectedEnterprise === enterprise.id
                         return (
                             <motion.div
@@ -134,7 +98,7 @@ function EnterpriseList({
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-border">
-                                        <img src={enterprise?.photoUrl || "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80"} alt={enterprise.name} className="w-full h-full object-cover" />
+                                        <img src={enterprise?.image || "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80"} alt={enterprise.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-1">
@@ -145,11 +109,7 @@ function EnterpriseList({
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                                            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {Number(enterprise.distance).toPrecision(2)} Km</span>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                                            <span className="flex items-center gap-1"><Plus className="w-3 h-3" /> {enterprise.rewardPoints}</span>
+                                            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {enterprise.distance}</span>
                                         </div>
                                     </div>
                                     <motion.div

@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -33,8 +32,5 @@ public class EnterpriseUser {
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createAt;
 }
 
