@@ -2,11 +2,10 @@ import CitizenMain from "@/components/layout/citizen/CitizenMain";
 import ProtectedRoute from "./ProtectedRoute";
 import { Navigate } from "react-router";
 import CitizenHome from "@/pages/citizen/CitizenHome";
-import ReportHistory from "@/pages/citizen/ReportHistory";
+import RewardHistory from "@/pages/citizen/RewardHistory";
 import LeaderBoard from "@/pages/citizen/LeaderBoard";
 import FeedBack from "@/pages/citizen/FeedBack";
 import WasteReportProcess from "@/pages/citizen/WasteReportProcess";
-import RewardHistory from "@/pages/citizen/RewardHistory";
 
 export const citizenRoutes = [
   {
@@ -18,7 +17,6 @@ export const citizenRoutes = [
         children: [
           { index: true, element: <Navigate to="dashboard" replace /> },
           { path: "dashboard", element: <CitizenHome /> },
-          { path: "reports", element: <ReportHistory /> },
           { path: "rewards", element: <RewardHistory /> },
           { path: "leaderboard", element: <LeaderBoard /> },
           { path: "feedback", element: <FeedBack /> },
