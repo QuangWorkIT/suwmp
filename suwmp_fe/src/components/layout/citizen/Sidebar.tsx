@@ -25,6 +25,11 @@ function Sidebar() {
       path: "/citizen/new-report",
     },
     {
+      icon: <FileText size={18} />,
+      label: "My Reports",
+      path: "/citizen/reports",
+    },
+    {
       icon: <Medal size={18} />,
       label: "Rewards",
       path: "/citizen/rewards",
