@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Edit, MapPin, Plus, LoaderCircle, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { ServiceAreaService } from "@/services/ServiceAreaService";
 import WasteReportService from "@/services/WasteReportService";
 import type { ServiceArea } from "@/types/serviceArea";
 import ServiceAreaMap from "@/components/common/enterprise/ServiceAreaMap";
-import { mockServiceAreas, USE_MOCK_DATA } from "@/data/mockServiceAreas";
 import {
   reverseGeocode,
   forwardGeocode,
@@ -17,6 +16,9 @@ import {
   type AddressSuggestion,
 } from "@/utilities/geocoding";
 import { useDebounce } from "@/hooks/useDebouse";
+import { CollectorService } from "@/services/CollectorService";
+
+import { useAppSelector } from "@/redux/hooks";
 
 const ServiceAreasPage = () => {
   const { user } = useAppSelector((state) => state.user);
@@ -26,6 +28,8 @@ const ServiceAreasPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<Record<number, string>>({});
+  const [collectorCount, setCollectorCount] = useState(0);
+  const [activeRequestCount, setActiveRequestCount] = useState(0);
 
   const [pendingAddress, setPendingAddress] = useState<string>("");
   const [pendingCoordinates, setPendingCoordinates] = useState<{
@@ -39,6 +43,7 @@ const ServiceAreasPage = () => {
   const [geocodingAddress, setGeocodingAddress] = useState(false);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const mapCardRef = useRef<HTMLDivElement>(null); // Ref for map card
   const [radius, setRadius] = useState<string>("1000");
   const [saving, setSaving] = useState(false);
   const [focusedZone, setFocusedZone] = useState<{
@@ -134,12 +139,11 @@ const ServiceAreasPage = () => {
   const stats = useMemo(() => {
     return {
       totalZones: areas.length,
-      // placeholders to match the Figma card; hook these to real endpoints later
-      totalCollectors: 12,
-      activeRequests: 30,
-      coverageRate: 94,
+      totalCollectors: collectorCount,
+      activeRequests: activeRequestCount,
+      coverageRate: 0, // Placeholder set to 0 as it's not implemented yet
     };
-  }, [areas.length]);
+  }, [areas.length, collectorCount, activeRequestCount]);
 
   // Autocomplete search effect
   useEffect(() => {
@@ -235,44 +239,32 @@ const ServiceAreasPage = () => {
       return;
     }
 
-    if (USE_MOCK_DATA) {
-      const newArea: ServiceArea = {
-        id: Date.now(),
-        enterpriseId,
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await ServiceAreaService.create(enterpriseId!, {
         latitude: pendingCoordinates.lat,
         longitude: pendingCoordinates.lng,
         radius: Math.round(radiusValue),
-      };
-      setAreas((prev) => [newArea, ...prev]);
+      });
+
+      if (!res.success) {
+        setError(res.error || "Failed to create service area");
+        return;
+      }
       setPendingAddress("");
       setPendingCoordinates(null);
       setAddressSuggestions([]);
-      try {
-        const addr = await reverseGeocode(newArea.longitude, newArea.latitude);
-        if (addr) setAddresses((prev) => ({ ...prev, [newArea.id]: addr }));
-      } catch {
-        // ignore
+      await fetchAreas();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err) || "An unexpected error occurred while saving");
       }
-      return;
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(true);
-    setError(null);
-    const res = await ServiceAreaService.create(enterpriseId, {
-      latitude: pendingCoordinates.lat,
-      longitude: pendingCoordinates.lng,
-      radius: Math.round(radiusValue),
-    });
-    setSaving(false);
-
-    if (!res.success) {
-      setError(res.error || "Failed to create service area");
-      return;
-    }
-    setPendingAddress("");
-    setPendingCoordinates(null);
-    setAddressSuggestions([]);
-    await fetchAreas();
   };
 
   const handleViewZone = (area: ServiceArea) => {
@@ -282,12 +274,10 @@ const ServiceAreasPage = () => {
       radius: area.radius,
     });
     // Scroll map into view if needed
-    setTimeout(() => {
-      const mapCard = document.querySelector('[class*="lg:col-span-2"]');
-      if (mapCard) {
-        mapCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-    }, 100);
+    mapCardRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
   };
 
   // Close suggestions when clicking outside
