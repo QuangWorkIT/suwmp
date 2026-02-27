@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Edit, MapPin, Plus, LoaderCircle, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { ServiceAreaService } from "@/services/ServiceAreaService";
 import WasteReportService from "@/services/WasteReportService";
 import type { ServiceArea } from "@/types/serviceArea";
 import ServiceAreaMap from "@/components/common/enterprise/ServiceAreaMap";
+import { mockServiceAreas, USE_MOCK_DATA } from "@/data/mockServiceAreas";
 import {
   reverseGeocode,
   forwardGeocode,
@@ -16,9 +17,6 @@ import {
   type AddressSuggestion,
 } from "@/utilities/geocoding";
 import { useDebounce } from "@/hooks/useDebouse";
-import { CollectorService } from "@/services/CollectorService";
-
-import { useAppSelector } from "@/redux/hooks";
 
 const ServiceAreasPage = () => {
   const { user } = useAppSelector((state) => state.user);
@@ -28,8 +26,6 @@ const ServiceAreasPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<Record<number, string>>({});
-  const [collectorCount, setCollectorCount] = useState(0);
-  const [activeRequestCount, setActiveRequestCount] = useState(0);
 
   const [pendingAddress, setPendingAddress] = useState<string>("");
   const [pendingCoordinates, setPendingCoordinates] = useState<{
@@ -43,7 +39,6 @@ const ServiceAreasPage = () => {
   const [geocodingAddress, setGeocodingAddress] = useState(false);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const mapCardRef = useRef<HTMLDivElement>(null); // Ref for map card
   const [radius, setRadius] = useState<string>("1000");
   const [saving, setSaving] = useState(false);
   const [focusedZone, setFocusedZone] = useState<{
@@ -118,8 +113,8 @@ const ServiceAreasPage = () => {
       const updates: Record<number, string> = {};
       for (const a of unresolved) {
         try {
-          // reverseGeocode expects (latitude, longitude)
-          const addr = await reverseGeocode(a.latitude, a.longitude);
+          // reverseGeocode expects (longitude, latitude)
+          const addr = await reverseGeocode(a.longitude, a.latitude);
           if (addr) updates[a.id] = addr;
         } catch {
           // ignore and keep lat/lng fallback
@@ -139,11 +134,12 @@ const ServiceAreasPage = () => {
   const stats = useMemo(() => {
     return {
       totalZones: areas.length,
-      totalCollectors: collectorCount,
-      activeRequests: activeRequestCount,
-      coverageRate: 0, // Placeholder set to 0 as it's not implemented yet
+      // placeholders to match the Figma card; hook these to real endpoints later
+      totalCollectors: 12,
+      activeRequests: 30,
+      coverageRate: 94,
     };
-  }, [areas.length, collectorCount, activeRequestCount]);
+  }, [areas.length]);
 
   // Autocomplete search effect
   useEffect(() => {
@@ -229,39 +225,54 @@ const ServiceAreasPage = () => {
   };
 
   const handleCreate = async () => {
-    if (!pendingPoint) return;
+    if (!pendingCoordinates) {
+      setError("Please select a valid address first.");
+      return;
+    }
     const radiusValue = Number(radius);
     if (!Number.isFinite(radiusValue) || radiusValue <= 0) {
       setError("Radius must be a positive number (meters).");
       return;
     }
 
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await ServiceAreaService.create(enterpriseId!, {
+    if (USE_MOCK_DATA) {
+      const newArea: ServiceArea = {
+        id: Date.now(),
+        enterpriseId,
         latitude: pendingCoordinates.lat,
         longitude: pendingCoordinates.lng,
         radius: Math.round(radiusValue),
-      });
-
-      if (!res.success) {
-        setError(res.error || "Failed to create service area");
-        return;
-      }
+      };
+      setAreas((prev) => [newArea, ...prev]);
       setPendingAddress("");
       setPendingCoordinates(null);
       setAddressSuggestions([]);
-      await fetchAreas();
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(String(err) || "An unexpected error occurred while saving");
+      try {
+        const addr = await reverseGeocode(newArea.longitude, newArea.latitude);
+        if (addr) setAddresses((prev) => ({ ...prev, [newArea.id]: addr }));
+      } catch {
+        // ignore
       }
-    } finally {
-      setSaving(false);
+      return;
     }
+
+    setSaving(true);
+    setError(null);
+    const res = await ServiceAreaService.create(enterpriseId, {
+      latitude: pendingCoordinates.lat,
+      longitude: pendingCoordinates.lng,
+      radius: Math.round(radiusValue),
+    });
+    setSaving(false);
+
+    if (!res.success) {
+      setError(res.error || "Failed to create service area");
+      return;
+    }
+    setPendingAddress("");
+    setPendingCoordinates(null);
+    setAddressSuggestions([]);
+    await fetchAreas();
   };
 
   const handleViewZone = (area: ServiceArea) => {
@@ -271,10 +282,12 @@ const ServiceAreasPage = () => {
       radius: area.radius,
     });
     // Scroll map into view if needed
-    mapCardRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-    });
+    setTimeout(() => {
+      const mapCard = document.querySelector('[class*="lg:col-span-2"]');
+      if (mapCard) {
+        mapCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }, 100);
   };
 
   // Close suggestions when clicking outside
@@ -317,45 +330,130 @@ const ServiceAreasPage = () => {
             <div className="mt-4 h-80 rounded-xl bg-muted/30 border border-border relative overflow-hidden">
               <ServiceAreaMap
                 areas={areas}
-                onMapClick={(lng, lat) => setPendingPoint({ lng, lat })}
+                onMapClick={(lng, lat) => {
+                  // When clicking map, reverse geocode to get address
+                  (async () => {
+                    try {
+                      const addr = await reverseGeocode(lng, lat);
+                      setPendingAddress(addr);
+                      setPendingCoordinates({ lng, lat });
+                    } catch {
+                      setPendingAddress("");
+                      setPendingCoordinates({ lng, lat });
+                    }
+                  })();
+                }}
+                focusZone={focusedZone}
               />
 
               {/* Click helper */}
-              {!pendingPoint && (
+              {!pendingCoordinates && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-muted-foreground">
                     <div className="mx-auto mb-3 h-12 w-12 rounded-xl bg-background/70 border flex items-center justify-center">
                       <MapPin className="h-6 w-6" />
                     </div>
                     <p className="font-medium">Interactive Map</p>
-                    <p className="text-sm">Click to add a service zone</p>
+                    <p className="text-sm">
+                      Enter an address or click to add a service zone
+                    </p>
                   </div>
                 </div>
               )}
 
               {/* Add-zone mini panel */}
-              {pendingPoint && (
-                <div className="absolute bottom-4 left-4 right-4 md:right-auto md:w-[360px] rounded-xl bg-background/90 backdrop-blur border shadow-sm p-3 space-y-3">
+              {(pendingAddress || pendingCoordinates) && (
+                <div className="absolute bottom-4 left-4 right-4 md:right-auto md:w-[400px] rounded-xl bg-background/90 backdrop-blur border shadow-sm p-3 space-y-3 z-10">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">New Zone</p>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setPendingPoint(null)}
+                      onClick={() => {
+                        setPendingAddress("");
+                        setPendingCoordinates(null);
+                        setAddressSuggestions([]);
+                        setShowSuggestions(false);
+                        setError(null);
+                      }}
                     >
-                      Cancel
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">Latitude</p>
-                      <Input value={pendingPoint.lat.toFixed(6)} readOnly />
+
+                  {/* Address input with autocomplete */}
+                  <div className="space-y-1 relative">
+                    <p className="text-xs text-muted-foreground">Address</p>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        ref={addressInputRef}
+                        value={pendingAddress}
+                        onChange={(e) => {
+                          setPendingAddress(e.target.value);
+                          setShowSuggestions(true);
+                          if (!e.target.value.trim()) {
+                            setPendingCoordinates(null);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleGeocodeAddress();
+                          } else if (e.key === "Escape") {
+                            setShowSuggestions(false);
+                          }
+                        }}
+                        onBlur={() => {
+                          // Delay to allow suggestion click to fire first
+                          setTimeout(() => {
+                            if (pendingAddress && !pendingCoordinates) {
+                              handleGeocodeAddress();
+                            }
+                          }, 200);
+                        }}
+                        placeholder="Enter address or click on map"
+                        className="pl-10 pr-10"
+                        disabled={geocodingAddress}
+                      />
+                      {geocodingAddress && (
+                        <LoaderCircle className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+
+                      {/* Autocomplete suggestions dropdown */}
+                      {showSuggestions && addressSuggestions.length > 0 && (
+                        <div
+                          ref={suggestionsRef}
+                          className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg max-h-60 overflow-auto"
+                        >
+                          {addressSuggestions.map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleAddressSelect(suggestion)}
+                              className="w-full text-left px-4 py-2 hover:bg-muted transition-colors border-b last:border-b-0"
+                            >
+                              <p className="text-sm font-medium">
+                                {suggestion.formatted_address}
+                              </p>
+                              {suggestion.sublabel && (
+                                <p className="text-xs text-muted-foreground">
+                                  {suggestion.sublabel}
+                                </p>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">Longitude</p>
-                      <Input value={pendingPoint.lng.toFixed(6)} readOnly />
-                    </div>
+                    {pendingCoordinates && (
+                      <p className="text-xs text-muted-foreground">
+                        Location: {pendingCoordinates.lat.toFixed(6)},{" "}
+                        {pendingCoordinates.lng.toFixed(6)}
+                      </p>
+                    )}
                   </div>
+
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">
                       Radius (meters)
@@ -369,7 +467,7 @@ const ServiceAreasPage = () => {
                   </div>
                   <Button
                     onClick={handleCreate}
-                    disabled={saving}
+                    disabled={saving || !pendingCoordinates || geocodingAddress}
                     className="w-full gap-2"
                   >
                     <Plus className="h-4 w-4" />
@@ -462,7 +560,11 @@ const ServiceAreasPage = () => {
                   <Separator />
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewZone(a)}
+                    >
                       View
                     </Button>
                     <Button variant="outline" size="sm">

@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link, useLocation } from "react-router"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Recycle, User, LogIn, UserPlus } from "lucide-react"
 import { useState } from "react"
@@ -17,7 +17,7 @@ import { roleNavigation } from "@/pages/authentication/LoginPage"
 function Header() {
     const { user } = useAppSelector(state => state.user)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const location = { pathname: "/" } // Mock for demo
+    const location = useLocation()
 
     const mockNavigation = [
         { name: "Home", path: "/" },

@@ -27,8 +27,7 @@ public class CorsConfig {
                 "Origin",
                 "Content-Type",
                 "Accept",
-                "Authorization"
-        ));
+                "Authorization"));
 
         // allow methods
         config.setAllowedMethods(Arrays.asList(
@@ -36,8 +35,8 @@ public class CorsConfig {
                 "POST",
                 "PUT",
                 "DELETE",
-                "OPTIONS"
-        ));
+                "OPTIONS",
+                "PATCH"));
 
         // allow cookies / JWT in headers
         config.setAllowCredentials(true);

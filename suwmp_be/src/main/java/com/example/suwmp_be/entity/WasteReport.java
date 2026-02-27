@@ -1,5 +1,6 @@
 package com.example.suwmp_be.entity;
 
+import com.example.suwmp_be.constants.WasteReportStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
@@ -51,8 +52,12 @@ public class WasteReport {
 
     private String description;
 
-    @Column(nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column
+    private WasteReportStatus status;
+
+    @Column(name = "enterprise_note")
+    private String enterpriseNote;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

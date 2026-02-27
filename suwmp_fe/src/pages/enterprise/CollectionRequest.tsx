@@ -25,7 +25,7 @@ import {
   ClipboardCheck,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { WasteReportEnterprise } from "@/types/wasteReportRequest";

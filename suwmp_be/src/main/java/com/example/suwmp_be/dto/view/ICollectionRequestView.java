@@ -2,7 +2,7 @@ package com.example.suwmp_be.dto.view;
 
 import java.time.Instant;
 
-public interface CollectionRequestView {
+public interface ICollectionRequestView {
     Long getRequestId();
     Long getEnterpriseId();
     String getWasteTypeName();
@@ -13,5 +13,5 @@ public interface CollectionRequestView {
     String getCitizenName();
     String getCitizenPhone();
     String getCollectorName();
-    Instant getCreateAt();
+    Instant getCreatedAt();
 }
