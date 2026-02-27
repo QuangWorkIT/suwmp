@@ -8,9 +8,10 @@ import WasteguidePage from "@/pages/public/WasteguidePage";
 import ResetPasswordPage from "@/pages/authentication/ResetPasswordPage";
 import { citizenRoutes } from "./citizent.route";
 import { enterpriseRoutes } from "./enterprise.route";
-import {adminRoutes} from "./admin.route";
+import { adminRoutes } from "./admin.route";
 import { createBrowserRouter } from "react-router";
 import UnAuthorizedPage from "@/pages/error/UnAuthorizedPage";
+import { collectorRoutes } from "./collector.route";
 
 
 const router = createBrowserRouter([
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
   ...citizenRoutes,
   ...enterpriseRoutes,
   ...adminRoutes,
+  ...collectorRoutes,
 
   // authentication routes
   { path: "/signup", element: <RegisterPage /> },
