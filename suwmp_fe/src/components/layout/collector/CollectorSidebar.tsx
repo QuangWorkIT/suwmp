@@ -19,7 +19,7 @@ function CollectorSidebar() {
     const path = useLocation().pathname
 
     return (
-        <div className="">
+        <div className="fixed left-0 top-0">
             <motion.aside
                 initial={{ x: -50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
