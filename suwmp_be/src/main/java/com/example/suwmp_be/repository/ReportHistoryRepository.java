@@ -1,6 +1,6 @@
 package com.example.suwmp_be.repository;
 
-import com.example.suwmp_be.dto.history.RewardHistoryDto;
+import com.example.suwmp_be.dto.history.ReportHistoryDto;
 import com.example.suwmp_be.entity.RewardTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.UUID;
 
-public interface RewardTransactionRepository extends JpaRepository<RewardTransaction, Long> {
+public interface ReportHistoryRepository extends JpaRepository<RewardTransaction, Long> {
     @Query("""
         SELECT new com.example.suwmp_be.dto.history.RewardHistoryDto(
             rt.id,
@@ -27,5 +27,5 @@ public interface RewardTransactionRepository extends JpaRepository<RewardTransac
             WHERE rt.citizen.id = :citizenId
             ORDER BY rt.createdAt DESC
         """)
-    List<RewardHistoryDto> findRewardTransaction(UUID citizenId);
+    List<ReportHistoryDto> findRewardTransaction(UUID citizenId);
 }

@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Getter
-public class RewardHistoryDto {
+public class ReportHistoryDto {
 
     private Long id;
     private Integer points;
@@ -18,7 +18,7 @@ public class RewardHistoryDto {
     private Double volume;
     private String status;
 
-    public RewardHistoryDto(
+    public ReportHistoryDto(
             Long id,
             Integer points,
             String reason,
