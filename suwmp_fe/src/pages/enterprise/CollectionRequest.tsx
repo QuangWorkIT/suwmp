@@ -28,7 +28,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { WasteReportEnterprise } from "@/types/wasteReportRequest";
+import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/WasteReportService";
 
 const statusConfig = {
