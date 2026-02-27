@@ -2,7 +2,7 @@ import authClient from "@/config/axios";
 import type {
   WasteCategory,
   CreateWasteCategoryRequest,
-} from "@/types/WasteCategory";
+} from "@/types/wasteCategory";
 
 const wasteCategoryService = {
   async getAll(): Promise<WasteCategory[]> {

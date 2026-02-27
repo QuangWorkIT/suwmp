@@ -1,5 +1,5 @@
 import authClient from "@/config/axios";
-import type { RewardTransaction } from "@/types/RewardTransaction";
+import type { RewardTransaction } from "@/types/rewardTransaction";
 
 export const RewardService = {
   async getMyRewards(): Promise<RewardTransaction[]> {

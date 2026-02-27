@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { toast } from "sonner";
 import WasteCategoryService from "@/services/WasteCategoryService";
-import type { WasteCategory } from "@/types/WasteCategory";
+import type { WasteCategory } from "@/types/wasteCategory";
 
 type Props = {
   open: boolean;

@@ -3,7 +3,11 @@ import AdminMain from "@/components/layout/admin/AdminMain";
 import ForgotPasswordPage from "@/pages/authentication/ForgotPasswordPage";
 import LoginPage from "@/pages/authentication/LoginPage";
 import RegisterPage from "@/pages/authentication/RegisterPage";
-import { AdminDashboardPage, UserManagementPage, WasteCategoriesPage } from "@/pages/admin";
+import {
+  AdminDashboardPage,
+  UserManagementPage,
+  WasteCategoriesPage,
+} from "@/pages/admin";
 import About from "@/pages/public/About";
 import PublicHome from "@/pages/public/PublicHome";
 import WasteguidePage from "@/pages/public/WasteguidePage";
@@ -12,7 +16,7 @@ import { citizenRoutes } from "./citizent.route";
 import { enterpriseRoutes } from "./enterprise.route";
 import { createBrowserRouter, Navigate } from "react-router";
 import UnAuthorizedPage from "@/pages/error/UnAuthorizedPage";
-
+import ComplaintsPage from "@/pages/admin/ComplaintsPage";
 
 const router = createBrowserRouter([
   {
@@ -38,7 +42,7 @@ const router = createBrowserRouter([
       { path: "waste-categories", element: <WasteCategoriesPage /> },
       { path: "regions", element: <div>Regions & Zones</div> },
       { path: "policies", element: <div>Policies</div> },
-      { path: "complaints", element: <div>Complaints</div> },
+      { path: "complaints", element: <ComplaintsPage /> },
       { path: "audit-logs", element: <div>Audit Logs</div> },
       { path: "analytics", element: <div>Analytics</div> },
       { path: "access-control", element: <div>Access Control</div> },
@@ -55,7 +59,7 @@ const router = createBrowserRouter([
     path: "/reset-password",
     element: <ResetPasswordPage />,
   },
-  { path: "/unauthorized", element: <UnAuthorizedPage /> }
+  { path: "/unauthorized", element: <UnAuthorizedPage /> },
 ]);
 
 export default router;

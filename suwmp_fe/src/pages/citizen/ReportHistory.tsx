@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { RewardService } from "@/services/RewardService";
-import type { RewardTransaction } from "@/types/RewardTransaction";
+import type { RewardTransaction } from "@/types/rewardTransaction";
 import {
   Calendar,
   ChevronRight,
@@ -281,7 +281,7 @@ const RewardHistory = () => {
         <div className="mt-6 text-left">
           <p className="text-gray-600">
             Showing {rewardTransactions.length} of {rewardTransactions.length}{" "}
-            transactions
+            reports
           </p>
           <button className="mt-4 py-2 text-green-600 hover:text-green-700 font-medium transition-colors cursor-pointer">
             Load More
