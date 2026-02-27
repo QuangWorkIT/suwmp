@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebouse";
+import wasteReportService from "@/services/WasteReportService";
+import type { AssignedTask } from "@/types/collectorTask";
 import { AnimatePresence, motion } from "framer-motion";
 import {
     Navigation,
@@ -16,31 +18,51 @@ import {
     Search,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-const mockTasks = [
-    { id: 1, type: "Recyclables", status: "assigned", address: "123 Green Street, Apt 4B", distance: "0.8 km", time: "10 mins", citizen: "John D.", phone: "+1 555-0123", priority: "urgent" },
-    { id: 2, type: "Organic Waste", status: "assigned", address: "456 Eco Lane", distance: "1.2 km", time: "15 mins", citizen: "Sarah M.", phone: "+1 555-0456", priority: "normal" },
-    { id: 3, type: "E-Waste", status: "assigned", address: "789 Tech Road, Unit 12", distance: "2.1 km", time: "25 mins", citizen: "Mike R.", phone: "+1 555-0789", priority: "normal" },
-    { id: 4, type: "Hazardous", status: "assigned", address: "321 Safe Ave", distance: "3.5 km", time: "40 mins", citizen: "Lisa P.", phone: "+1 555-0321", priority: "urgent" },
-];
+
 function CollectorTask() {
+    const [isFetching, setIsFetching] = useState(false)
+    const [tasks, setTasks] = useState<AssignedTask[]>([])
     const [filter, setFilter] = useState("all")
-    const [filteredTasks, setFilterTasks] = useState(mockTasks)
+    const [filteredTasks, setFilterTasks] = useState(tasks)
     const [searchQuery, setSearchQuery] = useState("")
     const debounceSearchQuery = useDebounce(searchQuery, 300)
 
-    const filterTasks = () => mockTasks.filter((t) => {
+    // fetch tasks
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                setIsFetching(true)
+                const response = await wasteReportService.getCollectorAssignedTasks();
+
+                console.log(response)
+                setTasks(response.data);
+                setFilterTasks(response.data)
+                setIsFetching(false)
+            } catch (error) {
+                toast.error("Error fetching tasks")
+                setIsFetching(false)
+                console.log("Error fetching tasks", error);
+            }
+        }
+        fetchTasks();
+    }, [])
+
+    const filterTasks = () => tasks.filter((t) => {
         const matchPriority =
             filter === "all" ? true : t.priority === filter
 
         const keyword = debounceSearchQuery.trim().toLowerCase()
 
         const searchItem = (
-            t.address +
+            t.citizenName +
             " " +
-            t.citizen +
+            t.citizenPhone +
             " " +
-            t.phone
+            t.wasteTypeName +
+            " " +
+            t.address
         ).toLowerCase()
 
         const matchKeyword =
@@ -113,7 +135,13 @@ function CollectorTask() {
 
                 <div className="px-8 grid gap-4">
                     <AnimatePresence mode="wait">
-                        {filteredTasks.length === 0 && mockTasks.length === 0 && (
+                        {isFetching && (
+                            <div className="flex items-center justify-center p-12">
+                                <div className="animate-spin rounded-full h-18 w-18 border-b-2 border-primary" />
+                            </div>
+                        )}
+
+                        {filteredTasks.length === 0 && tasks.length === 0 && (
                             <motion.div
                                 key="empty-all"
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -130,7 +158,7 @@ function CollectorTask() {
                             </motion.div>
                         )}
 
-                        {filteredTasks.length === 0 && mockTasks.length > 0 && (
+                        {filteredTasks.length === 0 && tasks.length > 0 && (
                             <motion.div
                                 key="empty-search"
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -154,7 +182,7 @@ function CollectorTask() {
                             >
                                 {filteredTasks.map((task, index) => (
                                     <motion.div
-                                        key={task.id}
+                                        key={task.requestId}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{
@@ -167,24 +195,22 @@ function CollectorTask() {
                                         whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
                                     >
                                         <Card className="p-5">
-                                            <div className="flex flex-col md:flex-row gap-4">
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${task.type === "Recyclables" ? "bg-gradient-to-br from-blue-500 to-cyan-600" :
-                                                    task.type === "Organic Waste" ? "bg-gradient-to-br from-green-500 to-emerald-600" :
-                                                        "bg-gradient-to-br from-violet-500 to-purple-600"
-                                                    }`}>
-                                                    <Package className="w-6 h-6 text-white" />
+                                            <div className="flex flex-col md:flex-row gap-4 items-center">
+                                                <div className={`group w-24 h-24 rounded-lg flex items-center justify-center shadow-md`}>
+                                                    <img src={task.photoUrl} alt={task.wasteTypeName} 
+                                                    className="w-full h-full object-cover rounded-lg" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <h3 className="font-semibold">{task.type}</h3>
+                                                        <h3 className="font-semibold">{task.wasteTypeName}</h3>
                                                         {task.priority === "urgent" && <Badge className="bg-red-500 text-white border-0">Urgent</Badge>}
                                                         {task.priority === "high" && <Badge className="bg-orange-500 text-white border-0">High</Badge>}
                                                     </div>
                                                     <div className="grid sm:grid-cols-2 gap-y-2 text-sm text-muted-foreground">
                                                         <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{task.address}</div>
-                                                        <div className="flex items-center gap-2"><User className="w-4 h-4" />{task.citizen}</div>
-                                                        <div className="flex items-center gap-2"><Clock className="w-4 h-4" />{task.time} ({task.distance})</div>
-                                                        <div className="flex items-center gap-2"><Phone className="w-4 h-4" />{task.phone}</div>
+                                                        <div className="flex items-center gap-2"><User className="w-4 h-4" />{task.citizenName}</div>
+                                                        <div className="flex items-center gap-2"><Clock className="w-4 h-4" />{new Date(task.collectTime).toLocaleString()}</div>
+                                                        <div className="flex items-center gap-2"><Phone className="w-4 h-4" />{task.citizenPhone}</div>
                                                     </div>
                                                 </div>
                                                 <div className="flex md:flex-col gap-2 justify-center">

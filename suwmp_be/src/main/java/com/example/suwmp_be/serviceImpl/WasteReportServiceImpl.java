@@ -5,6 +5,7 @@ import com.example.suwmp_be.dto.mapper.WasteReportMapper;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
 import com.example.suwmp_be.entity.Enterprise;
@@ -15,6 +16,8 @@ import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -102,6 +105,11 @@ public class WasteReportServiceImpl implements IWasteReportService {
                 .stream()
                 .map(this::toCitizenStatusResponse)
                 .toList();
+    }
+
+    @Override
+    public Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable) {
+        return wasteReportRepo.findAssignedTasksByCollector_Id(collectorId, pageable);
     }
 
     private CitizenWasteReportStatusResponse toCitizenStatusResponse(WasteReport report) {

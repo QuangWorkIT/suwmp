@@ -1,6 +1,9 @@
 import authClient from "@/config/axios";
+import type { AssignedTask, AssignedTaskResponse } from "@/types/collectorTask";
 import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
+import { reverseGeocode } from "@/utilities/geocoding";
+import s3Service from "./S3Service";
 
 const wasteReportService = {
     createWasteReport: async (data: WasteReportRequest) => {
@@ -46,21 +49,36 @@ const wasteReportService = {
             throw error;
         }
     },
+    getCollectorAssignedTasks: async (): Promise<AssignedTaskResponse> => {
+        const response = await authClient.get("/waste-reports/collectors/tasks/me");
+        const arr: AssignedTask[] = []
+
+        // reverse address and download image
+        for (let i = 0; i < response.data.data.length; i++) {
+            const [photoRes, address] = await Promise.all([
+                s3Service.getImage(response.data.data[i].photoUrl),
+                reverseGeocode(response.data.data[i].requestLongitude, response.data.data[i].requestLatitude)
+            ])
+            arr.push({ ...response.data.data[i], address: address, photoUrl: photoRes.data })
+        }
+        
+        return { ...response.data, data: arr };
+    },
     getReportStatus: async (
         reportId: number,
-      ): Promise<CitizenWasteReportStatus> => {
+    ): Promise<CitizenWasteReportStatus> => {
         const response = await authClient.get(`/waste-reports/${reportId}/status`);
         return response.data.data as CitizenWasteReportStatus;
-      },
-    
-      getMyReports: async (): Promise<CitizenWasteReportStatus[]> => {
+    },
+
+    getMyReports: async (): Promise<CitizenWasteReportStatus[]> => {
         const response = await authClient.get("/waste-reports/citizen/me");
         return response.data.data as CitizenWasteReportStatus[];
-      },
-    
-      submitRating: async (reportId: number, rating: number): Promise<void> => {
+    },
+
+    submitRating: async (reportId: number, rating: number): Promise<void> => {
         await authClient.post(`/waste-reports/${reportId}/rating`, { rating });
-      },
-  }
+    },
+}
 
 export default wasteReportService

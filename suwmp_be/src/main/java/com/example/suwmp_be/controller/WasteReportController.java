@@ -2,10 +2,12 @@ package com.example.suwmp_be.controller;
 
 
 import com.example.suwmp_be.dto.BaseResponse;
+import com.example.suwmp_be.dto.PaginatedResponse;
 import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.service.IWasteReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,9 +22,15 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -163,6 +171,20 @@ public class WasteReportController {
                 "Canceled waste report request",
                 wasteService.cancelWasteReport(rq.getWasteReportId(), rq.getNote()))
         );
+    }
+
+
+    @PreAuthorize("hasRole('COLLECTOR')")
+    @GetMapping("/collectors/tasks/me")
+    public ResponseEntity<PaginatedResponse<IAssignedTaskView>> getCollectorTasks(
+            Authentication authentication,
+            @PageableDefault(page = 0, size = 20, sort = "startCollectAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<IAssignedTaskView> tasks = wasteService.getCollectorAssignedTasks(
+                (UUID) authentication.getPrincipal(), pageable);
+
+        PaginatedResponse<IAssignedTaskView> response = PaginatedResponse.buildPaginatedResponse(tasks);
+        return ResponseEntity.ok(response);
     }
 
 }

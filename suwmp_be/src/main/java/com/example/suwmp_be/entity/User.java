@@ -44,7 +44,7 @@ public class User {
     private Role role;
 
     @Pattern(
-            regexp = "^(ACTIVE|SUSPENDED)$"
+            regexp = "^(ACTIVE|SUSPENDED|INACTIVE)$"
     )
     @Column(nullable = false)
     private String status;

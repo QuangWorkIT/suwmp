@@ -2,6 +2,7 @@ package com.example.suwmp_be.entity;
 
 import com.example.suwmp_be.constants.WasteReportStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,6 +48,12 @@ public class WasteReport {
     @Column
     private double volume;
 
+    @Pattern(
+            regexp = "^(URGENT|NORMAL)$"
+    )
+    @Column
+    private String priority;
+
     @Column(nullable = false)
     private String photoUrl;
 
@@ -64,6 +71,7 @@ public class WasteReport {
 
     @PrePersist
     protected void onCreate() {
+        this.priority = "NORMAL";
         this.createdAt = LocalDateTime.now();
     }
 }
