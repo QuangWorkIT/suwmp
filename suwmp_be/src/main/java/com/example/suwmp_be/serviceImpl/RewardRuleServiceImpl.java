@@ -44,7 +44,7 @@ public class RewardRuleServiceImpl implements IRewardRuleService {
     public GetRewardRuleByEnterpriseAndWasteTypeResponse getRewardRuleByWasteTypeAndEnterprise(long enterpriseId, long wasteTypeId) {
         var rewardRule = rewardRuleRepository.findByEnterpriseIdAndWasteTypeId(enterpriseId, wasteTypeId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_DATA));
-        log.info("Get successfully reward rule of enterprise {}", enterpriseId);
+        log.info("Get successfully reward rule of enterprise {} and waste type {}", enterpriseId, wasteTypeId);
         return rewardRuleMapper.toGetRewardRuleByEnterpriseAndWasteTypeResponse(rewardRule);
     }
 }
