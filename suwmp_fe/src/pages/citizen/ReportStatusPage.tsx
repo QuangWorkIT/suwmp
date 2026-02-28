@@ -50,14 +50,20 @@ function ReportStatusPage() {
       try {
         setLoading(true);
         setError(null);
-        const [reportData, statusData] = await Promise.all([
-          wasteReportService.getReportStatus(Number(id)),
-          wasteReportService.getRatingStatus(Number(id)),
-        ]);
+        // Fetch report first as it's critical
+        const reportData = await wasteReportService.getReportStatus(Number(id));
         setReport(reportData);
-        setRatingStatus(statusData);
-        if (statusData.alreadyRated) {
-          setRating(statusData.userRating);
+
+        // Fetch rating status separately and handle its errors independently
+        try {
+          const statusData = await wasteReportService.getRatingStatus(Number(id));
+          setRatingStatus(statusData);
+          if (statusData.alreadyRated) {
+            setRating(statusData.userRating);
+          }
+        } catch (ratingErr) {
+          console.error("Failed to load rating status:", ratingErr);
+          // Don't set error state globally, just leave ratingStatus as null
         }
       } catch (err) {
         console.error(err);
@@ -377,8 +383,10 @@ function ReportStatusPage() {
                 </div>
               )}
               
-              {ratingMessage && !ratingStatus?.alreadyRated && (
-                <p className="text-xs text-muted-foreground mt-1">
+              {ratingMessage && (
+                <p className={`text-xs mt-1 ${
+                  ratingMessage.includes("Failed") ? "text-destructive" : "text-muted-foreground"
+                }`}>
                   {ratingMessage}
                 </p>
               )}

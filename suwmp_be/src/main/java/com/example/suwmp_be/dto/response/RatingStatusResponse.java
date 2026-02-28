@@ -13,6 +13,6 @@ public class RatingStatusResponse {
     private boolean canRate;
     private boolean alreadyRated;
     private Integer userRating;
-    private Double averageRating;
-    private Long totalRatings;
+    private double averageRating;
+    private long totalRatings;
 }

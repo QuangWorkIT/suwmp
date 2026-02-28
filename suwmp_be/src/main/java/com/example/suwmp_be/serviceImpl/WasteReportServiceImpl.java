@@ -22,6 +22,7 @@ import com.example.suwmp_be.repository.UserRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,10 +126,6 @@ public class WasteReportServiceImpl implements IWasteReportService {
             throw new ApplicationException(ErrorCode.INVALID_REPORT_STATUS);
         }
 
-        if (reportRatingRepo.existsByReportIdAndCitizenId(reportId, citizenId)) {
-            throw new ApplicationException(ErrorCode.ALREADY_RATED);
-        }
-
         User citizen = userRepo.findById(citizenId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_ID_INVALID));
 
@@ -138,12 +135,16 @@ public class WasteReportServiceImpl implements IWasteReportService {
                 .rating(ratingRequest.getRating())
                 .build();
 
-        reportRatingRepo.save(rating);
+        try {
+            reportRatingRepo.saveAndFlush(rating);
+        } catch (DataIntegrityViolationException e) {
+            throw new ApplicationException(ErrorCode.ALREADY_RATED);
+        }
     }
 
     @Override
     public RatingStatusResponse getRatingStatus(Long reportId, UUID citizenId) {
-        WasteReport report = wasteReportRepo.findById(reportId)
+        WasteReport report = wasteReportRepo.findByIdAndCitizen_Id(reportId, citizenId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
 
         Optional<ReportRating> userRating = reportRatingRepo.findByReportIdAndCitizenId(reportId, citizenId);
