@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthService } from "@/services/AuthService";
+import { EmailService } from "@/services/EmailService";
+import { GoogleLogin } from "@react-oauth/google";
 import { Lock, Mail, Phone, Recycle, User } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
@@ -99,6 +101,32 @@ export default function Register() {
     if (!/[0-9]/.test(password))
       return "Password must contain at least 1 number";
     return "";
+  };
+
+  const handleGoogleLoginSuccess = async (googleTokenResponse: any) => {
+    const idToken = googleTokenResponse.credential;
+    if (!idToken) {
+      console.error("Google did not return ID Token")
+      toast.error("Google register failed");
+      return;
+    }
+    
+    const response = await AuthService.registerByGoogle(idToken)
+    .then(async (res) => {
+        toast.success("Register successfully! Please login to continue");
+        navigate("/signin");
+        return res;
+      })
+    .catch((error) => {
+      console.error(error);
+      toast.error("Google register failed");
+    });
+
+    if (!response) return;
+    await EmailService.sendPassword(response.data)
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   return (
@@ -217,18 +245,15 @@ export default function Register() {
             </div>
           </div>
 
-          <Button
-            type="button"
-            className="w-full flex items-center justify-center mt-6 px-5 py-3 border border-gray-200 rounded-xl 
-            hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200"
-          >
-            <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="Google"
-              className="w-5 h-5"
-            />
-            <span className="text-sm font-medium text-gray-500"> Google</span>
-          </Button>
+          <GoogleLogin
+            onSuccess={handleGoogleLoginSuccess}
+            onError={() => toast.error("Google Register popup failed")}
+            auto_select={false}
+            useOneTap={false}
+            text="signup_with"
+            width="100%"
+            shape="rectangular"
+          />
         </div>
 
         <p className="text-sm text-center mt-6">

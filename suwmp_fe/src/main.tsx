@@ -11,7 +11,7 @@ if (!clientId) console.error("VITE_GOOGLE_CLIENT_ID is not configured. Google lo
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={clientId}>
+    <GoogleOAuthProvider clientId={clientId} locale="en">
       <App />
     </GoogleOAuthProvider>
   </StrictMode>,

@@ -1,7 +1,7 @@
 package com.example.suwmp_be.serviceImpl;
 
-import com.example.suwmp_be.dto.forgot_password.SendLinkResetDto;
-import com.example.suwmp_be.service.IEmailService;
+import com.example.suwmp_be.dto.email.SendLinkResetDto;
+import com.example.suwmp_be.dto.email.SendPasswordDto;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
@@ -19,13 +19,14 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService implements IEmailService {
+public class EmailService {
     private final JavaMailSender mailSender;
-    private final OtpService otpService;
 
     private static final String EMAIL_FROM = "suwmp.hcm@gmail.com";
     private static final String NAME_FROM = "Smart Urban Waste Platform";
+
     private static final String SEND_OTP_SUBJECT = "Send OTP Verification";
+    private static final String SEND_PASSWORD_SUBJECT = "Send Password";
 
     private static final String ROUTE = "/reset-password?resetToken=";
 
@@ -33,7 +34,6 @@ public class EmailService implements IEmailService {
     private String FE_URLS;
 
     @Async
-    @Override
     public void sendLinkReset(SendLinkResetDto sendLinkResetDto) {
         MimeMessage message = mailSender.createMimeMessage();
 
@@ -42,14 +42,36 @@ public class EmailService implements IEmailService {
             message.setRecipients(MimeMessage.RecipientType.TO, sendLinkResetDto.to());
             message.setSubject(EmailService.SEND_OTP_SUBJECT);
 
-            String resetToken = otpService.generateResetToken(sendLinkResetDto.to());
             String feUrl = FE_URLS.split(",")[0];
-            String url = feUrl + ROUTE + resetToken;
+            String url = feUrl + ROUTE + sendLinkResetDto.resetToken();
 
             // build content
             String html = readFile("html/send-reset-password.html");
             String content = html.replace("${CustomerName}", sendLinkResetDto.fullName());
             content = content.replace("${LINK_RESET}", url);
+            message.setContent(content, "text/html; charset=utf-8");
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Async
+    public void sendPassword(SendPasswordDto sendPasswordDto) {
+        MimeMessage message = mailSender.createMimeMessage();
+
+        try {
+            message.setFrom(new InternetAddress(EMAIL_FROM, NAME_FROM));
+            message.setRecipients(MimeMessage.RecipientType.TO, sendPasswordDto.to());
+            message.setSubject(EmailService.SEND_PASSWORD_SUBJECT);
+
+            // build content
+            String html = readFile("html/send-password.html");
+            String content = html.replace("${CustomerName}", sendPasswordDto.fullName());
+            content = content.replace("${Password}", sendPasswordDto.password());
             message.setContent(content, "text/html; charset=utf-8");
 
             mailSender.send(message);

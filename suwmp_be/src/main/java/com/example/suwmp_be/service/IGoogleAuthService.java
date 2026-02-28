@@ -1,12 +1,11 @@
 package com.example.suwmp_be.service;
 
-import com.example.suwmp_be.dto.google_auth.GoogleLoginRequest;
-import com.example.suwmp_be.dto.google_auth.GoogleLoginResponse;
-import com.example.suwmp_be.dto.google_auth.GoogleUserInfo;
-import com.example.suwmp_be.dto.google_auth.TokenGoogleResponse;
+import com.example.suwmp_be.dto.google_auth.*;
 
 public interface IGoogleAuthService {
-    GoogleUserInfo verifyIdToken(GoogleLoginRequest request);
+    GoogleUserInfo verifyIdToken(String idToken);
 
     GoogleLoginResponse loginByGoogle(GoogleLoginRequest request);
+
+    GoogleRegisterResponse registerByGoogle(GoogleRegisterRequest request);
 }
