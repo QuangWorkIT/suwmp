@@ -97,7 +97,7 @@ export const AuthService = {
     } catch (error: any) {
       console.log({
         title: error.response?.data?.title,
-        messsage: error.response?.data?.message,
+        message: error.response?.data?.message,
         status: error.response?.status
       });
       throw error;

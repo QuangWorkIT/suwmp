@@ -5,7 +5,6 @@ import com.example.suwmp_be.constants.UserStatus;
 import com.example.suwmp_be.dto.google_auth.GoogleLoginRequest;
 import com.example.suwmp_be.dto.google_auth.GoogleLoginResponse;
 import com.example.suwmp_be.dto.google_auth.GoogleUserInfo;
-import com.example.suwmp_be.dto.google_auth.TokenGoogleResponse;
 import com.example.suwmp_be.entity.User;
 import com.example.suwmp_be.exception.AuthenticationException;
 import com.example.suwmp_be.exception.NotFoundException;
