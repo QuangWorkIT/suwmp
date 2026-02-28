@@ -3,10 +3,13 @@ package com.example.suwmp_be.controller;
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
 import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
+import com.example.suwmp_be.dto.google_auth.GoogleLoginRequest;
+import com.example.suwmp_be.dto.google_auth.TokenGoogleResponse;
 import com.example.suwmp_be.dto.request.LoginRequest;
 import com.example.suwmp_be.dto.request.RegisterRequest;
 import com.example.suwmp_be.dto.response.TokenResponse;
 import com.example.suwmp_be.serviceImpl.AuthService;
+import com.example.suwmp_be.serviceImpl.GoogleAuthServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,6 +30,8 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authentication", description = "User authentication and authorization endpoints")
 public class AuthController {
     private final AuthService authService;
+
+    private final GoogleAuthServiceImpl googleAuthService;
 
     @PostMapping("/register")
     @Operation(
@@ -166,5 +171,19 @@ public class AuthController {
                 .path("/")
                 .sameSite("None")
                 .build();
+    }
+
+    @PostMapping("/google/login")
+    public ResponseEntity<BaseResponse<TokenGoogleResponse>> loginByGoogle(@RequestBody GoogleLoginRequest request) {
+        TokenGoogleResponse response = googleAuthService.loginByGoogle(request);
+        ResponseCookie cookie = setCookieToken(response.refreshToken());
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Set-cookie", cookie.toString())
+                .body(new BaseResponse<>(
+                        true,
+                        "Login by Google successfully",
+                        response)
+                );
     }
 }

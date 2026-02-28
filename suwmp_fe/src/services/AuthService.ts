@@ -88,4 +88,15 @@ export const AuthService = {
       throw error;
     }
   },
+
+  loginByGoogle: async (idToken: string) => {
+    try {
+      const response = await api.post("/auth/google/login", { idToken });
+
+      return response.data;
+    } catch (error: any) {
+      console.log(error);
+      throw error;
+    }
+  },
 };
