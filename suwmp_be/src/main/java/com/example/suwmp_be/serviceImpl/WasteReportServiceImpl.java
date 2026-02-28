@@ -12,13 +12,11 @@ import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
 import com.example.suwmp_be.entity.Enterprise;
 import com.example.suwmp_be.entity.ReportRating;
-import com.example.suwmp_be.entity.User;
 import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.exception.ApplicationException;
 import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.repository.ReportRatingRepository;
-import com.example.suwmp_be.repository.UserRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +35,6 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final EnterpriseRepository enterpriseRepo;
     private final WasteReportMapper wasteReportMapper;
     private final ReportRatingRepository reportRatingRepo;
-    private final UserRepository userRepo;
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -126,12 +123,9 @@ public class WasteReportServiceImpl implements IWasteReportService {
             throw new ApplicationException(ErrorCode.INVALID_REPORT_STATUS);
         }
 
-        User citizen = userRepo.findById(citizenId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_ID_INVALID));
-
         ReportRating rating = ReportRating.builder()
                 .report(report)
-                .citizen(citizen)
+                .citizen(report.getCitizen())
                 .rating(ratingRequest.getRating())
                 .build();
 
