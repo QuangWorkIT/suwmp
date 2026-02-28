@@ -1,5 +1,5 @@
 import authClient from "@/config/axios";
-import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest, RatingStatusResponse } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
 
 const wasteReportService = {
@@ -60,6 +60,11 @@ const wasteReportService = {
     
       submitRating: async (reportId: number, rating: number): Promise<void> => {
         await authClient.post(`/waste-reports/${reportId}/rating`, { rating });
+      },
+
+      getRatingStatus: async (reportId: number): Promise<RatingStatusResponse> => {
+        const response = await authClient.get(`/waste-reports/${reportId}/rating`);
+        return response.data.data as RatingStatusResponse;
       },
   }
 

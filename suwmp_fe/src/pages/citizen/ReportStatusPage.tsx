@@ -15,7 +15,19 @@ import {
   Navigation2,
   UserRound,
   Star,
+  Info,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { RatingStatusResponse } from "@/types/WasteReportRequest";
 
 function ReportStatusPage() {
   const { id } = useParams();
@@ -27,17 +39,26 @@ function ReportStatusPage() {
   const [rating, setRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratingStatus, setRatingStatus] = useState<RatingStatusResponse | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [ratingMessage, setRatingMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
 
-    const fetchStatus = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await wasteReportService.getReportStatus(Number(id));
-        setReport(data);
+        const [reportData, statusData] = await Promise.all([
+          wasteReportService.getReportStatus(Number(id)),
+          wasteReportService.getRatingStatus(Number(id)),
+        ]);
+        setReport(reportData);
+        setRatingStatus(statusData);
+        if (statusData.alreadyRated) {
+          setRating(statusData.userRating);
+        }
       } catch (err) {
         console.error(err);
         setError("Unable to load report status. Please try again.");
@@ -46,18 +67,22 @@ function ReportStatusPage() {
       }
     };
 
-    fetchStatus();
+    fetchData();
   }, [id]);
 
   const handleSubmitRating = async () => {
-    if (!id || rating == null) return;
+    if (!id || rating == null || ratingStatus?.alreadyRated) return;
 
     setSubmittingRating(true);
     setRatingMessage(null);
+    setShowConfirm(false);
 
     try {
       await wasteReportService.submitRating(Number(id), rating);
       setRatingMessage("Thanks for your feedback!");
+      // Refresh status to lock the UI
+      const updatedStatus = await wasteReportService.getRatingStatus(Number(id));
+      setRatingStatus(updatedStatus);
     } catch (err) {
       console.error(err);
       setRatingMessage("Failed to submit rating. Please try again.");
@@ -296,44 +321,87 @@ function ReportStatusPage() {
             </div>
           </Card>
 
-          {/* Rate your experience */}
-          <Card className="p-5 space-y-4">
-            <h3 className="text-sm font-medium">Rate your experience</h3>
-            <div className="flex gap-3">
-              {Array.from({ length: 5 }).map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors cursor-pointer"
-                  aria-label={`Rate ${idx + 1} star${idx === 0 ? "" : "s"}`}
-                  onClick={() => setRating(idx + 1)}
-                  onMouseEnter={() => setHoverRating(idx + 1)}
-                  onMouseLeave={() => setHoverRating(null)}
-                >
-                  <Star
-                    className={`w-4 h-4 ${
-                      (hoverRating ?? rating ?? 0) > idx
-                        ? "text-emerald-500 fill-emerald-500"
-                        : "text-muted-foreground"
+          {/* Rate your experience (Only visible if COLLECTED) */}
+          {report.status === "COLLECTED" && (
+            <Card className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">Rate your experience</h3>
+                {ratingStatus?.totalRatings ? (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    {ratingStatus.averageRating.toFixed(1)} ({ratingStatus.totalRatings})
+                  </span>
+                ) : null}
+              </div>
+              
+              <div className="flex gap-3">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={ratingStatus?.alreadyRated || submittingRating}
+                    className={`w-10 h-10 rounded-xl border border-border flex items-center justify-center transition-colors ${
+                      ratingStatus?.alreadyRated 
+                        ? "cursor-default opacity-80" 
+                        : "hover:bg-muted cursor-pointer"
                     }`}
-                  />
-                </button>
-              ))}
-            </div>
-            <Button
-              size="sm"
-              className="mt-2"
-              disabled={rating == null || submittingRating}
-              onClick={handleSubmitRating}
-            >
-              {submittingRating ? "Submitting..." : "Submit rating"}
-            </Button>
-            {ratingMessage && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {ratingMessage}
-              </p>
-            )}
-          </Card>
+                    aria-label={`Rate ${idx + 1} star${idx === 0 ? "" : "s"}`}
+                    onClick={() => setRating(idx + 1)}
+                    onMouseEnter={() => !ratingStatus?.alreadyRated && setHoverRating(idx + 1)}
+                    onMouseLeave={() => !ratingStatus?.alreadyRated && setHoverRating(null)}
+                  >
+                    <Star
+                      className={`w-4 h-4 ${
+                        (hoverRating ?? rating ?? 0) > idx
+                          ? "text-emerald-500 fill-emerald-500"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {!ratingStatus?.alreadyRated ? (
+                <Button
+                  size="sm"
+                  className="mt-2 w-full"
+                  disabled={rating == null || submittingRating}
+                  onClick={() => setShowConfirm(true)}
+                >
+                  {submittingRating ? "Submitting..." : "Submit rating"}
+                </Button>
+              ) : (
+                <div className="mt-2 p-3 bg-muted/50 rounded-lg flex items-start gap-2 text-xs text-muted-foreground">
+                  <Info className="w-4 h-4 mt-0.5 text-blue-500" />
+                  <p>Thanks for your feedback! Ratings are final and cannot be edited to ensure transparency.</p>
+                </div>
+              )}
+              
+              {ratingMessage && !ratingStatus?.alreadyRated && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {ratingMessage}
+                </p>
+              )}
+            </Card>
+          )}
+
+          <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Submit your rating?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You are about to give this collection experience a <strong>{rating} star</strong> rating. 
+                  Ratings are final and cannot be modified after submission.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Go back</AlertDialogCancel>
+                <AlertDialogAction onClick={handleSubmitRating} className="bg-emerald-600 hover:bg-emerald-700">
+                  Confirm Submission
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
