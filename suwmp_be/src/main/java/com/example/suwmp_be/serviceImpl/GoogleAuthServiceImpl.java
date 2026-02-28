@@ -44,7 +44,8 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
         if (user == null)
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
 
-        if (user.getStatus().equals(UserStatus.INACTIVE.toString()) ||
+        if (user.getStatus() == null ||
+                user.getStatus().equals(UserStatus.INACTIVE.toString()) ||
                 user.getStatus().equals(UserStatus.SUSPENDED.toString()) ||
                 user.getDeletedAt() != null)
             throw new AuthenticationException(ErrorCode.USER_INACTIVE);
