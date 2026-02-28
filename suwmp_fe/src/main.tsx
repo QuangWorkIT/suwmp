@@ -6,7 +6,8 @@ import App from "./App.tsx";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "your_google_client_id_here";
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+if (!clientId) console.error("VITE_GOOGLE_CLIENT_ID is not configured. Google login will not work.");
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

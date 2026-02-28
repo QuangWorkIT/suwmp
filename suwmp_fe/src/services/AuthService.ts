@@ -95,7 +95,11 @@ export const AuthService = {
 
       return response.data;
     } catch (error: any) {
-      console.log(error);
+      console.log({
+        title: error.response?.data?.title,
+        messsage: error.response?.data?.message,
+        status: error.response?.status
+      });
       throw error;
     }
   },

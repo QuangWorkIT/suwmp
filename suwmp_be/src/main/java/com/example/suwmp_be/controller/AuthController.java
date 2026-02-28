@@ -4,6 +4,7 @@ import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
 import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
 import com.example.suwmp_be.dto.google_auth.GoogleLoginRequest;
+import com.example.suwmp_be.dto.google_auth.GoogleLoginResponse;
 import com.example.suwmp_be.dto.google_auth.TokenGoogleResponse;
 import com.example.suwmp_be.dto.request.LoginRequest;
 import com.example.suwmp_be.dto.request.RegisterRequest;
@@ -175,8 +176,9 @@ public class AuthController {
 
     @PostMapping("/google/login")
     public ResponseEntity<BaseResponse<TokenGoogleResponse>> loginByGoogle(@RequestBody GoogleLoginRequest request) {
-        TokenGoogleResponse response = googleAuthService.loginByGoogle(request);
-        ResponseCookie cookie = setCookieToken(response.refreshToken());
+        GoogleLoginResponse googleLoginResponse = googleAuthService.loginByGoogle(request);
+        ResponseCookie cookie = setCookieToken(googleLoginResponse.refreshToken());
+        TokenGoogleResponse response = new TokenGoogleResponse(googleLoginResponse.accessToken());
 
         return ResponseEntity.status(HttpStatus.OK)
                 .header("Set-cookie", cookie.toString())

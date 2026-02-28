@@ -3,6 +3,7 @@ package com.example.suwmp_be.serviceImpl;
 import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.constants.UserStatus;
 import com.example.suwmp_be.dto.google_auth.GoogleLoginRequest;
+import com.example.suwmp_be.dto.google_auth.GoogleLoginResponse;
 import com.example.suwmp_be.dto.google_auth.GoogleUserInfo;
 import com.example.suwmp_be.dto.google_auth.TokenGoogleResponse;
 import com.example.suwmp_be.entity.User;
@@ -37,7 +38,7 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
     final AuthService authService;
 
     @Override
-    public TokenGoogleResponse loginByGoogle(GoogleLoginRequest request) {
+    public GoogleLoginResponse loginByGoogle(GoogleLoginRequest request) {
         GoogleUserInfo googleUserInfo = verifyIdToken(request);
 
         User user = userRepository.findByEmail(googleUserInfo.email());
@@ -51,7 +52,7 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
 
         log.info("Login by Google successfully: {}", googleUserInfo.email());
 
-        return new TokenGoogleResponse(
+        return new GoogleLoginResponse(
                 jwtUtil.generateToken(user),
                 authService.generateRefreshToken(user).getTokenId()
         );
@@ -59,6 +60,7 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
 
     @Override
     public GoogleUserInfo verifyIdToken(GoogleLoginRequest request) {
+        GoogleIdToken googleIdToken;
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     new NetHttpTransport(),
@@ -66,21 +68,22 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
             ).setAudience(Collections.singletonList(googleClientId))
                     .build();
 
-            GoogleIdToken googleIdToken = verifier.verify(request.idToken());
-            if (googleIdToken == null)
-                throw new AuthenticationException(ErrorCode.GOOGLE_ID_TOKEN_INVALID);
-            log.info("Verify Google id token successfully");
-
-            GoogleIdToken.Payload payload = googleIdToken.getPayload();
-
-            return new GoogleUserInfo(
-                    payload.getEmail(),
-                    (String) payload.get("name"),
-                    (String) payload.get("picture"),
-                    payload.getEmailVerified()
-            );
+            googleIdToken = verifier.verify(request.idToken());
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
+
+        if (googleIdToken == null)
+            throw new AuthenticationException(ErrorCode.GOOGLE_ID_TOKEN_INVALID);
+        log.info("Verify Google id token successfully");
+
+        GoogleIdToken.Payload payload = googleIdToken.getPayload();
+
+        return new GoogleUserInfo(
+                payload.getEmail(),
+                (String) payload.get("name"),
+                (String) payload.get("picture"),
+                payload.getEmailVerified()
+        );
     }
 }
