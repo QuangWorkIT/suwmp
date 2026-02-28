@@ -1,10 +1,11 @@
+import Pagination from "@/components/common/Pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useDebounce } from "@/hooks/useDebouse";
 import wasteReportService from "@/services/WasteReportService";
 import type { AssignedTask } from "@/types/collectorTask";
+import type { PaginatedResponse } from "@/types/response";
 import { AnimatePresence, motion } from "framer-motion";
 import {
     Navigation,
@@ -27,58 +28,45 @@ function CollectorTask() {
     const [filter, setFilter] = useState("all")
     const [filteredTasks, setFilterTasks] = useState(tasks)
     const [searchQuery, setSearchQuery] = useState("")
-    const debounceSearchQuery = useDebounce(searchQuery, 300)
+
+    // paging
+    const [currentPage, setCurrentPage] = useState(0)
+    const [totalPages, setTotalPages] = useState(0)
+    const [hasNext, setHasNext] = useState(false)
+    const [hasPrev, setHasPrev] = useState(false)
+
+    const fetchTasks = async (page: number, size: number = 4) => {
+        try {
+            setIsFetching(true)
+            const response = await wasteReportService.getCollectorAssignedTasks(page, size);
+
+            handlePaging(response)
+            setIsFetching(false)
+        } catch (error) {
+            toast.error("Error fetching tasks")
+            setIsFetching(false)
+            console.log("Error fetching tasks", error);
+        }
+    }
+
+    const handlePaging = (pagedData: PaginatedResponse<AssignedTask>) => {
+        setTasks(pagedData.data);
+        setFilterTasks(pagedData.data)  
+        setCurrentPage(pagedData.currentPage)
+        setTotalPages(pagedData.totalPages)
+        setHasNext(pagedData.hasNext)
+        setHasPrev(pagedData.hasPrevious)
+    }
 
     // fetch tasks
     useEffect(() => {
-        const fetchTasks = async () => {
-            try {
-                setIsFetching(true)
-                const response = await wasteReportService.getCollectorAssignedTasks();
-
-                console.log(response)
-                setTasks(response.data);
-                setFilterTasks(response.data)
-                setIsFetching(false)
-            } catch (error) {
-                toast.error("Error fetching tasks")
-                setIsFetching(false)
-                console.log("Error fetching tasks", error);
-            }
-        }
-        fetchTasks();
+        fetchTasks(0);
     }, [])
 
-    const filterTasks = () => tasks.filter((t) => {
-        const matchPriority =
-            filter === "all" ? true : t.priority === filter
-
-        const keyword = debounceSearchQuery.trim().toLowerCase()
-
-        const searchItem = (
-            t.citizenName +
-            " " +
-            t.citizenPhone +
-            " " +
-            t.wasteTypeName +
-            " " +
-            t.address
-        ).toLowerCase()
-
-        const matchKeyword =
-            keyword === "" ? true : searchItem.includes(keyword)
-
-        return matchPriority && matchKeyword
-    })
-
-    useEffect(() => {
-        const filtered = filterTasks()
-        setFilterTasks(filtered)
-    }, [debounceSearchQuery, filter])
 
 
     return (
-        <div className="relative">
+        <div className="relative pb-10">
             <header className="fixed top-0 left-0 md:left-[250px] w-full md:w-[calc(100%-250px)] z-50
             bg-white/50 px-8 py-5 border-b border-foreground/20 flex
             justify-between items-center backdrop-blur-xl backdrop-saturate-200">
@@ -118,18 +106,12 @@ function CollectorTask() {
                         <Input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "enter") {
-                                    const filtered = filterTasks()
-                                    setFilterTasks(filtered)
-                                }
-                            }}
                             placeholder="Search tasks..."
                             className="pl-10 bg-white" />
                     </div>
                     <div className="flex gap-2">
                         <Button variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")} size="sm">All</Button>
-                        <Button variant={filter === "urgent" ? "destructive" : "outline"} onClick={() => setFilter("urgent")} size="sm">Urgent</Button>
+                        <Button variant={filter === "URGENT" ? "destructive" : "outline"} onClick={() => setFilter("URGENT")} size="sm">Urgent</Button>
                     </div>
                 </motion.div>
 
@@ -141,7 +123,7 @@ function CollectorTask() {
                             </div>
                         )}
 
-                        {filteredTasks.length === 0 && tasks.length === 0 && (
+                        {!isFetching && filteredTasks.length === 0 && tasks.length === 0 && (
                             <motion.div
                                 key="empty-all"
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -158,7 +140,7 @@ function CollectorTask() {
                             </motion.div>
                         )}
 
-                        {filteredTasks.length === 0 && tasks.length > 0 && (
+                        {!isFetching && filteredTasks.length === 0 && tasks.length > 0 && (
                             <motion.div
                                 key="empty-search"
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -197,14 +179,13 @@ function CollectorTask() {
                                         <Card className="p-5">
                                             <div className="flex flex-col md:flex-row gap-4 items-center">
                                                 <div className={`group w-24 h-24 rounded-lg flex items-center justify-center shadow-md`}>
-                                                    <img src={task.photoUrl} alt={task.wasteTypeName} 
-                                                    className="w-full h-full object-cover rounded-lg" />
+                                                    <img src={task.photoUrl} alt={task.wasteTypeName}
+                                                        className="w-full h-full object-cover rounded-lg" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <h3 className="font-semibold">{task.wasteTypeName}</h3>
-                                                        {task.priority === "urgent" && <Badge className="bg-red-500 text-white border-0">Urgent</Badge>}
-                                                        {task.priority === "high" && <Badge className="bg-orange-500 text-white border-0">High</Badge>}
+                                                        {task.priority === "URGENT" && <Badge className="bg-red-500 text-white border-0">Urgent</Badge>}
                                                     </div>
                                                     <div className="grid sm:grid-cols-2 gap-y-2 text-sm text-muted-foreground">
                                                         <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{task.address}</div>
@@ -228,6 +209,18 @@ function CollectorTask() {
                             </motion.div>
                         )}
                     </AnimatePresence>
+                </div>
+
+                <div className="flex justify-center">
+                    {!isFetching && (
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            hasPrev={hasPrev}
+                            hasNext={hasNext}
+                            fetchItems={fetchTasks}
+                        />
+                    )}
                 </div>
             </main>
         </div>

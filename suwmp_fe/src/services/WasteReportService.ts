@@ -1,9 +1,10 @@
 import authClient from "@/config/axios";
-import type { AssignedTask, AssignedTaskResponse } from "@/types/collectorTask";
+import type { AssignedTask } from "@/types/collectorTask";
 import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
 import { reverseGeocode } from "@/utilities/geocoding";
 import s3Service from "./S3Service";
+import type { PaginatedResponse } from "@/types/response";
 
 const wasteReportService = {
     createWasteReport: async (data: WasteReportRequest) => {
@@ -15,15 +16,15 @@ const wasteReportService = {
             throw error;
         }
     },
-    getWasteReportsByEnterprise: async (enterpriseId: number) => {
+    getWasteReportsByEnterprise: async (page: Number, size: Number): Promise<PaginatedResponse<WasteReportEnterprise>> => {
         try {
-            const response = await authClient.get(`/waste-reports/enterprises/${enterpriseId}`);
+            const response = await authClient.get(`/waste-reports/enterprises/requests/me`, { params: { page, size } });
             const arr: WasteReportEnterprise[] = []
             for (let i = 0; i < response.data.data.length; i++) {
                 const element = response.data.data[i];
                 arr.push(await standardizeWasteReportRequest(element))
             }
-            return arr;
+            return { ...response.data, data: arr };
         } catch (error) {
             console.error("Error getting waste reports by enterprise:", error);
             throw error;
@@ -49,8 +50,8 @@ const wasteReportService = {
             throw error;
         }
     },
-    getCollectorAssignedTasks: async (): Promise<AssignedTaskResponse> => {
-        const response = await authClient.get("/waste-reports/collectors/tasks/me");
+    getCollectorAssignedTasks: async (page: number, size: number): Promise<PaginatedResponse<AssignedTask>> => {
+        const response = await authClient.get("/waste-reports/collectors/tasks/me", { params: { page, size } });
         const arr: AssignedTask[] = []
 
         // reverse address and download image
@@ -61,7 +62,7 @@ const wasteReportService = {
             ])
             arr.push({ ...response.data.data[i], address: address, photoUrl: photoRes.data })
         }
-        
+
         return { ...response.data, data: arr };
     },
     getReportStatus: async (

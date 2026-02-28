@@ -70,7 +70,7 @@ public class WasteReportController {
     }
 
     @PreAuthorize("hasRole('ENTERPRISE')")
-    @GetMapping("/enterprises/{enterpriseId}")
+    @GetMapping("/enterprises/requests/me")
     @Operation(
             summary = "Get waste reports for an enterprise",
             description = "Retrieve all waste report requests assigned to a specific enterprise."
@@ -84,14 +84,17 @@ public class WasteReportController {
             @ApiResponse(responseCode = "400", description = "Invalid enterprise ID"),
             @ApiResponse(responseCode = "404", description = "Enterprise not found")
     })
-    public ResponseEntity<BaseResponse<List<ICollectionRequestView>>> getWasteReports(
+    public ResponseEntity<PaginatedResponse<ICollectionRequestView>> getWasteReports(
             @Parameter(description = "Enterprise ID", required = true)
-            @PathVariable @Positive Long enterpriseId
+            Authentication authentication,
+            @PageableDefault(page = 0, size = 5, sort = "created_at", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(new BaseResponse<>(
-                true, "Get waste reports successfully",
-                wasteService.getWasteReportRequestsByEnterprise(enterpriseId)
-        ));
+        Page<ICollectionRequestView> collectionRequests =
+                wasteService.getWasteReportRequestsByEnterprise((UUID) authentication.getPrincipal(), pageable);
+
+        PaginatedResponse<ICollectionRequestView> response =
+                PaginatedResponse.buildPaginatedResponse(collectionRequests);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('CITIZEN')")
@@ -178,7 +181,7 @@ public class WasteReportController {
     @GetMapping("/collectors/tasks/me")
     public ResponseEntity<PaginatedResponse<IAssignedTaskView>> getCollectorTasks(
             Authentication authentication,
-            @PageableDefault(page = 0, size = 20, sort = "startCollectAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(page = 0, size = 4, sort = "startCollectAt", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         Page<IAssignedTaskView> tasks = wasteService.getCollectorAssignedTasks(
                 (UUID) authentication.getPrincipal(), pageable);

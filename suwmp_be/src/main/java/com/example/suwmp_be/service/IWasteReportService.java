@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface IWasteReportService {
     long createNewReport(WasteReportRequest wasteReport);
 
-    List<ICollectionRequestView> getWasteReportRequestsByEnterprise(Long enterpriseId);
+    Page<ICollectionRequestView> getWasteReportRequestsByEnterprise(UUID enterpriseId, Pageable pageable);
 
     List<EnterpriseNearbyResponse> getEnterprisesNearbyCitizen(Double citizenLong, Double citizenLat, Long wasteTypeId);
 

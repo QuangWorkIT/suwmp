@@ -25,8 +25,8 @@ function WasteClassification({ selectedType, setSelectedType, handleNextStep, ha
     const wasteTypes = [
         { id: "1", name: "Organic", icon: Leaf, color: "from-green-500 to-emerald-600" },
         { id: "2", name: "Recyclable", icon: Recycle, color: "from-blue-500 to-cyan-600" },
-        { id: "3", name: "E-Waste", icon: Monitor, color: "from-violet-500 to-purple-600" },
-        { id: "4", name: "Hazardous", icon: AlertTriangle, color: "from-red-500 to-rose-600" },
+        { id: "3", name: "Hazardous", icon: AlertTriangle, color: "from-red-500 to-rose-600" },
+        { id: "4", name: "E-Waste", icon: Monitor, color: "from-violet-500 to-purple-600" },
         { id: "5", name: "General", icon: Package, color: "from-gray-500 to-slate-600" },
     ];
 

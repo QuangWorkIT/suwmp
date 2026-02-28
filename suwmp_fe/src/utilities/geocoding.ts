@@ -66,8 +66,9 @@ export const autocompleteAddress = async (
 export const forwardGeocode = async (
     address: string
 ): Promise<{ longitude: number; latitude: number }> => {
-    const url = `https://sg-maps.track-asia.com/api/v2/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+    const url = `https://maps.track-asia.com/api/v2/place/textsearch/json?language=vi&key=${apiKey}&query=${encodeURIComponent(address)}&new_admin=true&include_old_admin=true`;
     const res = await fetch(url);
+    
     
     if (!res.ok) {
         throw new Error("Geocoding request failed");
@@ -83,7 +84,7 @@ export const forwardGeocode = async (
     if (!location) {
         throw new Error("No location data in geocoding result");
     }
-
+    console.log(location)
     return {
         longitude: Number(location.lng),
         latitude: Number(location.lat),

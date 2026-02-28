@@ -9,7 +9,9 @@ import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
 import com.example.suwmp_be.entity.Enterprise;
+import com.example.suwmp_be.entity.EnterpriseUser;
 import com.example.suwmp_be.entity.WasteReport;
+import com.example.suwmp_be.repository.EnterpriseUserRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.exception.NotFoundException;
@@ -29,6 +31,7 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final WasteReportRepository wasteReportRepo;
     private final EnterpriseRepository enterpriseRepo;
     private final WasteReportMapper wasteReportMapper;
+    private final EnterpriseUserRepository enterpriseUserRepo;
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -46,11 +49,14 @@ public class WasteReportServiceImpl implements IWasteReportService {
     }
 
     @Override
-    public List<ICollectionRequestView> getWasteReportRequestsByEnterprise(Long enterpriseId) {
-        if (!enterpriseRepo.existsById(enterpriseId)) {
+    public Page<ICollectionRequestView> getWasteReportRequestsByEnterprise(UUID enterpriseId, Pageable pageable) {
+        EnterpriseUser enterpriseUser = enterpriseUserRepo.findByUserId(enterpriseId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ENTERPRISE_NOT_FOUND));
+
+        if (!enterpriseRepo.existsById(enterpriseUser.getEnterpriseId())) {
             throw new NotFoundException(ErrorCode.ENTERPRISE_NOT_FOUND);
         }
-        return wasteReportRepo.getRequestsByEnterprise(enterpriseId);
+        return wasteReportRepo.getRequestsByEnterprise(enterpriseUser.getEnterpriseId(), pageable);
     }
 
     @Override

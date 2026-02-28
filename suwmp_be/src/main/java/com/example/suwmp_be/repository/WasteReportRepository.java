@@ -24,6 +24,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
                 wr.longitude              AS requestLongitude,
                 wr.latitude               AS requestLatitude,
                 wr.volume                 AS volume,
+                wr.priority               AS priority,
                 wr.status                 AS currentStatus,
                 u1.full_name              AS citizenName,
                 u1.phone                  AS citizenPhone,
@@ -42,7 +43,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
               AND wr.enterprise_id = :enterpriseId
             ORDER BY wr.created_at DESC
             """, nativeQuery = true)
-    List<ICollectionRequestView> getRequestsByEnterprise(Long enterpriseId);
+    Page<ICollectionRequestView> getRequestsByEnterprise(Long enterpriseId, Pageable pageable);
 
     @Query(value = """
                 SELECT
@@ -100,7 +101,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             JOIN wr.citizen citizen
             JOIN ca.collector collector
             WHERE collector.id = :collectorId
-            ORDER BY ca.startCollectAt DESC
+            ORDER BY ca.startCollectAt ASC
             """)
     Page<IAssignedTaskView> findAssignedTasksByCollector_Id(UUID collectorId, Pageable pageable);
 }

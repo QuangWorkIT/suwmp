@@ -6,7 +6,6 @@ export const standardizeWasteReportRequest = async (req: WasteReportEnterprise) 
         const address = await reverseGeocode(req.requestLongitude, req.requestLatitude);
         return {
             ...req,
-            priority: "normal",
             zone: "Zone A",
             address: address,
         }
@@ -14,7 +13,6 @@ export const standardizeWasteReportRequest = async (req: WasteReportEnterprise) 
         console.log("Reverse geocoding failed: ", error);
         return {
             ...req,
-            priority: "normal",
             zone: "Zone A",
             address: "",
         }
@@ -23,7 +21,7 @@ export const standardizeWasteReportRequest = async (req: WasteReportEnterprise) 
 
 // example date: 2026-02-04T07:47:42.456Z
 // output: 4 thg 2, 2026
-export const dateTimeFormat = (date: string) => {
+export const dateFormat = (date: string) => {
     const dateObj = new Date(date);
     return dateObj.toLocaleDateString("vi-VN", {
         year: "numeric",

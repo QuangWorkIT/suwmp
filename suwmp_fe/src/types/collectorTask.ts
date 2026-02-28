@@ -13,13 +13,3 @@ export type AssignedTask = {
     photoUrl: string;
     address: string
 }
-
-export type AssignedTaskResponse = {
-    data: AssignedTask[];
-    currentPage: number;
-    totalItems: number;
-    totalPages: number;
-    pageSize: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-}
