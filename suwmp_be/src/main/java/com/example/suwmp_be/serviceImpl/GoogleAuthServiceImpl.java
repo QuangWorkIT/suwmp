@@ -3,8 +3,11 @@ package com.example.suwmp_be.serviceImpl;
 import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.constants.RoleEnum;
 import com.example.suwmp_be.constants.UserStatus;
-import com.example.suwmp_be.dto.email.SendPasswordDto;
-import com.example.suwmp_be.dto.google_auth.*;
+import com.example.suwmp_be.dto.email.SendLinkResetDto;
+import com.example.suwmp_be.dto.google_auth.GoogleLoginRequest;
+import com.example.suwmp_be.dto.google_auth.GoogleLoginResponse;
+import com.example.suwmp_be.dto.google_auth.GoogleRegisterRequest;
+import com.example.suwmp_be.dto.google_auth.GoogleUserInfo;
 import com.example.suwmp_be.entity.Role;
 import com.example.suwmp_be.entity.User;
 import com.example.suwmp_be.exception.AuthenticationException;
@@ -44,6 +47,7 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
     final PasswordEncoder passwordEncoder;
     final RoleRepository roleRepository;
     final EmailService emailService;
+    final OtpService otpService;
 
     @Override
     public GoogleLoginResponse loginByGoogle(GoogleLoginRequest request) {
@@ -98,10 +102,12 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
         userRepository.save(newUser);
         log.info("Register user by Google successfully: {}", newUser.getEmail());
 
-        emailService.sendPassword(new SendPasswordDto(
-                newUser.getEmail(),
-                newUser.getFullName(),
-                password)
+        String resetToken = otpService.generateResetToken(newUser.getEmail());
+        emailService.sendLinkReset(new SendLinkResetDto(
+                        newUser.getEmail(),
+                        newUser.getFullName(),
+                        resetToken
+                )
         );
     }
 

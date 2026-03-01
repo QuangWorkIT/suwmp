@@ -192,7 +192,7 @@ public class AuthController {
         googleAuthService.registerByGoogle(request);
 
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(new BaseResponse<>(
                         true,
                         "Register by Google successfully")
