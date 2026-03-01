@@ -26,8 +26,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -109,9 +111,19 @@ public class WasteReportServiceImpl implements IWasteReportService {
 
     @Override
     public List<CitizenWasteReportStatusResponse> getCitizenReports(UUID citizenId) {
-        return wasteReportRepo.findAllByCitizen_IdOrderByCreatedAtDesc(citizenId)
+        List<WasteReport> reports = wasteReportRepo.findAllByCitizen_IdOrderByCreatedAtDesc(citizenId);
+        List<Long> reportIds = reports.stream().map(WasteReport::getId).toList();
+
+        Map<Long, String> collectorMap = collectionAssignmentRepo.findByWasteReportIdIn(reportIds)
                 .stream()
-                .map(this::toCitizenStatusResponse)
+                .collect(Collectors.toMap(
+                        ca -> ca.getWasteReport().getId(),
+                        ca -> ca.getCollector() != null ? ca.getCollector().getFullName() : "Unknown",
+                        (existing, replacement) -> existing // Keep the first assignment found
+                ));
+
+        return reports.stream()
+                .map(report -> toCitizenStatusResponse(report, collectorMap.get(report.getId())))
                 .toList();
     }
 
@@ -134,7 +146,11 @@ public class WasteReportServiceImpl implements IWasteReportService {
         try {
             reportRatingRepo.saveAndFlush(rating);
         } catch (DataIntegrityViolationException e) {
-            throw new ApplicationException(ErrorCode.ALREADY_RATED);
+            String message = e.getMessage();
+            if (message != null && message.contains("uk_report_rating_report_user")) {
+                throw new ApplicationException(ErrorCode.ALREADY_RATED);
+            }
+            throw e;
         }
     }
 
@@ -163,13 +179,18 @@ public class WasteReportServiceImpl implements IWasteReportService {
     }
 
     private CitizenWasteReportStatusResponse toCitizenStatusResponse(WasteReport report) {
-        Enterprise enterprise = report.getEnterprise();
-        String referenceCode = String.format("REQ-%03d", report.getId());
-
-        String collectorName = collectionAssignmentRepo
-                .findByWasteReportId(report.getId())
+        String collectorName = collectionAssignmentRepo.findByWasteReportId(report.getId())
+                .stream()
+                .findFirst()
                 .map(ca -> ca.getCollector() != null ? ca.getCollector().getFullName() : null)
                 .orElse(null);
+
+        return toCitizenStatusResponse(report, collectorName);
+    }
+
+    private CitizenWasteReportStatusResponse toCitizenStatusResponse(WasteReport report, String collectorName) {
+        Enterprise enterprise = report.getEnterprise();
+        String referenceCode = String.format("REQ-%03d", report.getId());
 
         return new CitizenWasteReportStatusResponse(
                 report.getId(),

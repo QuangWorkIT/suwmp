@@ -58,7 +58,12 @@ function ReportStatusPage() {
         setReport(reportData);
 
         // Fetch address for Bug 1
-        reverseGeocode(reportData.latitude, reportData.longitude).then(setAddress);
+        reverseGeocode(reportData.latitude, reportData.longitude)
+          .then(setAddress)
+          .catch((err) => {
+            console.error("Geocoding failed:", err);
+            setAddress(null);
+          });
 
         // Fetch rating status separately and handle its errors independently
         try {
@@ -416,7 +421,7 @@ function ReportStatusPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Submit your rating?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  You are about to give this collection experience a <strong>{rating} star</strong> rating. 
+                  You are about to give this collection experience a <strong>{rating}-star</strong> rating. 
                   Ratings are final and cannot be modified after submission.
                 </AlertDialogDescription>
               </AlertDialogHeader>
