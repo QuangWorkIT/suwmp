@@ -1,5 +1,6 @@
 package com.example.suwmp_be.repository;
 
+import com.example.suwmp_be.dto.history.ReportHistoryDto;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
 import com.example.suwmp_be.entity.WasteReport;
@@ -76,4 +77,26 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
 
     List<WasteReport> findAllByCitizen_IdOrderByCreatedAtDesc(UUID citizenId);
 
+    @Query(value = """
+        SELECT 
+            wr.id AS id,
+            wr.status AS status,
+            wr.volume AS volume,
+            wr.latitude AS latitude,
+            wr.longitude AS longitude,
+            wr.photo_url AS photoUrl,
+            wr.created_at AS createdAt,
+            wt.name AS wasteTypeName,
+            COALESCE(rt.points, 0) AS rewardPoints
+        FROM waste_reports wr
+        JOIN waste_types wt ON wr.waste_type_id = wt.id
+        LEFT JOIN reward_transactions rt 
+               ON rt.waste_report_id = wr.id
+        WHERE wr.citizen_id = :citizenId
+        ORDER BY wr.created_at DESC
+        """,
+            nativeQuery = true)
+    List<ReportHistoryDto> findReportHistoryByCitizenId(
+            @Param("citizenId") UUID citizenId
+    );
 }
