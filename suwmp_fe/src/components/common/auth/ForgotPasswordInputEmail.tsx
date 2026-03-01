@@ -40,11 +40,11 @@ const ForgotPasswordInputEmail = () => {
 
       await AuthService.verifyEmail(data.email);
 
-      console.log("Identify email successfully.");
+      console.log("Identify email successfully");
 
-      toast.success("Identify email successfully.");
+      toast.success("Identify email successfully");
     } catch (error) {
-      toast.error("Failed to identify email.");
+      toast.error("Failed to identify email");
     } finally {
       setIsLoading(false);
     }

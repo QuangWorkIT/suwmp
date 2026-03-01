@@ -3,6 +3,7 @@ package com.example.suwmp_be.serviceImpl;
 import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.constants.RoleEnum;
 import com.example.suwmp_be.constants.UserStatus;
+import com.example.suwmp_be.dto.email.SendPasswordDto;
 import com.example.suwmp_be.dto.google_auth.*;
 import com.example.suwmp_be.entity.Role;
 import com.example.suwmp_be.entity.User;
@@ -42,6 +43,7 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
     final AuthService authService;
     final PasswordEncoder passwordEncoder;
     final RoleRepository roleRepository;
+    final EmailService emailService;
 
     @Override
     public GoogleLoginResponse loginByGoogle(GoogleLoginRequest request) {
@@ -67,8 +69,10 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
 
     @Override
     @Transactional
-    public GoogleRegisterResponse registerByGoogle(GoogleRegisterRequest request) {
+    public void registerByGoogle(GoogleRegisterRequest request) {
         GoogleUserInfo googleUserInfo = verifyIdToken(request.idToken());
+        if (!googleUserInfo.emailVerified())
+            throw new AuthenticationException(ErrorCode.GOOGLE_ID_TOKEN_INVALID);
 
         User user = userRepository.findByEmail(googleUserInfo.email());
         if (user != null) {
@@ -77,7 +81,7 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
                     user.getDeletedAt() != null)
                 throw new BadRequestException(ErrorCode.USER_INACTIVE);
 
-            throw new BadRequestException(ErrorCode.USER_EXISTED);
+            throw new BadRequestException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
         String password = generatePassword();
@@ -92,10 +96,13 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
                 .status(UserStatus.ACTIVE.toString())
                 .build();
         userRepository.save(newUser);
-
         log.info("Register user by Google successfully: {}", newUser.getEmail());
 
-        return new GoogleRegisterResponse(newUser.getEmail(), newUser.getFullName(), password);
+        emailService.sendPassword(new SendPasswordDto(
+                newUser.getEmail(),
+                newUser.getFullName(),
+                password)
+        );
     }
 
     @Override
@@ -127,14 +134,14 @@ public class GoogleAuthServiceImpl implements IGoogleAuthService {
         );
     }
 
-    String CHARACTERS =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-                    "abcdefghijklmnopqrstuvwxyz" +
-                    "0123456789" +
-                    "!@#$%^&*()-_=+[]{}|;:,.<>?";
-    int length = 10;
-
     private String generatePassword() {
+        String CHARACTERS =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+                        "abcdefghijklmnopqrstuvwxyz" +
+                        "0123456789" +
+                        "@#*";
+        int length = 10;
+
         SecureRandom secureRandom = new SecureRandom();
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {

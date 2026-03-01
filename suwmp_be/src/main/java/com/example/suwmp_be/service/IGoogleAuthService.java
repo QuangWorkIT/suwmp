@@ -7,5 +7,5 @@ public interface IGoogleAuthService {
 
     GoogleLoginResponse loginByGoogle(GoogleLoginRequest request);
 
-    GoogleRegisterResponse registerByGoogle(GoogleRegisterRequest request);
+    void registerByGoogle(GoogleRegisterRequest request);
 }

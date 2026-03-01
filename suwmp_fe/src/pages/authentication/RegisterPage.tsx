@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthService } from "@/services/AuthService";
-import { EmailService } from "@/services/EmailService";
 import { GoogleLogin } from "@react-oauth/google";
 import { Lock, Mail, Phone, Recycle, User } from "lucide-react";
 import { useState } from "react";
@@ -110,23 +109,16 @@ export default function Register() {
       toast.error("Google register failed");
       return;
     }
-    
-    const response = await AuthService.registerByGoogle(idToken)
-    .then(async (res) => {
-        toast.success("Register successfully! Please login to continue");
-        navigate("/signin");
-        return res;
-      })
+
+    await AuthService.registerByGoogle(idToken)
+    .then(() => {
+      toast.success("Register successfully! Please login to continue");
+      navigate("/signin");
+    })
     .catch((error) => {
       console.error(error);
       toast.error("Google register failed");
-    });
-
-    if (!response) return;
-    await EmailService.sendPassword(response.data)
-      .catch((error) => {
-        console.error(error);
-      });
+    })
   };
 
   return (

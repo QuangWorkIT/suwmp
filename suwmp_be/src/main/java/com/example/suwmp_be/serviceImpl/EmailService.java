@@ -52,9 +52,7 @@ public class EmailService {
             message.setContent(content, "text/html; charset=utf-8");
 
             mailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (MessagingException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -75,9 +73,7 @@ public class EmailService {
             message.setContent(content, "text/html; charset=utf-8");
 
             mailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (MessagingException | IOException e) {
             throw new RuntimeException(e);
         }
     }

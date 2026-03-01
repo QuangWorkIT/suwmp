@@ -188,15 +188,14 @@ public class AuthController {
     }
 
     @PostMapping("/google/register")
-    public ResponseEntity<BaseResponse<GoogleRegisterResponse>> registerByGoogle(@Valid @RequestBody GoogleRegisterRequest request) {
-        var response = googleAuthService.registerByGoogle(request);
+    public ResponseEntity<BaseResponse<?>> registerByGoogle(@Valid @RequestBody GoogleRegisterRequest request) {
+        googleAuthService.registerByGoogle(request);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new BaseResponse<>(
                         true,
-                        "Register by Google successfully",
-                        response)
+                        "Register by Google successfully")
                 );
     }
 }
