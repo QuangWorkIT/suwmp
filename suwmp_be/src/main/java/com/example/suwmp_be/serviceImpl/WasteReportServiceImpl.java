@@ -15,6 +15,7 @@ import com.example.suwmp_be.entity.ReportRating;
 import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.exception.ApplicationException;
 import com.example.suwmp_be.exception.NotFoundException;
+import com.example.suwmp_be.repository.CollectionAssignmentRepository;
 import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.repository.ReportRatingRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
@@ -35,6 +36,7 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final EnterpriseRepository enterpriseRepo;
     private final WasteReportMapper wasteReportMapper;
     private final ReportRatingRepository reportRatingRepo;
+    private final CollectionAssignmentRepository collectionAssignmentRepo;
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -164,8 +166,10 @@ public class WasteReportServiceImpl implements IWasteReportService {
         Enterprise enterprise = report.getEnterprise();
         String referenceCode = String.format("REQ-%03d", report.getId());
 
-        // TODO: wire collector name from collection_assignments if needed
-        String collectorName = null;
+        String collectorName = collectionAssignmentRepo
+                .findByWasteReportId(report.getId())
+                .map(ca -> ca.getCollector() != null ? ca.getCollector().getFullName() : null)
+                .orElse(null);
 
         return new CitizenWasteReportStatusResponse(
                 report.getId(),

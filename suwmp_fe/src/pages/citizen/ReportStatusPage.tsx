@@ -10,13 +10,14 @@ import {
   ArrowLeft,
   Clock,
   MapPin,
-  Recycle,
   CheckCircle2,
   Navigation2,
   UserRound,
   Star,
   Info,
+  Camera,
 } from "lucide-react";
+import { reverseGeocode } from "@/utilities/trackasiaGeocode";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,8 @@ function ReportStatusPage() {
   const [ratingStatus, setRatingStatus] = useState<RatingStatusResponse | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [ratingMessage, setRatingMessage] = useState<string | null>(null);
+  const [address, setAddress] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -53,6 +56,9 @@ function ReportStatusPage() {
         // Fetch report first as it's critical
         const reportData = await wasteReportService.getReportStatus(Number(id));
         setReport(reportData);
+
+        // Fetch address for Bug 1
+        reverseGeocode(reportData.latitude, reportData.longitude).then(setAddress);
 
         // Fetch rating status separately and handle its errors independently
         try {
@@ -175,8 +181,20 @@ function ReportStatusPage() {
 
           {/* Hero card (image 3 style) */}
           <Card className="p-0 overflow-hidden">
-            <div className="h-40 sm:h-48 md:h-56 bg-muted flex items-center justify-center">
-              <Recycle className="w-12 h-12 text-muted-foreground/60" />
+            <div className="h-48 sm:h-56 md:h-64 bg-muted flex items-center justify-center relative">
+              {report.photoUrl && !imgError ? (
+                <img 
+                  src={report.photoUrl} 
+                  alt="Waste Report" 
+                  className="w-full h-full object-cover"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-muted-foreground/60">
+                  <Camera className="w-12 h-12" />
+                  <p className="text-xs">No image available</p>
+                </div>
+              )}
             </div>
             <div className="p-6 md:p-7 flex flex-col md:flex-row gap-6 border-t border-border/60">
               <div className="flex-1 space-y-4">
@@ -194,11 +212,11 @@ function ReportStatusPage() {
                 </h2>
 
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {`${report.latitude.toFixed(4)}, ${report.longitude.toFixed(
-                    4,
-                  )}`}
+                <span className="flex items-center gap-1 min-w-0">
+                  <MapPin className="w-4 h-4 shrink-0" />
+                  <span className="truncate">
+                    {address ?? `${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}`}
+                  </span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -281,9 +299,9 @@ function ReportStatusPage() {
                 const isDone = index < currentIndex;
                 const isActive = index === currentIndex;
                 return (
-                  <div key={item.id} className="relative pl-14">
+                  <div key={item.id} className="relative pl-14 min-h-[40px] flex flex-col justify-center">
                     <div
-                      className={`absolute left-2 top-0 w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      className={`absolute left-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border-2 z-10 ${
                         isDone || isActive
                           ? "bg-emerald-500 text-white border-emerald-500"
                           : "bg-background text-muted-foreground border-border"
