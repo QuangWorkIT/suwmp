@@ -1,8 +1,11 @@
 package com.example.suwmp_be.repository;
 
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
 import com.example.suwmp_be.entity.WasteReport;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +24,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
                 wr.longitude              AS requestLongitude,
                 wr.latitude               AS requestLatitude,
                 wr.volume                 AS volume,
+                wr.priority               AS priority,
                 wr.status                 AS currentStatus,
                 u1.full_name              AS citizenName,
                 u1.phone                  AS citizenPhone,
@@ -39,12 +43,12 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
               AND wr.enterprise_id = :enterpriseId
             ORDER BY wr.created_at DESC
             """, nativeQuery = true)
-    List<ICollectionRequestView> getRequestsByEnterprise(Long enterpriseId);
+    Page<ICollectionRequestView> getRequestsByEnterprise(Long enterpriseId, Pageable pageable);
 
     @Query(value = """
                 SELECT
                     e.id,e.name,e.description,e.rating,e.photo_url AS photoUrl,e.created_at AS createdAt,
-
+            
                     rr.base_points AS basePoint,
                     rr.quality_multiplier AS qualityMultiplier,
             
@@ -72,8 +76,32 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             @Param("citizenLat") Double citizenLat,
             @Param("wasteTypeId") Long wasteTypeId
     );
+
     Optional<WasteReport> findByIdAndCitizen_Id(Long id, UUID citizenId);
 
     List<WasteReport> findAllByCitizen_IdOrderByCreatedAtDesc(UUID citizenId);
 
+    @Query("""
+            SELECT
+                wr.id               AS requestId,
+                wt.name             AS wasteTypeName,
+                wr.longitude        AS requestLongitude,
+                wr.latitude         AS requestLatitude,
+                wr.volume           AS volume,
+                wr.priority         AS priority,
+                wr.status           AS currentStatus,
+                wr.photoUrl         AS photoUrl,
+                citizen.fullName    AS citizenName,
+                citizen.phone       AS citizenPhone,
+                collector.id        AS collectorId,
+                ca.startCollectAt   AS collectTime
+            FROM CollectionAssignment ca
+            JOIN ca.wasteReport wr
+            JOIN wr.wasteType wt
+            JOIN wr.citizen citizen
+            JOIN ca.collector collector
+            WHERE collector.id = :collectorId
+            ORDER BY ca.startCollectAt ASC
+            """)
+    Page<IAssignedTaskView> findAssignedTasksByCollector_Id(UUID collectorId, Pageable pageable);
 }

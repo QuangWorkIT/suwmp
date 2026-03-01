@@ -1,10 +1,9 @@
 package com.example.suwmp_be.dto.view;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
-public interface ICollectionRequestView {
+public interface IAssignedTaskView {
     Long getRequestId();
-    Long getEnterpriseId();
     String getWasteTypeName();
     Double getRequestLongitude();
     Double getRequestLatitude();
@@ -13,6 +12,7 @@ public interface ICollectionRequestView {
     String getCurrentStatus();
     String getCitizenName();
     String getCitizenPhone();
-    String getCollectorName();
-    Instant getCreatedAt();
+    String getCollectorId();
+    String getPhotoUrl();
+    OffsetDateTime getCollectTime();
 }
