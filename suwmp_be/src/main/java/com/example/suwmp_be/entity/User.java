@@ -36,7 +36,7 @@ public class User {
     @Column
     private String imageUrl;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String phone;
 
     @ManyToOne(fetch = FetchType.LAZY)
