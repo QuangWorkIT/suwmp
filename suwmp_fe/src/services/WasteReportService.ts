@@ -16,7 +16,7 @@ const wasteReportService = {
             throw error;
         }
     },
-    getWasteReportsByEnterprise: async (page: Number, size: Number): Promise<PaginatedResponse<WasteReportEnterprise>> => {
+    getWasteReportsByEnterprise: async (page: number, size: number): Promise<PaginatedResponse<WasteReportEnterprise>> => {
         try {
             const response = await authClient.get(`/waste-reports/enterprises/requests/me`, { params: { page, size } });
             const arr: WasteReportEnterprise[] = []
@@ -51,19 +51,40 @@ const wasteReportService = {
         }
     },
     getCollectorAssignedTasks: async (page: number, size: number): Promise<PaginatedResponse<AssignedTask>> => {
-        const response = await authClient.get("/waste-reports/collectors/tasks/me", { params: { page, size } });
-        const arr: AssignedTask[] = []
+        try {
+            const response = await authClient.get("/waste-reports/collectors/tasks/me", { params: { page, size } });
 
-        // reverse address and download image
-        for (let i = 0; i < response.data.data.length; i++) {
-            const [photoRes, address] = await Promise.all([
-                s3Service.getImage(response.data.data[i].photoUrl),
-                reverseGeocode(response.data.data[i].requestLongitude, response.data.data[i].requestLatitude)
-            ])
-            arr.push({ ...response.data.data[i], address: address, photoUrl: photoRes.data })
+            // Map each task to a promise that performs image fetching and geocoding in parallel
+            const tasksPromises = response.data.data.map(async (task: AssignedTask) => {
+                try {
+                    const [photoRes, address] = await Promise.all([
+                        s3Service.getImage(task.photoUrl).catch(() => ({ data: "" })),
+                        reverseGeocode(task.requestLongitude, task.requestLatitude).catch(() => "Unknown Address")
+                    ]);
+
+                    return {
+                        ...task,
+                        address: address,
+                        photoUrl: photoRes.data || ""
+                    };
+                } catch (itemError) {
+                    console.error(`Error processing task ${task.requestId}:`, itemError);
+                    return {
+                        ...task,
+                        address: "Unknown Address",
+                        photoUrl: ""
+                    };
+                }
+            });
+
+            // Process all task promises in parallel
+            const arr = await Promise.all(tasksPromises);
+
+            return { ...response.data, data: arr };
+        } catch (error) {
+            console.error("Error getting collector assigned tasks:", error);
+            throw error;
         }
-
-        return { ...response.data, data: arr };
     },
     getReportStatus: async (
         reportId: number,

@@ -3,7 +3,6 @@ package com.example.suwmp_be.entity;
 import com.example.suwmp_be.constants.WasteReportStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -71,7 +70,9 @@ public class WasteReport {
 
     @PrePersist
     protected void onCreate() {
-        this.priority = "NORMAL";
+        if (this.priority == null) {
+            this.priority = "NORMAL";
+        }
         this.createdAt = LocalDateTime.now();
     }
 }

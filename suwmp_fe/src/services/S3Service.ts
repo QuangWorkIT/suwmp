@@ -1,9 +1,9 @@
 import authClient from "@/config/axios";
 
-const token = localStorage.getItem("token");
 const s3Service = {
     uploadImage: async (image: File) => {
         try {
+            const token = localStorage.getItem("token");
             const formData = new FormData();
             formData.append("image", image);
             const response = await authClient.post("/s3/upload", formData, {

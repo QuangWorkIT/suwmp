@@ -67,7 +67,7 @@ function CollectionRequest() {
     const [hasNext, setHasNext] = useState(false);
     const [totalItems, settotalItems] = useState(0)
 
-    const fetchRequests = useCallback(async (page: Number, size: Number = 4) => {
+    const fetchRequests = useCallback(async (page: number, size: number = 4) => {
         if (!user.user) return
 
         try {

@@ -29,8 +29,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -87,7 +85,7 @@ public class WasteReportController {
     public ResponseEntity<PaginatedResponse<ICollectionRequestView>> getWasteReports(
             @Parameter(description = "Enterprise ID", required = true)
             Authentication authentication,
-            @PageableDefault(page = 0, size = 5, sort = "created_at", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(page = 0, size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<ICollectionRequestView> collectionRequests =
                 wasteService.getWasteReportRequestsByEnterprise((UUID) authentication.getPrincipal(), pageable);

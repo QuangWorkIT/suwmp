@@ -84,7 +84,7 @@ export const forwardGeocode = async (
     if (!location) {
         throw new Error("No location data in geocoding result");
     }
-    console.log(location)
+    
     return {
         longitude: Number(location.lng),
         latitude: Number(location.lat),

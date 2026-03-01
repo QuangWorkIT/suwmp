@@ -13,7 +13,7 @@ import java.util.List;
 public class PaginatedResponse<T> {
     private List<T> data;
     private int currentPage;
-    private int totalItems;
+    private long totalItems;
     private int totalPages;
     private int pageSize;
     private boolean hasNext;
@@ -23,7 +23,7 @@ public class PaginatedResponse<T> {
         PaginatedResponse<T> response = new PaginatedResponse<>();
         response.setData(page.getContent());
         response.setCurrentPage(page.getNumber());
-        response.setTotalItems((int) page.getTotalElements());
+        response.setTotalItems(page.getTotalElements());
         response.setPageSize(page.getSize());
         response.setTotalPages(page.getTotalPages());
         response.setHasNext(page.hasNext());
