@@ -4,10 +4,8 @@ import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.constants.RoleEnum;
 import com.example.suwmp_be.constants.UserStatus;
 import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
-import com.example.suwmp_be.dto.forgot_password.SendLinkResetDto;
+import com.example.suwmp_be.dto.email.SendLinkResetDto;
 import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
-import com.example.suwmp_be.dto.google_auth.GoogleLoginRequest;
-import com.example.suwmp_be.dto.google_auth.TokenGoogleResponse;
 import com.example.suwmp_be.dto.request.LoginRequest;
 import com.example.suwmp_be.dto.request.RegisterRequest;
 import com.example.suwmp_be.dto.response.TokenResponse;
@@ -71,7 +69,11 @@ public class AuthService implements IAuthService {
         if (user == null)
             throw new NotFoundException(ErrorCode.EMAIL_NOT_EXIST);
 
-        SendLinkResetDto sendLinkResetDto = new SendLinkResetDto(user.getEmail(), user.getFullName());
+        SendLinkResetDto sendLinkResetDto = new SendLinkResetDto(
+                user.getEmail(),
+                user.getFullName(),
+                otpService.generateResetToken(user.getEmail())
+        );
         emailService.sendLinkReset(sendLinkResetDto);
 
         log.info("Verify email successfully");

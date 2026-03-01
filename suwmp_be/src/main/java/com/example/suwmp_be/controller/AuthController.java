@@ -3,9 +3,7 @@ package com.example.suwmp_be.controller;
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
 import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
-import com.example.suwmp_be.dto.google_auth.GoogleLoginRequest;
-import com.example.suwmp_be.dto.google_auth.GoogleLoginResponse;
-import com.example.suwmp_be.dto.google_auth.TokenGoogleResponse;
+import com.example.suwmp_be.dto.google_auth.*;
 import com.example.suwmp_be.dto.request.LoginRequest;
 import com.example.suwmp_be.dto.request.RegisterRequest;
 import com.example.suwmp_be.dto.response.TokenResponse;
@@ -175,7 +173,7 @@ public class AuthController {
     }
 
     @PostMapping("/google/login")
-    public ResponseEntity<BaseResponse<TokenGoogleResponse>> loginByGoogle(@RequestBody GoogleLoginRequest request) {
+    public ResponseEntity<BaseResponse<TokenGoogleResponse>> loginByGoogle(@Valid @RequestBody GoogleLoginRequest request) {
         GoogleLoginResponse googleLoginResponse = googleAuthService.loginByGoogle(request);
         ResponseCookie cookie = setCookieToken(googleLoginResponse.refreshToken());
         TokenGoogleResponse response = new TokenGoogleResponse(googleLoginResponse.accessToken());
@@ -186,6 +184,18 @@ public class AuthController {
                         true,
                         "Login by Google successfully",
                         response)
+                );
+    }
+
+    @PostMapping("/google/register")
+    public ResponseEntity<BaseResponse<?>> registerByGoogle(@Valid @RequestBody GoogleRegisterRequest request) {
+        googleAuthService.registerByGoogle(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new BaseResponse<>(
+                        true,
+                        "Register by Google successfully")
                 );
     }
 }
