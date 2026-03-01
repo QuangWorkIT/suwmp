@@ -22,14 +22,12 @@ export const citizenRoutes = [
                     { path: "reports/:id", element: <ReportStatusPage /> },
                     { path: "leaderboard", element: <LeaderBoard /> },
                     { path: "feedback", element: <FeedBack /> },
-                ]
-            }
+                ],
+            },
         ],
     },
     {
         element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
-        children: [
-            { path: "/citizen/new-report", element: <WasteReportProcess /> },
-        ],
+        children: [{ path: "/citizen/new-report", element: <WasteReportProcess /> }],
     },
-]
+];
