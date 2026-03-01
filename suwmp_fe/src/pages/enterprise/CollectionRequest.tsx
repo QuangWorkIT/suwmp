@@ -17,7 +17,7 @@ import {
     Inbox,
     User,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
@@ -96,23 +96,25 @@ function CollectionRequest() {
         setHasNext(pagedData.hasNext)
     }
 
-    const filteredRequests = fetchedRequests.filter((req) => {
-        if (statusFilter !== "all" && req.currentStatus !== statusFilter) return false;
+    const filteredRequests = useMemo(() => {
+        return fetchedRequests.filter((req) => {
+            if (statusFilter !== "all" && req.currentStatus !== statusFilter) return false;
 
-        const keyword = searchQuery.trim().toLowerCase();
-        if (keyword === "") return true;
+            const keyword = searchQuery.trim().toLowerCase();
+            if (keyword === "") return true;
 
-        const searchString = (
-            req.requestId.toString() + " " +
-            (req.address || "") + " " +
-            (req.collectorName || "") + " " +
-            (req.citizenName || "") + " " +
-            (req.wasteTypeName || "") + " " +
-            (req.priority || "")
-        ).toLowerCase();
+            const searchString = (
+                req.requestId.toString() + " " +
+                (req.address || "") + " " +
+                (req.collectorName || "") + " " +
+                (req.citizenName || "") + " " +
+                (req.wasteTypeName || "") + " " +
+                (req.priority || "")
+            ).toLowerCase();
 
-        return searchString.includes(keyword);
-    });
+            return searchString.includes(keyword);
+        });
+    }, [fetchedRequests, searchQuery, statusFilter]);
 
     const toggleSelect = (id: number) => {
         setSelectedRequests(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);

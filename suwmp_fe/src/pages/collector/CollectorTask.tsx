@@ -18,7 +18,7 @@ import {
     Phone,
     Search,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 
@@ -26,7 +26,6 @@ function CollectorTask() {
     const [isFetching, setIsFetching] = useState(false)
     const [tasks, setTasks] = useState<AssignedTask[]>([])
     const [filter, setFilter] = useState("all")
-    const [filteredTasks, setFilterTasks] = useState(tasks)
     const [searchQuery, setSearchQuery] = useState("")
 
     // paging
@@ -51,7 +50,6 @@ function CollectorTask() {
 
     const handlePaging = (pagedData: PaginatedResponse<AssignedTask>) => {
         setTasks(pagedData.data);
-        setFilterTasks(pagedData.data)  
         setCurrentPage(pagedData.currentPage)
         setTotalPages(pagedData.totalPages)
         setHasNext(pagedData.hasNext)
@@ -62,6 +60,27 @@ function CollectorTask() {
     useEffect(() => {
         fetchTasks(0);
     }, [])
+
+    const filteredTasks = useMemo(() => {
+        return tasks.filter((task) => {
+            // Filter by priority
+            if (filter !== "all" && task.priority !== filter) return false;
+
+            // Filter by search query
+            const keyword = searchQuery.trim().toLowerCase();
+            if (keyword === "") return true;
+
+            const searchString = (
+                task.requestId.toString() + " " +
+                (task.address || "") + " " +
+                (task.citizenName || "") + " " +
+                (task.wasteTypeName || "") + " " +
+                (task.priority || "")
+            ).toLowerCase();
+
+            return searchString.includes(keyword);
+        });
+    }, [tasks, searchQuery, filter]);
 
 
 
