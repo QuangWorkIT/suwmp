@@ -1,5 +1,6 @@
 import { api } from "@/config/api";
 import type { LoginRequest, RegisterRequest, ResetPasswordRequest } from "../types/auth";
+import type { BaseResponse } from "@/types/baseResponse";
 
 export const AuthService = {
   login: async (payload: LoginRequest) => {
@@ -95,7 +96,20 @@ export const AuthService = {
 
       return response.data;
     } catch (error: any) {
-      console.log({
+      console.error({
+        title: error.response?.data?.title,
+        message: error.response?.data?.message,
+        status: error.response?.status
+      });
+      throw error;
+    }
+  },
+
+  registerByGoogle: async (idToken: string) => {
+    try {
+      await api.post("/auth/google/register", { idToken });
+    } catch (error: any) {
+      console.error({
         title: error.response?.data?.title,
         message: error.response?.data?.message,
         status: error.response?.status

@@ -134,6 +134,7 @@ CREATE TABLE waste_reports
     longitude            DOUBLE PRECISION,
     photo_url            VARCHAR(500),
     volume               DOUBLE PRECISION,
+    priority             VARCHAR(20) CHECK (priority IN ('URGENT', 'NORMAL')),
     status               VARCHAR(20) CHECK (
         status IN ('PENDING', 'REJECTED', 'ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
         ),
