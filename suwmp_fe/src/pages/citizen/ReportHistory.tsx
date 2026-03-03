@@ -87,9 +87,9 @@ const ReportHistoryPage = () => {
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString("en-US", {
-            month: "short",
+        return new Date(dateString).toLocaleDateString("vi-VN", {
             day: "numeric",
+            month: "numeric",
             year: "numeric",
         });
     };
