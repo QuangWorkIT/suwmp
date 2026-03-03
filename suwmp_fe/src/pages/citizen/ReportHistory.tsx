@@ -21,9 +21,17 @@ import { useNavigate } from "react-router";
 const ReportHistoryPage = () => {
     const navigate = useNavigate();
 
-    const [activeFilter, setActiveFilter] = useState<
-        "All" | "Pending" | "In Progress" | "Collected"
-    >("All");
+    type FilterOption = "All" | "Pending" | "In Progress" | "Collected";
+    const [activeFilter, setActiveFilter] = useState<FilterOption>("All");
+
+    const filterStatusMap: Record<
+        Exclude<FilterOption, "All">,
+        ReportStatus[]
+    > = {
+        Pending: ["PENDING"],
+        "In Progress": ["ASSIGNED", "ON_THE_WAY"],
+        Collected: ["COLLECTED"],
+    };
 
     const [viewMode, setViewMode] = useState<"list" | "grid">("list");
     const [reports, setReports] = useState<ReportHistory[]>([]);
@@ -89,8 +97,8 @@ const ReportHistoryPage = () => {
     const filteredReports =
         activeFilter === "All"
             ? reports
-            : reports.filter(
-                  (r) => r.status === (activeFilter as ReportStatus)
+            : reports.filter((r) =>
+                  filterStatusMap[activeFilter].includes(r.status)
               );
 
     return (
@@ -185,14 +193,24 @@ const ReportHistoryPage = () => {
 
                 {/* Reports List */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div className="divide-y divide-gray-200">
+                    <div
+                        className={
+                            viewMode === "grid"
+                                ? "grid grid-cols-1 md:grid-cols-2 gap-4 p-4"
+                                : "divide-y divide-gray-200"
+                        }
+                    >
                         {filteredReports.map((report) => (
                             <div
                                 key={report.id}
                                 onClick={() =>
                                     navigate(`/reports/${report.id}`)
                                 }
-                                className="p-6 hover:bg-gray-50 cursor-pointer group"
+                                className={`p-6 hover:bg-gray-50 cursor-pointer group ${
+                                    viewMode === "grid"
+                                        ? "rounded-lg border border-gray-200 hover:shadow-sm"
+                                        : "hover:bg-gray-50"
+                                }`}
                             >
                                 <div className="flex justify-between">
                                     <div className="flex gap-4">
