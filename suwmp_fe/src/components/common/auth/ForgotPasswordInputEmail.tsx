@@ -40,11 +40,11 @@ const ForgotPasswordInputEmail = () => {
 
       await AuthService.verifyEmail(data.email);
 
-      console.log("Identify email successfully.");
+      console.log("Identify email successfully");
 
-      toast.success("Identify email successfully.");
+      toast.success("A reset link has been sent to your email");
     } catch (error) {
-      toast.error("Failed to identify email.");
+      toast.error("Unable to send reset link. Please try again");
     } finally {
       setIsLoading(false);
     }

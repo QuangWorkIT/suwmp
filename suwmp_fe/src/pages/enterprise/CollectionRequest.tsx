@@ -17,13 +17,13 @@ import {
     Inbox,
     User,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/WasteReportService";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { dateTimeFormat } from "@/utilities/format";
+import { dateFormat } from "@/utilities/format";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import RejectRequestForm from "@/components/common/enterprise/RejectRequestForm";
 import AssignCollectorForm from "@/components/common/enterprise/AssignCollectorForm";
+import type { PaginatedResponse } from "@/types/response";
 
 
 const statusConfig = {
@@ -43,10 +44,8 @@ const statusConfig = {
 };
 
 const priorityConfig = {
-    urgent: { label: "Urgent", color: "bg-red-100 text-red-700 border-red-200" },
-    high: { label: "High", color: "bg-orange-100 text-orange-700 border-orange-200" },
-    normal: { label: "Normal", color: "bg-gray-100 text-gray-700 border-gray-200" },
-    low: { label: "Low", color: "bg-slate-100 text-slate-600 border-slate-200" },
+    URGENT: { label: "Urgent", color: "bg-red-100 text-red-700 border-red-200" },
+    NORMAL: { label: "Normal", color: "bg-gray-100 text-gray-700 border-gray-200" },
 };
 
 function CollectionRequest() {
@@ -62,15 +61,22 @@ function CollectionRequest() {
     const [selectedRejectRequestId, setSelectedRejectRequestId] = useState<number | null>(null);
     const [isFetchingRequests, setIsFetchingRequests] = useState(false)
 
-    const fetchRequests = useCallback(async () => {
+    // pagination state
+    const [currentPage, setCurrentPage] = useState(0);
+    const [hasPrev, setHasPrev] = useState(false);
+    const [hasNext, setHasNext] = useState(false);
+    const [totalItems, settotalItems] = useState(0)
+
+    const fetchRequests = useCallback(async (page: number, size: number = 4) => {
         if (!user.user) return
 
         try {
             setIsFetchingRequests(true)
             // get waste reports by enterprise id
-            const response = await wasteReportService.getWasteReportsByEnterprise(user.user.enterpriseId)
+            const response = await wasteReportService.getWasteReportsByEnterprise(page, size)
 
-            setFetchRequests(response);
+            setFetchRequests(response.data);
+            handlePagination(response)
             setIsFetchingRequests(false)
             setSelectedRequests([])
         } catch (error) {
@@ -80,14 +86,35 @@ function CollectionRequest() {
     }, [user.user, dispatch])
 
     useEffect(() => {
-        fetchRequests()
+        fetchRequests(0)
     }, [fetchRequests])
 
-    const filteredRequests = fetchedRequests.filter((req) => {
-        if (statusFilter !== "all" && req.currentStatus !== statusFilter) return false;
-        if (searchQuery && !req.requestId.toString().includes(searchQuery.toLowerCase()) && !req.address.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-        return true;
-    });
+    const handlePagination = (pagedData: PaginatedResponse<WasteReportEnterprise>) => {
+        setCurrentPage(pagedData.currentPage)
+        settotalItems(pagedData.totalItems)
+        setHasPrev(pagedData.hasPrevious)
+        setHasNext(pagedData.hasNext)
+    }
+
+    const filteredRequests = useMemo(() => {
+        return fetchedRequests.filter((req) => {
+            if (statusFilter !== "all" && req.currentStatus !== statusFilter) return false;
+
+            const keyword = searchQuery.trim().toLowerCase();
+            if (keyword === "") return true;
+
+            const searchString = (
+                req.requestId.toString() + " " +
+                (req.address || "") + " " +
+                (req.collectorName || "") + " " +
+                (req.citizenName || "") + " " +
+                (req.wasteTypeName || "") + " " +
+                (req.priority || "")
+            ).toLowerCase();
+
+            return searchString.includes(keyword);
+        });
+    }, [fetchedRequests, searchQuery, statusFilter]);
 
     const toggleSelect = (id: number) => {
         setSelectedRequests(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -107,7 +134,7 @@ function CollectionRequest() {
             animate={{ opacity: 1 }}
             className="min-h-screen bg-background"
         >
-            <div>
+            <div className="pb-15">
                 <header className="fixed top-0 left-0 z-50 w-full lg:left-[250px] lg:w-[calc(100%-250px)]
                  bg-white/50 px-6 py-5 border-b border-foreground/20 flex 
                  justify-between items-center backdrop-blur-xl backdrop-saturate-200">
@@ -203,7 +230,7 @@ function CollectionRequest() {
                                         <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Collector</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Priority</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
+                                        <th className="text-left py-3 px-3 text-sm font-medium text-muted-foreground">Requested Date</th>
                                         <th className="text-right py-3 pr-6 text-sm font-medium text-muted-foreground">Actions</th>
                                     </tr>
                                 </thead>
@@ -312,7 +339,7 @@ function CollectionRequest() {
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     <Badge variant="outline" className={`text-xs`}>
-                                                        {dateTimeFormat(req.createdAt)}
+                                                        {dateFormat(req.createdAt)}
                                                     </Badge>
                                                 </td>
                                                 <td className="py-3 pr-6">
@@ -370,10 +397,10 @@ function CollectionRequest() {
                         </div>
 
                         <div className="flex items-center justify-between p-4 border-t border-border">
-                            <p className="text-sm text-muted-foreground">Showing {filteredRequests.length} of {fetchedRequests.length} requests</p>
+                            <p className="text-sm text-muted-foreground">Showing {filteredRequests.length} of {totalItems} requests</p>
                             <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" disabled>Previous</Button>
-                                <Button variant="outline" size="sm">Next</Button>
+                                <Button variant="outline" size="sm" disabled={!hasPrev} onClick={() => fetchRequests(currentPage - 1)}>Previous</Button>
+                                <Button variant="outline" size="sm" disabled={!hasNext} onClick={() => fetchRequests(currentPage + 1)}>Next</Button>
                             </div>
                         </div>
                     </Card>
@@ -395,7 +422,7 @@ function CollectionRequest() {
                                     <RejectRequestForm
                                         wasteReportId={selectedRejectRequestId}
                                         setIsRejectFormOpen={setIsRejectFormOpen}
-                                        onSuccess={fetchRequests} />
+                                        onSuccess={() => fetchRequests(currentPage)} />
                                 </motion.div>
                             </motion.div>
                         )}
@@ -418,7 +445,7 @@ function CollectionRequest() {
                                     <AssignCollectorForm
                                         selectedRequests={selectedRequests}
                                         setIsAssignFormOpen={setIsAssignFormOpen}
-                                        onSuccess={fetchRequests} />
+                                        onSuccess={() => fetchRequests(currentPage)} />
                                 </motion.div>
                             </motion.div>
                         )}
