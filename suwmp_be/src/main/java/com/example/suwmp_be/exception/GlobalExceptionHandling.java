@@ -13,6 +13,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,5 +180,30 @@ public class GlobalExceptionHandling {
         Map<String, String> body = new HashMap<>();
         body.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException exception) {
+        ErrorCode errorCode = exception.getErrorCode();
+        log.warn(errorCode.getTitle(), exception);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .title(errorCode.getTitle())
+                .message(errorCode.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ErrorResponse> handleIOException(IOException exception) {
+        log.error("IO Exception occurred", exception);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .title("File Operation Error")
+                .message("Failed to process file: " + exception.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }

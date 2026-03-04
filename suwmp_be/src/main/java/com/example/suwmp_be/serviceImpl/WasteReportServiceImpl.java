@@ -18,6 +18,7 @@ import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.exception.ConflictException;
+import com.example.suwmp_be.exception.BadRequestException;
 import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.dto.response.AttachmentResponse;
 import com.example.suwmp_be.service.IS3Service;
@@ -31,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +45,12 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final EnterpriseUserRepository enterpriseUserRepo;
     private final ComplaintAttachmentRepository attachmentRepo;
     private final IS3Service s3Service;
+
+    private static final int MAX_FILES = 5;
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
+            "image/jpeg", "image/png", "application/pdf"
+    );
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -150,10 +158,27 @@ public class WasteReportServiceImpl implements IWasteReportService {
         WasteReport report = wasteReportRepo.findByIdAndCitizen_Id(reportId, citizenId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
 
-        // Check if status allows attachments
         if (report.getStatus() == WasteReportStatus.REJECTED || 
             report.getStatus() == WasteReportStatus.COLLECTED) {
             throw new ConflictException(ErrorCode.CONFLICT);
+        }
+
+        // 1. Validation before any side effects
+        if (files != null && !files.isEmpty()) {
+            if (files.size() > MAX_FILES) {
+                throw new BadRequestException(ErrorCode.BAD_REQUEST_BODY_MISSING); // Using generic for now
+            }
+            for (MultipartFile file : files) {
+                if (file.isEmpty()) {
+                    throw new BadRequestException(ErrorCode.BAD_REQUEST_BODY_MISSING);
+                }
+                if (file.getSize() > MAX_FILE_SIZE) {
+                    throw new BadRequestException(ErrorCode.BAD_REQUEST_BODY_MISSING);
+                }
+                if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
+                    throw new BadRequestException(ErrorCode.BAD_REQUEST_BODY_MISSING);
+                }
+            }
         }
 
         if (description != null && !description.isBlank()) {
@@ -181,8 +206,10 @@ public class WasteReportServiceImpl implements IWasteReportService {
                 attachmentRepo.save(attachment);
             }
         } catch (Exception e) {
-            // Ideally should delete from S3 but simplified for now as per plan
-            // In a real prod environment, we would trigger async cleanup or use a more robust flow
+            //补偿/Compensation: Cleanup uploaded files in S3 if DB save or other logic fails
+            for (String key : uploadedKeys) {
+                s3Service.deleteObject(key);
+            }
             throw e;
         }
     }

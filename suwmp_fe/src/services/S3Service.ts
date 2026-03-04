@@ -8,7 +8,6 @@ const s3Service = {
             formData.append("image", image);
             const response = await authClient.post("/s3/upload", formData, {
                 headers: {
-                    "Content-Type": "multipart/form-data",
                     "Authorization": "Bearer " + token
                 },
             });

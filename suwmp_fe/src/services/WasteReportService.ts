@@ -110,17 +110,15 @@ const wasteReportService = {
             throw error;
         }
     },
-    uploadAttachments: async (reportId: number, files: File[], description: string) => {
+    uploadAttachments: async (reportId: number, files: File[], description?: string) => {
         try {
             const formData = new FormData();
-            files.forEach((file) => formData.append("files", file));
+            for (const file of files) {
+                formData.append("files", file);
+            }
             if (description) formData.append("description", description);
 
-            const response = await authClient.post(`/waste-reports/${reportId}/attachments`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const response = await authClient.post(`/waste-reports/${reportId}/attachments`, formData);
             return response.data;
         } catch (error) {
             console.error("Error uploading attachments:", error);

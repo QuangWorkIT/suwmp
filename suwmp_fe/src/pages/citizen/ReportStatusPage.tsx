@@ -50,6 +50,23 @@ function ReportStatusPage() {
   const [issueDescription, setIssueDescription] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
+
+  // Manage file previews memory
+  useEffect(() => {
+    // Generate new previews
+    const newPreviews = selectedFiles.map(file => 
+      file.type.startsWith("image/") ? URL.createObjectURL(file) : ""
+    );
+    setFilePreviews(newPreviews);
+
+    // Cleanup: Revoke all ObjectURLs on change or unmount
+    return () => {
+      newPreviews.forEach(url => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, [selectedFiles]);
 
   useEffect(() => {
     if (!id) return;
@@ -407,14 +424,14 @@ function ReportStatusPage() {
                     <span className="text-[10px] font-normal text-muted-foreground">Up to 5 files, max 5MB each</span>
                   </label>
                   
-                  <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                     {selectedFiles.map((file, idx) => (
                       <div key={idx} className="relative aspect-square rounded-md border bg-muted overflow-hidden flex items-center justify-center">
                         {file.type === "application/pdf" ? (
                           <FileText className="w-6 h-6 text-red-500" />
                         ) : (
                           <img 
-                            src={URL.createObjectURL(file)} 
+                            src={filePreviews[idx]} 
                             alt="Preview" 
                             className="w-full h-full object-cover"
                           />

@@ -40,9 +40,4 @@ public class ComplaintAttachment {
     @CreatedDate
     @Column(name = "uploaded_at", updatable = false)
     private LocalDateTime uploadedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.uploadedAt = LocalDateTime.now();
-    }
 }
