@@ -16,6 +16,11 @@ public enum ErrorCode {
     RESET_TOKEN_INVALID("Unauthenticated", "Reset password token expired or not valid"),
     ACCESS_TOKEN_INVALID("Unauthenticated", "Invalid or expired JWT"),
     USER_ID_INVALID("Bad Request", "Invalid user ID in token"),
+    GOOGLE_ID_TOKEN_INVALID("Unauthenticated", "Invalid Google ID Token"),
+
+    USER_NOT_FOUND("Not Found", "User not found"),
+    USER_ALREADY_EXISTS("Bad Request", "User already exists"),
+    USER_INACTIVE("Unauthenticated", "User is inactive"),
 
     ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found"),
     WASTE_REPORT_NOT_FOUND("Not Found", "Waste report not found"),

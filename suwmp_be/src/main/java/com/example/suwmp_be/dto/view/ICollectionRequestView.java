@@ -9,6 +9,7 @@ public interface ICollectionRequestView {
     Double getRequestLongitude();
     Double getRequestLatitude();
     Double getVolume();
+    String getPriority();
     String getCurrentStatus();
     String getCitizenName();
     String getCitizenPhone();

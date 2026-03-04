@@ -10,21 +10,21 @@ interface StatsCardsProps {
 const statConfig = [
   {
     label: "Total Collectors",
-    value: (stats: CollectorStats) => stats.totalCollectors.toString(),
+    value: (stats: CollectorStats) => stats.totalCollectors,
     icon: Users,
     iconColor: "text-primary",
     bgColor: "bg-primary/10",
   },
   {
     label: "Active Now",
-    value: (stats: CollectorStats) => stats.activeNow.toString(),
+    value: (stats: CollectorStats) => stats.activeNow,
     icon: Activity,
     iconColor: "text-green-600",
     bgColor: "bg-green-50",
   },
   {
     label: "Tasks Today",
-    value: (stats: CollectorStats) => stats.tasksToday.toString(),
+    value: (stats: CollectorStats) => stats.tasksToday,
     icon: ClipboardList,
     iconColor: "text-blue-600",
     bgColor: "bg-blue-50",

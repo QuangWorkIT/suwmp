@@ -10,6 +10,7 @@ import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.response.RatingStatusResponse;
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
 
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.service.IWasteReportService;
 import io.swagger.v3.oas.annotations.Operation;

@@ -16,14 +16,17 @@ export const citizenRoutes = [
                 path: "/citizen",
                 element: <CitizenMain />,
                 children: [
-                    { index: true, element: <Navigate to="dashboard" replace /> },
+                    {
+                        index: true,
+                        element: <Navigate to="dashboard" replace />,
+                    },
                     { path: "dashboard", element: <CitizenHome /> },
                     { path: "reports", element: <ReportHistory /> },
                     { path: "reports/:id", element: <ReportStatusPage /> },
                     { path: "leaderboard", element: <LeaderBoard /> },
                     { path: "feedback", element: <FeedBack /> },
-                ]
-            }
+                ],
+            },
         ],
     },
     {
@@ -32,4 +35,4 @@ export const citizenRoutes = [
             { path: "/citizen/new-report", element: <WasteReportProcess /> },
         ],
     },
-]
+];

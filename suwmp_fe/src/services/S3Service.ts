@@ -1,9 +1,9 @@
 import authClient from "@/config/axios";
 
-const token  = localStorage.getItem("token");
 const s3Service = {
     uploadImage: async (image: File) => {
         try {
+            const token = localStorage.getItem("token");
             const formData = new FormData();
             formData.append("image", image);
             const response = await authClient.post("/s3/upload", formData, {
@@ -16,6 +16,17 @@ const s3Service = {
         } catch (error) {
             console.log("Error uploading image:", error);
             throw new Error("Failed to upload image");
+        }
+    },
+    getImage: async (key: string) => {
+        try {
+            const response = await authClient.get(`/s3/download`,
+                { params: { key: key } }
+            );
+            return response.data;
+        } catch (error) {
+            console.log("Error getting image:", error);
+            throw new Error("Failed to get image");
         }
     }
 }

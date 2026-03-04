@@ -16,6 +16,10 @@ import com.example.suwmp_be.entity.EnterpriseUser;
 import com.example.suwmp_be.entity.ReportRating;
 import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.exception.ApplicationException;
+import com.example.suwmp_be.entity.WasteReport;
+import com.example.suwmp_be.repository.EnterpriseUserRepository;
+import com.example.suwmp_be.repository.WasteReportRepository;
+import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.CollectionAssignmentRepository;
 import com.example.suwmp_be.repository.EnterpriseRepository;
@@ -28,6 +32,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +53,7 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final CollectionAssignmentRepository collectionAssignmentRepo;
     private final EnterpriseUserRepository enterpriseUserRepo;
 
+    private final EnterpriseUserRepository enterpriseUserRepo;
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -191,6 +198,8 @@ public class WasteReportServiceImpl implements IWasteReportService {
     public Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable) {
         return wasteReportRepo.findAssignedTasksByCollector_Id(collectorId, pageable);
 
+    public Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable) {
+        return wasteReportRepo.findAssignedTasksByCollector_Id(collectorId, pageable);
     }
 
     private CitizenWasteReportStatusResponse toCitizenStatusResponse(WasteReport report) {
