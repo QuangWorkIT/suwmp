@@ -18,7 +18,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
             WHEN 'IN_PROGRESS' THEN 2
             WHEN 'RESOLVED' THEN 3
         END,
-        c.createdAt DESC
+        c.createdAt ASC
 """)
     Page<Complaint> findAllOrderByCustomStatus(Pageable pageable);
 }

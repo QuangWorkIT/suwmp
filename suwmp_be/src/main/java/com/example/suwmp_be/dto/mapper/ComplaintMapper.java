@@ -18,6 +18,7 @@ public interface ComplaintMapper {
     @Mapping(target = "citizenName", source = "citizen.fullName")
     ComplaintDTO toDTO(Complaint complaint);
 
+    @Mapping(source = "createdAt", target = "createdAt")
     default Page<ComplaintResponse> toPageResponse(Page<Complaint> page) {
         return page.map(this::toResponse);
     }

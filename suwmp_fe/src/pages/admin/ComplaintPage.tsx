@@ -1,46 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import type { Complaint } from "@/types/complaint";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { Complaint, PaginatedComplaints } from "@/types/complaint";
+import { ComplaintService } from "@/services/ComplaintService";
 import { MoreVertical, Search, Filter, XCircle, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
-
-const complaintsData: Complaint[] = [
-    {
-        id: 1,
-        citizenId: "John D.",
-        wasteReportId: "Collector Alex",
-        description: "Missed Collection",
-        createdAt: "Jan 12, 2026",
-        status: "OPEN",
-    },
-    {
-        id: 2,
-        citizenId: "GreenCycle",
-        wasteReportId: "Citizen Sarah",
-        description: "Contaminated Waste",
-        createdAt: "Jan 11, 2026",
-        status: "IN_PROGRESS",
-    },
-    {
-        id: 3,
-        citizenId: "Maria S.",
-        wasteReportId: "AI System",
-        description: "False Classification",
-        createdAt: "Jan 10, 2026",
-        status: "RESOLVED",
-    },
-    {
-        id: 4,
-        citizenId: "Tom W.",
-        wasteReportId: "Collector Mike",
-        description: "Rude behavior",
-        createdAt: "Jan 08, 2026",
-        status: "RESOLVED",
-    },
-];
 
 const StatusBadge = ({ status }: { status: Complaint["status"] }) => {
     if (status === "OPEN") {
@@ -74,10 +41,62 @@ const StatusIcon = ({ status }: { status: Complaint["status"] }) => {
     );
 };
 
+const formatDateTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+};
+
 const ComplaintsPage = () => {
     const [search, setSearch] = useState("");
+    const [data, setData] = useState<PaginatedComplaints | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(0);
+    const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-    const filtered = complaintsData.filter((c) => c.description.toLowerCase().includes(search.toLowerCase()));
+    const fetchComplaints = async (pageNumber: number) => {
+        setLoading(true);
+        try {
+            const res = await ComplaintService.getComplaints(pageNumber, 5);
+            setData(res.data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchComplaints(page);
+    }, [page]);
+
+    const handleViewDetails = async (complaint: Complaint) => {
+        try {
+            const res = await ComplaintService.getComplaintById(complaint.id);
+            // The details API response maps description, status, citizenName, photoUrl
+            // We merge it with the existing complaint so we retain 'id' and 'createAt'
+            setSelectedComplaint({ ...complaint, ...res.data });
+            setIsDialogOpen(true);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleUpdateStatus = async (status: Complaint["status"]) => {
+        if (!selectedComplaint) return;
+        try {
+            await ComplaintService.updateComplaintStatus(selectedComplaint.id, status);
+            // close dialog and refresh list
+            setIsDialogOpen(false);
+            fetchComplaints(page);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const complaints = data?.content || [];
+    const filtered = complaints.filter((c) => c.description.toLowerCase().includes(search.toLowerCase()));
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -100,45 +119,132 @@ const ComplaintsPage = () => {
 
                 {/* Complaint List */}
                 <div className="space-y-6">
-                    {filtered.map((complaint) => (
-                        <motion.div
-                            key={complaint.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <Card className="rounded-2xl shadow-sm hover:shadow-md transition">
-                                <CardContent className="flex items-center justify-between px-4 py-0">
-                                    <div className="flex items-center gap-4">
-                                        <StatusIcon status={complaint.status} />
-                                        <div>
-                                            <h3 className="font-semibold text-lg">{complaint.description}</h3>
-                                            <p className="text-sm text-gray-500">
-                                                Reported by{" "}
-                                                <span className="font-semibold text-black">{complaint.citizenId}</span>{" "}
-                                                against{" "}
-                                                <span className="font-semibold text-black">
-                                                    {complaint.wasteReportId}
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-6">
-                                        <div className="text-right">
-                                            <p className="text-xs text-gray-400">CMP-00{complaint.id}</p>
-                                            <p className="text-sm text-gray-500">{complaint.createdAt}</p>
+                    {loading ? (
+                        <p className="text-center text-gray-500 py-8">Loading complaints...</p>
+                    ) : filtered.length === 0 ? (
+                        <p className="text-center text-gray-500 py-8">No complaints found.</p>
+                    ) : (
+                        filtered.map((complaint) => (
+                            <motion.div
+                                key={complaint.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <Card 
+                                    className="rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer"
+                                    onClick={() => handleViewDetails(complaint)}
+                                >
+                                    <CardContent className="flex items-center justify-between px-4 py-4">
+                                        <div className="flex items-center gap-4">
+                                            <StatusIcon status={complaint.status} />
+                                            <div>
+                                                <h3 className="font-semibold text-lg">{complaint.description}</h3>
+                                                <p className="text-sm text-gray-500">
+                                                    Reported by{" "}
+                                                    <span className="font-semibold text-black">{complaint.citizenName}</span>
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        <StatusBadge status={complaint.status} />
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-right">
+                                                <p className="text-xs text-gray-400">CMP-00{complaint.id}</p>
+                                                {complaint.createdAt && <p className="text-sm text-gray-500">{formatDateTime(complaint.createdAt)}</p>}
+                                            </div>
 
-                                        <MoreVertical className="text-gray-400 cursor-pointer" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    ))}
+                                            <StatusBadge status={complaint.status} />
+
+                                            <MoreVertical className="text-gray-400" />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        ))
+                    )}
                 </div>
+
+                {/* Pagination Controls */}
+                {data && data.totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4 pt-4">
+                        <Button 
+                            variant="outline" 
+                            disabled={data.first}
+                            onClick={() => setPage((p) => Math.max(0, p - 1))}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm text-gray-600 font-medium">
+                            Page {data.number + 1} of {data.totalPages}
+                        </span>
+                        <Button 
+                            variant="outline" 
+                            disabled={data.last}
+                            onClick={() => setPage((p) => Math.min(data.totalPages - 1, p + 1))}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                )}
+
+                {/* Complaint Details Dialog */}
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl">Complaint Details</DialogTitle>
+                        </DialogHeader>
+                        {selectedComplaint && (
+                            <div className="space-y-5 pt-2">
+                                <div>
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">Citizen Name</span>
+                                    <p className="text-md font-medium mt-1">{selectedComplaint.citizenName}</p>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">Description</span>
+                                    <p className="text-md mt-1">{selectedComplaint.description}</p>
+                                </div>
+                                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                    <div>
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">Status</span>
+                                        <StatusBadge status={selectedComplaint.status} />
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">Created At</span>
+                                        <p className="text-sm font-medium">{selectedComplaint.createdAt ? formatDateTime(selectedComplaint.createdAt) : "N/A"}</p>
+                                    </div>
+                                </div>
+                                {selectedComplaint.photoUrl && (
+                                    <div>
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-2">Photo Evidence</span>
+                                        <img src={selectedComplaint.photoUrl} alt="Complaint" className="max-w-full h-auto rounded-lg shadow-sm border" />
+                                    </div>
+                                )}
+                                
+                                <div className="pt-4 border-t flex flex-col gap-2">
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 mb-1">Update Status</span>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                                            onClick={() => handleUpdateStatus("IN_PROGRESS")}
+                                            disabled={selectedComplaint.status === "IN_PROGRESS"}
+                                        >
+                                            Investigate
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                            onClick={() => handleUpdateStatus("RESOLVED")}
+                                            disabled={selectedComplaint.status === "RESOLVED"}
+                                        >
+                                            Resolve
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     );
