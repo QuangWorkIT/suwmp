@@ -8,20 +8,26 @@ import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.response.RatingStatusResponse;
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
 import com.example.suwmp_be.entity.Enterprise;
+import com.example.suwmp_be.entity.EnterpriseUser;
 import com.example.suwmp_be.entity.ReportRating;
 import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.exception.ApplicationException;
 import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.CollectionAssignmentRepository;
 import com.example.suwmp_be.repository.EnterpriseRepository;
+import com.example.suwmp_be.repository.EnterpriseUserRepository;
 import com.example.suwmp_be.repository.ReportRatingRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +45,8 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final WasteReportMapper wasteReportMapper;
     private final ReportRatingRepository reportRatingRepo;
     private final CollectionAssignmentRepository collectionAssignmentRepo;
+    private final EnterpriseUserRepository enterpriseUserRepo;
+
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -56,11 +64,14 @@ public class WasteReportServiceImpl implements IWasteReportService {
     }
 
     @Override
-    public List<ICollectionRequestView> getWasteReportRequestsByEnterprise(Long enterpriseId) {
-        if (!enterpriseRepo.existsById(enterpriseId)) {
+    public Page<ICollectionRequestView> getWasteReportRequestsByEnterprise(UUID enterpriseId, Pageable pageable) {
+        EnterpriseUser enterpriseUser = enterpriseUserRepo.findByUserId(enterpriseId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ENTERPRISE_NOT_FOUND));
+
+        if (!enterpriseRepo.existsById(enterpriseUser.getEnterpriseId())) {
             throw new NotFoundException(ErrorCode.ENTERPRISE_NOT_FOUND);
         }
-        return wasteReportRepo.getRequestsByEnterprise(enterpriseId);
+        return wasteReportRepo.getRequestsByEnterprise(enterpriseUser.getEnterpriseId(), pageable);
     }
 
     @Override
@@ -176,6 +187,10 @@ public class WasteReportServiceImpl implements IWasteReportService {
                 .averageRating(average != null ? average : 0.0)
                 .totalRatings(count)
                 .build();
+    @Override
+    public Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable) {
+        return wasteReportRepo.findAssignedTasksByCollector_Id(collectorId, pageable);
+
     }
 
     private CitizenWasteReportStatusResponse toCitizenStatusResponse(WasteReport report) {

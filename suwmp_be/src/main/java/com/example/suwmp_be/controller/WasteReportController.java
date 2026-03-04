@@ -1,12 +1,15 @@
 package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
+import com.example.suwmp_be.dto.PaginatedResponse;
 import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
 import com.example.suwmp_be.dto.request.RatingRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.response.RatingStatusResponse;
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
+
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.service.IWasteReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +24,10 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -63,7 +70,7 @@ public class WasteReportController {
     }
 
     @PreAuthorize("hasRole('ENTERPRISE')")
-    @GetMapping("/enterprises/{enterpriseId}")
+    @GetMapping("/enterprises/requests/me")
     @Operation(
             summary = "Get waste reports for an enterprise",
             description = "Retrieve all waste report requests assigned to a specific enterprise."
@@ -77,14 +84,17 @@ public class WasteReportController {
             @ApiResponse(responseCode = "400", description = "Invalid enterprise ID"),
             @ApiResponse(responseCode = "404", description = "Enterprise not found")
     })
-    public ResponseEntity<BaseResponse<List<ICollectionRequestView>>> getWasteReports(
+    public ResponseEntity<PaginatedResponse<ICollectionRequestView>> getWasteReports(
             @Parameter(description = "Enterprise ID", required = true)
-            @PathVariable @Positive Long enterpriseId
+            Authentication authentication,
+            @PageableDefault(page = 0, size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(new BaseResponse<>(
-                true, "Get waste reports successfully",
-                wasteService.getWasteReportRequestsByEnterprise(enterpriseId)
-        ));
+        Page<ICollectionRequestView> collectionRequests =
+                wasteService.getWasteReportRequestsByEnterprise((UUID) authentication.getPrincipal(), pageable);
+
+        PaginatedResponse<ICollectionRequestView> response =
+                PaginatedResponse.buildPaginatedResponse(collectionRequests);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('CITIZEN')")
@@ -199,4 +209,18 @@ public class WasteReportController {
                 wasteService.getRatingStatus(id, citizenId)
         ));
     }
+
+    @PreAuthorize("hasRole('COLLECTOR')")
+    @GetMapping("/collectors/tasks/me")
+    public ResponseEntity<PaginatedResponse<IAssignedTaskView>> getCollectorTasks(
+            Authentication authentication,
+            @PageableDefault(page = 0, size = 4, sort = "startCollectAt", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        Page<IAssignedTaskView> tasks = wasteService.getCollectorAssignedTasks(
+                (UUID) authentication.getPrincipal(), pageable);
+
+        PaginatedResponse<IAssignedTaskView> response = PaginatedResponse.buildPaginatedResponse(tasks);
+        return ResponseEntity.ok(response);
+    }
+
 }

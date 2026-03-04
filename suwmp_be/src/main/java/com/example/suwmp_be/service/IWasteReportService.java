@@ -2,8 +2,11 @@ package com.example.suwmp_be.service;
 
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.example.suwmp_be.dto.request.RatingRequest;
 import com.example.suwmp_be.dto.response.RatingStatusResponse;
@@ -14,7 +17,7 @@ import java.util.UUID;
 public interface IWasteReportService {
     long createNewReport(WasteReportRequest wasteReport);
 
-    List<ICollectionRequestView> getWasteReportRequestsByEnterprise(Long enterpriseId);
+    Page<ICollectionRequestView> getWasteReportRequestsByEnterprise(UUID enterpriseId, Pageable pageable);
 
     List<EnterpriseNearbyResponse> getEnterprisesNearbyCitizen(Double citizenLong, Double citizenLat, Long wasteTypeId);
 
@@ -27,4 +30,6 @@ public interface IWasteReportService {
     void submitRating(Long reportId, UUID citizenId, RatingRequest ratingRequest);
 
     RatingStatusResponse getRatingStatus(Long reportId, UUID citizenId);
+
+    Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable);
 }
