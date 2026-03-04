@@ -80,6 +80,8 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
 
     Optional<WasteReport> findByIdAndCitizen_Id(Long id, UUID citizenId);
 
+    boolean existsByIdAndCitizen_Id(Long id, UUID citizenId);
+
     List<WasteReport> findAllByCitizen_IdOrderByCreatedAtDesc(UUID citizenId);
 
     @Query("""

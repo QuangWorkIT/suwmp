@@ -66,3 +66,9 @@ export type CitizenWasteReportStatus = {
     rewardPoints?: number | null;
     classificationConfidence?: number | null;
 };
+export type AttachmentResponse = {
+    id: number;
+    url: string;
+    fileName: string;
+    uploadedAt: string;
+};

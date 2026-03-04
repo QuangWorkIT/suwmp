@@ -11,17 +11,26 @@ import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
 import com.example.suwmp_be.entity.Enterprise;
 import com.example.suwmp_be.entity.EnterpriseUser;
 import com.example.suwmp_be.entity.WasteReport;
+import com.example.suwmp_be.entity.ComplaintAttachment;
+import com.example.suwmp_be.repository.ComplaintAttachmentRepository;
 import com.example.suwmp_be.repository.EnterpriseUserRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.exception.NotFoundException;
+import com.example.suwmp_be.exception.ConflictException;
 import com.example.suwmp_be.constants.ErrorCode;
+import com.example.suwmp_be.dto.response.AttachmentResponse;
+import com.example.suwmp_be.service.IS3Service;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +41,8 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final EnterpriseRepository enterpriseRepo;
     private final WasteReportMapper wasteReportMapper;
     private final EnterpriseUserRepository enterpriseUserRepo;
+    private final ComplaintAttachmentRepository attachmentRepo;
+    private final IS3Service s3Service;
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -116,6 +127,64 @@ public class WasteReportServiceImpl implements IWasteReportService {
     @Override
     public Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable) {
         return wasteReportRepo.findAssignedTasksByCollector_Id(collectorId, pageable);
+    }
+
+    @Override
+    public List<AttachmentResponse> getAttachments(Long reportId, UUID citizenId) {
+        if (!wasteReportRepo.existsByIdAndCitizen_Id(reportId, citizenId)) {
+            throw new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND);
+        }
+
+        return attachmentRepo.findAllByWasteReportId(reportId).stream()
+                .map(a -> new AttachmentResponse(
+                        a.getId(),
+                        s3Service.generatePresignedUrl(a.getFileKey()),
+                        a.getFileName(),
+                        a.getUploadedAt()))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void uploadAttachments(Long reportId, UUID citizenId, List<MultipartFile> files, String description) throws IOException {
+        WasteReport report = wasteReportRepo.findByIdAndCitizen_Id(reportId, citizenId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
+
+        // Check if status allows attachments
+        if (report.getStatus() == WasteReportStatus.REJECTED || 
+            report.getStatus() == WasteReportStatus.COLLECTED) {
+            throw new ConflictException(ErrorCode.CONFLICT);
+        }
+
+        if (description != null && !description.isBlank()) {
+            report.setDescription(description);
+            wasteReportRepo.save(report);
+        }
+
+        if (files == null || files.isEmpty()) {
+            return;
+        }
+
+        List<String> uploadedKeys = new ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                String key = s3Service.uploadImg(file);
+                uploadedKeys.add(key);
+
+                ComplaintAttachment attachment = ComplaintAttachment.builder()
+                        .wasteReport(report)
+                        .fileKey(key)
+                        .fileName(file.getOriginalFilename())
+                        .fileType(file.getContentType())
+                        .fileSize(file.getSize())
+                        .build();
+                attachmentRepo.save(attachment);
+            }
+        } catch (Exception e) {
+            // Ideally should delete from S3 but simplified for now as per plan
+            // In a real prod environment, we would trigger async cleanup or use a more robust flow
+            throw e;
+        }
     }
 
     private CitizenWasteReportStatusResponse toCitizenStatusResponse(WasteReport report) {

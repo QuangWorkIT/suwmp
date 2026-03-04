@@ -5,6 +5,7 @@ import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.PaginatedResponse;
 import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
+import com.example.suwmp_be.dto.response.AttachmentResponse;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
@@ -26,11 +27,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -186,6 +190,39 @@ public class WasteReportController {
 
         PaginatedResponse<IAssignedTaskView> response = PaginatedResponse.buildPaginatedResponse(tasks);
         return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('CITIZEN')")
+    @GetMapping("/{id}/attachments")
+    @Operation(summary = "Get complaint attachments", description = "Retrieve all attachments (images/PDFs) for a specific waste report complaint.")
+    public ResponseEntity<BaseResponse<List<AttachmentResponse>>> getAttachments(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        UUID citizenId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Get attachments successfully",
+                wasteService.getAttachments(id, citizenId)
+        ));
+    }
+
+    @PreAuthorize("hasRole('CITIZEN')")
+    @PostMapping(value = "/{id}/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload complaint attachments", description = "Upload evidence files and update complaint description.")
+    public ResponseEntity<BaseResponse<Void>> uploadAttachments(
+            @PathVariable Long id,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "description", required = false) String description,
+            Authentication authentication
+    ) throws IOException {
+        UUID citizenId = (UUID) authentication.getPrincipal();
+        wasteService.uploadAttachments(id, citizenId, files, description);
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Upload attachments successfully",
+                null
+        ));
     }
 
 }

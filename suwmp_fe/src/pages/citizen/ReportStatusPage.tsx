@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { CitizenWasteReportStatus } from "@/types/WasteReportRequest";
+import type { CitizenWasteReportStatus, AttachmentResponse } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/WasteReportService";
 import PageLoading from "@/components/common/PageLoading";
 import {
@@ -15,7 +15,21 @@ import {
   Navigation2,
   UserRound,
   Star,
+  Paperclip,
+  X,
+  Plus,
+  FileText,
+  AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 function ReportStatusPage() {
   const { id } = useParams();
@@ -29,15 +43,27 @@ function ReportStatusPage() {
   const [submittingRating, setSubmittingRating] = useState(false);
   const [ratingMessage, setRatingMessage] = useState<string | null>(null);
 
+  // Attachment states
+  const [attachments, setAttachments] = useState<AttachmentResponse[]>([]);
+  const [showIssueForm, setShowIssueForm] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [issueDescription, setIssueDescription] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   useEffect(() => {
     if (!id) return;
 
-    const fetchStatus = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await wasteReportService.getReportStatus(Number(id));
-        setReport(data);
+        const [statusData, attachmentsData] = await Promise.all([
+          wasteReportService.getReportStatus(Number(id)),
+          wasteReportService.getAttachments(Number(id)).catch(() => []),
+        ]);
+        setReport(statusData);
+        setAttachments(attachmentsData);
       } catch (err) {
         console.error(err);
         setError("Unable to load report status. Please try again.");
@@ -46,9 +72,85 @@ function ReportStatusPage() {
       }
     };
 
-    fetchStatus();
+    fetchData();
   }, [id]);
 
+  const refreshAttachments = async () => {
+    if (!id) return;
+    try {
+      const data = await wasteReportService.getAttachments(Number(id));
+      setAttachments(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles: File[] = [];
+
+    files.forEach((file) => {
+      // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (>5MB)`);
+        return;
+      }
+      // Type check
+      const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`${file.name} is not a supported file type`);
+        return;
+      }
+      validFiles.push(file);
+    });
+
+    if (selectedFiles.length + validFiles.length > 5) {
+      toast.error("You can only upload up to 5 files");
+      return;
+    }
+
+    setSelectedFiles((prev) => [...prev, ...validFiles]);
+    // Clear input
+    e.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitIssue = async () => {
+    if (!id || (selectedFiles.length === 0 && !issueDescription.trim())) {
+      toast.error("Please provide a description or at least one file");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadProgress(20);
+      await wasteReportService.uploadAttachments(
+        Number(id),
+        selectedFiles,
+        issueDescription
+      );
+      setUploadProgress(100);
+      toast.success("Your evidence has been submitted successfully");
+      setShowIssueForm(false);
+      setSelectedFiles([]);
+      setIssueDescription("");
+      refreshAttachments();
+
+      // Update local report description if provided
+      if (issueDescription.trim() && report) {
+        setReport({ ...report, description: issueDescription });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload attachments. Please try again.");
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
   const handleSubmitRating = async () => {
     if (!id || rating == null) return;
 
@@ -236,8 +338,138 @@ function ReportStatusPage() {
 
           {/* Collector Assigned + Need Help row directly under card (image 2) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CollectorAndHelpCards collectorName={report.collectorName} />
+            <CollectorAndHelpCards 
+              collectorName={report.collectorName} 
+              onReportIssue={() => setShowIssueForm(true)}
+            />
           </div>
+
+          {/* Attachments List */}
+          {attachments.length > 0 && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Paperclip className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium">Evidence Attachments ({attachments.length})</h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {attachments.map((file) => (
+                  <a
+                    key={file.id}
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative aspect-square rounded-lg border bg-muted overflow-hidden flex items-center justify-center hover:border-emerald-500 transition-colors"
+                  >
+                    {file.fileName.toLowerCase().endsWith(".pdf") ? (
+                      <div className="flex flex-col items-center gap-1 p-2 text-center">
+                        <FileText className="w-8 h-8 text-red-500" />
+                        <span className="text-[10px] truncate max-w-full font-medium">
+                          {file.fileName}
+                        </span>
+                      </div>
+                    ) : (
+                      <img
+                        src={file.url}
+                        alt={file.fileName}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                      />
+                    )}
+                  </a>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Report Issue Dialog */}
+          <Dialog open={showIssueForm} onOpenChange={setShowIssueForm}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Report an issue</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <Textarea
+                    placeholder="Describe the issue you're facing..."
+                    value={issueDescription}
+                    onChange={(e) => setIssueDescription(e.target.value)}
+                    className="min-h-[120px]"
+                    maxLength={500}
+                  />
+                  <p className="text-[10px] text-muted-foreground text-right">
+                    {issueDescription.length}/500
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    Evidence (Images or PDFs)
+                    <span className="text-[10px] font-normal text-muted-foreground">Up to 5 files, max 5MB each</span>
+                  </label>
+                  
+                  <div className="grid grid-cols-3 gap-2">
+                    {selectedFiles.map((file, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-md border bg-muted overflow-hidden flex items-center justify-center">
+                        {file.type === "application/pdf" ? (
+                          <FileText className="w-6 h-6 text-red-500" />
+                        ) : (
+                          <img 
+                            src={URL.createObjectURL(file)} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                        <button
+                          onClick={() => removeFile(idx)}
+                          className="absolute top-1 right-1 bg-background/80 rounded-full p-0.5 shadow-sm hover:bg-destructive hover:text-white transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {selectedFiles.length < 5 && (
+                      <label className="aspect-square rounded-md border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted transition-colors">
+                        <Plus className="w-6 h-6 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground mt-1">Add file</span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          multiple
+                          accept="image/*,.pdf"
+                          onChange={handleFileUpload}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {uploading && (
+                  <div className="space-y-1">
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-500 transition-all duration-300" 
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-center text-muted-foreground">Uploading files...</p>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setShowIssueForm(false)} disabled={uploading}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSubmitIssue} 
+                  disabled={uploading || (selectedFiles.length === 0 && !issueDescription.trim())}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {uploading ? "Uploading..." : "Submit Report"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Right column: tracking timeline + rating (image 1) */}
@@ -342,8 +574,10 @@ function ReportStatusPage() {
 
 function CollectorAndHelpCards({
   collectorName,
+  onReportIssue,
 }: {
   collectorName: string | null;
+  onReportIssue: () => void;
 }) {
   return (
     <>
@@ -369,10 +603,12 @@ function CollectorAndHelpCards({
 
       <Card className="p-5 space-y-3">
         <h3 className="text-sm font-medium">Need Help?</h3>
-        <Button variant="outline" className="w-full justify-start">
+        <Button variant="outline" className="w-full justify-start gap-2" onClick={onReportIssue}>
+          <AlertCircle className="w-4 h-4" />
           Report an issue
         </Button>
-        <Button variant="ghost" className="w-full justify-start text-destructive">
+        <Button variant="ghost" className="w-full justify-start text-destructive gap-2">
+          <X className="w-4 h-4" />
           Cancel this request
         </Button>
       </Card>

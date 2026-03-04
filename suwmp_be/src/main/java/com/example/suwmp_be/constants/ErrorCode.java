@@ -30,7 +30,8 @@ public enum ErrorCode {
 
     DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
     NOT_FOUND_DATA("Not Found", "Data is not found"),
-    CAPACITY_NOT_EXISTED("Bad Request", "Corresponding enterprise capacity is not existed");
+    CAPACITY_NOT_EXISTED("Bad Request", "Corresponding enterprise capacity is not existed"),
+    CONFLICT("Conflict", "Conflict occurred with current state");
 
     ErrorCode(String title, String message) {
         this.title = title;

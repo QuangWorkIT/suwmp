@@ -101,6 +101,32 @@ const wasteReportService = {
     submitRating: async (reportId: number, rating: number): Promise<void> => {
         await authClient.post(`/waste-reports/${reportId}/rating`, { rating });
     },
+    getAttachments: async (reportId: number) => {
+        try {
+            const response = await authClient.get(`/waste-reports/${reportId}/attachments`);
+            return response.data.data;
+        } catch (error) {
+            console.error("Error getting attachments:", error);
+            throw error;
+        }
+    },
+    uploadAttachments: async (reportId: number, files: File[], description: string) => {
+        try {
+            const formData = new FormData();
+            files.forEach((file) => formData.append("files", file));
+            if (description) formData.append("description", description);
+
+            const response = await authClient.post(`/waste-reports/${reportId}/attachments`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error uploading attachments:", error);
+            throw error;
+        }
+    },
 }
 
 export default wasteReportService
