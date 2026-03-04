@@ -24,6 +24,7 @@ import com.example.suwmp_be.dto.response.AttachmentResponse;
 import com.example.suwmp_be.service.IS3Service;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class WasteReportServiceImpl implements IWasteReportService {
     private final WasteReportRepository wasteReportRepo;
     private final EnterpriseRepository enterpriseRepo;
@@ -208,7 +210,9 @@ public class WasteReportServiceImpl implements IWasteReportService {
         } catch (Exception e) {
             //补偿/Compensation: Cleanup uploaded files in S3 if DB save or other logic fails
             for (String key : uploadedKeys) {
-                s3Service.deleteObject(key);
+                if (!s3Service.deleteObject(key)) {
+                    log.error("Could not cleanup orphaned S3 object during rollback: {}", key);
+                }
             }
             throw e;
         }

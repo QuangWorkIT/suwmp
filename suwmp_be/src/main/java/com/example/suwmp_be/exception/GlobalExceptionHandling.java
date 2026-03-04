@@ -201,7 +201,7 @@ public class GlobalExceptionHandling {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .title("File Operation Error")
-                .message("Failed to process file: " + exception.getMessage())
+                .message("An error occurred while processing the file")
                 .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

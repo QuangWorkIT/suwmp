@@ -122,11 +122,21 @@ function ReportStatusPage() {
     });
 
     if (selectedFiles.length + validFiles.length > 5) {
-      toast.error("You can only upload up to 5 files");
-      return;
+      const availableSlots = 5 - selectedFiles.length;
+      if (availableSlots <= 0) {
+        toast.error("You can only upload up to 5 files");
+        return;
+      }
+      
+      const filesToAdd = validFiles.slice(0, availableSlots);
+      const skippedCount = validFiles.length - availableSlots;
+      
+      setSelectedFiles((prev) => [...prev, ...filesToAdd]);
+      toast.info(`Added ${filesToAdd.length} files. ${skippedCount} files were skipped due to the 5-file limit.`);
+    } else {
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
     }
-
-    setSelectedFiles((prev) => [...prev, ...validFiles]);
+    
     // Clear input
     e.target.value = "";
   };
@@ -156,10 +166,7 @@ function ReportStatusPage() {
       setIssueDescription("");
       refreshAttachments();
 
-      // Update local report description if provided
-      if (issueDescription.trim() && report) {
-        setReport({ ...report, description: issueDescription });
-      }
+      // No longer overwriting report.description locally to preserve collector notes
     } catch (err) {
       console.error(err);
       toast.error("Failed to upload attachments. Please try again.");

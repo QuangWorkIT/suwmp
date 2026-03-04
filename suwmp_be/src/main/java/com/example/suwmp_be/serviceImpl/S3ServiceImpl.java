@@ -61,15 +61,17 @@ public class S3ServiceImpl implements IS3Service {
     }
 
     @Override
-    public void deleteObject(String key) {
+    public boolean deleteObject(String key) {
         try {
             DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
                     .build();
             s3Client.deleteObject(deleteRequest);
+            return true;
         } catch (Exception e) {
-            log.error("Failed to delete object from S3: " + key, e);
+            log.error("Failed to delete object from S3: {}", key, e);
+            return false;
         }
     }
 }
