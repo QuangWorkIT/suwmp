@@ -44,4 +44,6 @@ public interface RewardTransactionRepository extends JpaRepository<RewardTransac
     List<CitizenPointSum> sumPointsUntil(
             @Param("date") LocalDate date
     );
+
+    List<RewardTransaction> findAllByCitizen_Id(UUID citizenId);
 }

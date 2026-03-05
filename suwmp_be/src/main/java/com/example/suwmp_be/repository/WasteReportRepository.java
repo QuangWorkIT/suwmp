@@ -128,4 +128,6 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
     List<IReportHistoryView> findReportHistoryByCitizenId(
             @Param("citizenId") UUID citizenId
     );
+
+    List<WasteReport> findAllByCitizen_Id(UUID citizenId);
 }
