@@ -12,6 +12,16 @@ export const ComplaintService = {
         }
     },
 
+    getComplaintsByUser: async (page: number = 0, size: number = 5): Promise<{ data: PaginatedComplaints; message: string; success: boolean }> => {
+        try {
+            const response = await authClient.get(`/complaints/user?page=${page}&size=${size}`);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    },
+
     getComplaintById: async (id: number): Promise<{ data: Complaint; message: string; success: boolean }> => {
         try {
             const response = await authClient.get(`/complaints/${id}`);
