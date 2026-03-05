@@ -1,6 +1,5 @@
 package com.example.suwmp_be.controller;
 
-import com.example.suwmp_be.constants.ComplaintStatus;
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.complaint.ComplaintDTO;
 import com.example.suwmp_be.dto.complaint.UpdateComplaintStatus;
@@ -11,7 +10,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/complaints")
@@ -25,7 +27,7 @@ public class ComplaintController {
     public ResponseEntity<BaseResponse<Page<ComplaintResponse>>> getAllComplaints(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
-            ) {
+    ) {
         var complaints = complaintService.getAllComplaints(Pageable.ofSize(size).withPage(page));
         return ResponseEntity.ok(new BaseResponse<>(
                 true,
@@ -56,6 +58,20 @@ public class ComplaintController {
                 true,
                 "Complaint status update successfully",
                 complaint
+        ));
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<BaseResponse<Page<ComplaintResponse>>> getAllComplaintsByUserId(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        var complaints = complaintService.getAllComplaintsByUserId((UUID) authentication.getPrincipal(), Pageable.ofSize(size).withPage(page));
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "User complaints retrieved successfully",
+                complaints
         ));
     }
 }
