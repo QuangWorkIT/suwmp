@@ -66,3 +66,11 @@ export type CitizenWasteReportStatus = {
     rewardPoints?: number | null;
     classificationConfidence?: number | null;
 };
+
+export interface RatingStatusResponse {
+    canRate: boolean;
+    alreadyRated: boolean;
+    userRating: number | null;
+    averageRating: number;
+    totalRatings: number;
+}

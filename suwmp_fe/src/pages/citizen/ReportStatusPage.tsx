@@ -10,12 +10,25 @@ import {
   ArrowLeft,
   Clock,
   MapPin,
-  Recycle,
   CheckCircle2,
   Navigation2,
   UserRound,
   Star,
+  Info,
+  Camera,
 } from "lucide-react";
+import { reverseGeocode } from "@/utilities/trackasiaGeocode";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { RatingStatusResponse } from "@/types/WasteReportRequest";
 
 function ReportStatusPage() {
   const { id } = useParams();
@@ -27,17 +40,42 @@ function ReportStatusPage() {
   const [rating, setRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratingStatus, setRatingStatus] = useState<RatingStatusResponse | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [ratingMessage, setRatingMessage] = useState<string | null>(null);
+  const [address, setAddress] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     if (!id) return;
 
-    const fetchStatus = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await wasteReportService.getReportStatus(Number(id));
-        setReport(data);
+        // Fetch report first as it's critical
+        const reportData = await wasteReportService.getReportStatus(Number(id));
+        setReport(reportData);
+
+        // Fetch address for Bug 1
+        reverseGeocode(reportData.latitude, reportData.longitude)
+          .then(setAddress)
+          .catch((err) => {
+            console.error("Geocoding failed:", err);
+            setAddress(null);
+          });
+
+        // Fetch rating status separately and handle its errors independently
+        try {
+          const statusData = await wasteReportService.getRatingStatus(Number(id));
+          setRatingStatus(statusData);
+          if (statusData.alreadyRated) {
+            setRating(statusData.userRating);
+          }
+        } catch (ratingErr) {
+          console.error("Failed to load rating status:", ratingErr);
+          // Don't set error state globally, just leave ratingStatus as null
+        }
       } catch (err) {
         console.error(err);
         setError("Unable to load report status. Please try again.");
@@ -46,18 +84,22 @@ function ReportStatusPage() {
       }
     };
 
-    fetchStatus();
+    fetchData();
   }, [id]);
 
   const handleSubmitRating = async () => {
-    if (!id || rating == null) return;
+    if (!id || rating == null || ratingStatus?.alreadyRated) return;
 
     setSubmittingRating(true);
     setRatingMessage(null);
+    setShowConfirm(false);
 
     try {
       await wasteReportService.submitRating(Number(id), rating);
       setRatingMessage("Thanks for your feedback!");
+      // Refresh status to lock the UI
+      const updatedStatus = await wasteReportService.getRatingStatus(Number(id));
+      setRatingStatus(updatedStatus);
     } catch (err) {
       console.error(err);
       setRatingMessage("Failed to submit rating. Please try again.");
@@ -144,8 +186,20 @@ function ReportStatusPage() {
 
           {/* Hero card (image 3 style) */}
           <Card className="p-0 overflow-hidden">
-            <div className="h-40 sm:h-48 md:h-56 bg-muted flex items-center justify-center">
-              <Recycle className="w-12 h-12 text-muted-foreground/60" />
+            <div className="h-48 sm:h-56 md:h-64 bg-muted flex items-center justify-center relative">
+              {report.photoUrl && !imgError ? (
+                <img 
+                  src={report.photoUrl} 
+                  alt="Waste Report" 
+                  className="w-full h-full object-cover"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-muted-foreground/60">
+                  <Camera className="w-12 h-12" />
+                  <p className="text-xs">No image available</p>
+                </div>
+              )}
             </div>
             <div className="p-6 md:p-7 flex flex-col md:flex-row gap-6 border-t border-border/60">
               <div className="flex-1 space-y-4">
@@ -163,11 +217,11 @@ function ReportStatusPage() {
                 </h2>
 
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {`${report.latitude.toFixed(4)}, ${report.longitude.toFixed(
-                    4,
-                  )}`}
+                <span className="flex items-center gap-1 min-w-0">
+                  <MapPin className="w-4 h-4 shrink-0" />
+                  <span className="truncate">
+                    {address ?? `${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}`}
+                  </span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -250,9 +304,9 @@ function ReportStatusPage() {
                 const isDone = index < currentIndex;
                 const isActive = index === currentIndex;
                 return (
-                  <div key={item.id} className="relative pl-14">
+                  <div key={item.id} className="relative pl-14 min-h-[40px] flex flex-col justify-center">
                     <div
-                      className={`absolute left-2 top-0 w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      className={`absolute left-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border-2 z-10 ${
                         isDone || isActive
                           ? "bg-emerald-500 text-white border-emerald-500"
                           : "bg-background text-muted-foreground border-border"
@@ -296,44 +350,89 @@ function ReportStatusPage() {
             </div>
           </Card>
 
-          {/* Rate your experience */}
-          <Card className="p-5 space-y-4">
-            <h3 className="text-sm font-medium">Rate your experience</h3>
-            <div className="flex gap-3">
-              {Array.from({ length: 5 }).map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors cursor-pointer"
-                  aria-label={`Rate ${idx + 1} star${idx === 0 ? "" : "s"}`}
-                  onClick={() => setRating(idx + 1)}
-                  onMouseEnter={() => setHoverRating(idx + 1)}
-                  onMouseLeave={() => setHoverRating(null)}
-                >
-                  <Star
-                    className={`w-4 h-4 ${
-                      (hoverRating ?? rating ?? 0) > idx
-                        ? "text-emerald-500 fill-emerald-500"
-                        : "text-muted-foreground"
+          {/* Rate your experience (Only visible if COLLECTED) */}
+          {report.status === "COLLECTED" && (
+            <Card className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">Rate your experience</h3>
+                {ratingStatus?.totalRatings ? (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    {ratingStatus.averageRating.toFixed(1)} ({ratingStatus.totalRatings})
+                  </span>
+                ) : null}
+              </div>
+              
+              <div className="flex gap-3">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={ratingStatus?.alreadyRated || submittingRating}
+                    className={`w-10 h-10 rounded-xl border border-border flex items-center justify-center transition-colors ${
+                      ratingStatus?.alreadyRated 
+                        ? "cursor-default opacity-80" 
+                        : "hover:bg-muted cursor-pointer"
                     }`}
-                  />
-                </button>
-              ))}
-            </div>
-            <Button
-              size="sm"
-              className="mt-2"
-              disabled={rating == null || submittingRating}
-              onClick={handleSubmitRating}
-            >
-              {submittingRating ? "Submitting..." : "Submit rating"}
-            </Button>
-            {ratingMessage && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {ratingMessage}
-              </p>
-            )}
-          </Card>
+                    aria-label={`Rate ${idx + 1} star${idx === 0 ? "" : "s"}`}
+                    onClick={() => setRating(idx + 1)}
+                    onMouseEnter={() => !ratingStatus?.alreadyRated && setHoverRating(idx + 1)}
+                    onMouseLeave={() => !ratingStatus?.alreadyRated && setHoverRating(null)}
+                  >
+                    <Star
+                      className={`w-4 h-4 ${
+                        (hoverRating ?? rating ?? 0) > idx
+                          ? "text-emerald-500 fill-emerald-500"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {!ratingStatus?.alreadyRated ? (
+                <Button
+                  size="sm"
+                  className="mt-2 w-full"
+                  disabled={rating == null || submittingRating}
+                  onClick={() => setShowConfirm(true)}
+                >
+                  {submittingRating ? "Submitting..." : "Submit rating"}
+                </Button>
+              ) : (
+                <div className="mt-2 p-3 bg-muted/50 rounded-lg flex items-start gap-2 text-xs text-muted-foreground">
+                  <Info className="w-4 h-4 mt-0.5 text-blue-500" />
+                  <p>Thanks for your feedback! Ratings are final and cannot be edited to ensure transparency.</p>
+                </div>
+              )}
+              
+              {ratingMessage && (
+                <p className={`text-xs mt-1 ${
+                  ratingMessage.includes("Failed") ? "text-destructive" : "text-muted-foreground"
+                }`}>
+                  {ratingMessage}
+                </p>
+              )}
+            </Card>
+          )}
+
+          <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Submit your rating?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You are about to give this collection experience a <strong>{rating}-star</strong> rating. 
+                  Ratings are final and cannot be modified after submission.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Go back</AlertDialogCancel>
+                <AlertDialogAction onClick={handleSubmitRating} className="bg-emerald-600 hover:bg-emerald-700">
+                  Confirm Submission
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>

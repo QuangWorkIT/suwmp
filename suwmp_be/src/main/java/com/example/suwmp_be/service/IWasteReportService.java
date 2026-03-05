@@ -8,6 +8,9 @@ import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.example.suwmp_be.dto.request.RatingRequest;
+import com.example.suwmp_be.dto.response.RatingStatusResponse;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +26,10 @@ public interface IWasteReportService {
     CitizenWasteReportStatusResponse getCitizenReportStatus(Long reportId, UUID citizenId);
 
     List<CitizenWasteReportStatusResponse> getCitizenReports(UUID citizenId);
+
+    void submitRating(Long reportId, UUID citizenId, RatingRequest ratingRequest);
+
+    RatingStatusResponse getRatingStatus(Long reportId, UUID citizenId);
 
     Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable);
 }
