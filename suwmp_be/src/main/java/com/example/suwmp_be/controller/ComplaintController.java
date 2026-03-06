@@ -5,6 +5,7 @@ import com.example.suwmp_be.dto.complaint.ComplaintDTO;
 import com.example.suwmp_be.dto.complaint.UpdateComplaintStatus;
 import com.example.suwmp_be.dto.response.ComplaintResponse;
 import com.example.suwmp_be.service.IComplaintService;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -61,11 +62,12 @@ public class ComplaintController {
         ));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/user")
     public ResponseEntity<BaseResponse<Page<ComplaintResponse>>> getAllComplaintsByUserId(
             Authentication authentication,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "5") @Min(1) int size
     ) {
         var complaints = complaintService.getAllComplaintsByUserId((UUID) authentication.getPrincipal(), Pageable.ofSize(size).withPage(page));
         return ResponseEntity.ok(new BaseResponse<>(
