@@ -53,6 +53,7 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final CollectionAssignmentRepository collectionAssignmentRepo;
     private final EnterpriseUserRepository enterpriseUserRepo;
 
+
     @Override
     public long createNewReport(WasteReportRequest request) {
         WasteReport wasteReport = wasteReportMapper.toEntity(request);

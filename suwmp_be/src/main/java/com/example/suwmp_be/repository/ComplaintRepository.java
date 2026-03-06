@@ -12,6 +12,8 @@ import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.UUID;
 
+import java.util.UUID;
+
 @Repository
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
@@ -26,6 +28,8 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
         c.createdAt ASC
 """)
     Page<Complaint> findAllOrderByCustomStatus(Pageable pageable);
+
+    Page<Complaint> findAllByCitizenId(UUID userId, Pageable pageable);
 
     long countByCitizen_Id(UUID citizenId);
 }
