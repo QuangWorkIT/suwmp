@@ -53,8 +53,6 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final CollectionAssignmentRepository collectionAssignmentRepo;
     private final EnterpriseUserRepository enterpriseUserRepo;
 
-    private final EnterpriseUserRepository enterpriseUserRepo;
-
     @Override
     public long createNewReport(WasteReportRequest request) {
         WasteReport wasteReport = wasteReportMapper.toEntity(request);
@@ -178,13 +176,13 @@ public class WasteReportServiceImpl implements IWasteReportService {
                 .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
 
         Optional<ReportRating> userRating = reportRatingRepo.findByReportIdAndCitizenId(reportId, citizenId);
-        
+
         Double average = reportRatingRepo.getAverageRatingByReportId(reportId);
         long count = reportRatingRepo.countByReportId(reportId);
 
         boolean alreadyRated = userRating.isPresent();
-        boolean canRate = report.getStatus() == WasteReportStatus.COLLECTED 
-                && !alreadyRated 
+        boolean canRate = report.getStatus() == WasteReportStatus.COLLECTED
+                && !alreadyRated
                 && report.getCitizen().getId().equals(citizenId);
 
         return RatingStatusResponse.builder()
@@ -194,10 +192,9 @@ public class WasteReportServiceImpl implements IWasteReportService {
                 .averageRating(average != null ? average : 0.0)
                 .totalRatings(count)
                 .build();
-    @Override
-    public Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable) {
-        return wasteReportRepo.findAssignedTasksByCollector_Id(collectorId, pageable);
+    }
 
+    @Override
     public Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable) {
         return wasteReportRepo.findAssignedTasksByCollector_Id(collectorId, pageable);
     }

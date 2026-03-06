@@ -25,8 +25,10 @@ const ProfileInfo = ({ profile }: ProfileInfoProps) => {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 mb-1">{profile.fullName || "Unknown Citizen"}</h1>
                         <p className="text-sm text-gray-500 flex items-center gap-1.5 mb-1.5">
-                            <Leaf className="w-4 h-4 text-green-500" /> 
-                            Joined in {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                            <Leaf className="w-4 h-4 text-green-500" />
+                            Joined in {profile.createdAt
+                                ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                                : 'N/A'}
                         </p>
                         <p className="text-sm font-medium text-gray-500">
                             <span className="text-gray-700 font-semibold">{profile.points?.toLocaleString() || 0}</span> Points

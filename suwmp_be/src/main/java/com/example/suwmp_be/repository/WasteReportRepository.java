@@ -11,9 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public interface WasteReportRepository extends JpaRepository<WasteReport, Long> {
 
@@ -129,5 +127,12 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             @Param("citizenId") UUID citizenId
     );
 
-    List<WasteReport> findAllByCitizen_Id(UUID citizenId);
+    long countByCitizen_Id(UUID citizenId);
+
+    @Query("""
+    SELECT COALESCE(SUM(wr.volume),0)
+    FROM WasteReport wr
+    WHERE wr.citizen.id = :citizenId
+""")
+    Double sumVolumeByCitizenId(@Param("citizenId") UUID citizenId);
 }

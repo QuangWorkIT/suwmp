@@ -10,7 +10,7 @@ public record CitizenProfileGetResponse(
         String email,
         Instant createdAt,
         int points,
-        int reports,
+        long reports,
         double volume,
-        int feedbacks
+        long feedbacks
 ) { }

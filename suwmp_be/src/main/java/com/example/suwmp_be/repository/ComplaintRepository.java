@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.UUID;
 
 @Repository
@@ -25,5 +27,5 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 """)
     Page<Complaint> findAllOrderByCustomStatus(Pageable pageable);
 
-    List<Complaint> findAllByCitizenId(UUID citizenId);
+    long countByCitizen_Id(UUID citizenId);
 }

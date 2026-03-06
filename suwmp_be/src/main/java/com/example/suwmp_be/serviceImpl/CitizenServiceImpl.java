@@ -29,20 +29,12 @@ public class CitizenServiceImpl {
         User user = userRepository.findById(request.citizenId())
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        int reports = 0;
-        double volume = 0;
-        for (var wr : wasteReportRepository.findAllByCitizen_Id(request.citizenId())) {
-            reports++;
-            volume += wr.getVolume();
-        }
+        long reports = wasteReportRepository.countByCitizen_Id(request.citizenId());
+        double volume = wasteReportRepository.sumVolumeByCitizenId(request.citizenId());
 
-        int points = 0;
-        for (var rt : rewardTransactionRepository.findAllByCitizen_Id(request.citizenId()))
-            points += rt.getPoints();
+        int points = rewardTransactionRepository.sumPointsByCitizenId(request.citizenId());
 
-        int feedbacks = 0;
-        for (var c : complaintRepository.findAllByCitizenId(request.citizenId()))
-            feedbacks++;
+        long feedbacks = complaintRepository.countByCitizen_Id(request.citizenId());
 
         return new CitizenProfileGetResponse(
                 user.getId(),

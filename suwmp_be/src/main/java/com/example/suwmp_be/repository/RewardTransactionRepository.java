@@ -6,9 +6,12 @@ import com.example.suwmp_be.repository.projection.CitizenPointSum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 public interface RewardTransactionRepository extends JpaRepository<RewardTransaction, Long> {
@@ -45,5 +48,10 @@ public interface RewardTransactionRepository extends JpaRepository<RewardTransac
             @Param("date") LocalDate date
     );
 
-    List<RewardTransaction> findAllByCitizen_Id(UUID citizenId);
+    @Query("""
+        SELECT COALESCE(SUM(rt.points),0)
+        FROM RewardTransaction rt
+        WHERE rt.citizen.id = :citizenId
+    """)
+    Integer sumPointsByCitizenId(@Param("citizenId") UUID citizenId);
 }
