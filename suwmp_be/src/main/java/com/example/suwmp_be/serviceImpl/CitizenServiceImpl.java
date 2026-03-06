@@ -49,6 +49,7 @@ public class CitizenServiceImpl {
                 user.getFullName(),
                 user.getPhone(),
                 user.getEmail(),
+                user.getCreatedAt(),
                 points,
                 reports,
                 volume,

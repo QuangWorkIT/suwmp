@@ -1,6 +1,14 @@
 import { Camera, Edit2, Leaf, Phone, Mail, User } from "lucide-react";
+import type { CitizenProfileGetResponse } from "@/types/citizenProfile";
 
-const ProfileInfo = () => {
+interface ProfileInfoProps {
+    profile: CitizenProfileGetResponse;
+}
+
+const ProfileInfo = ({ profile }: ProfileInfoProps) => {
+    // Generate initial for avatar
+    const initial = profile.fullName ? profile.fullName.charAt(0).toUpperCase() : 'U';
+
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             {/* Header Section */}
@@ -8,20 +16,20 @@ const ProfileInfo = () => {
                 <div className="flex items-center gap-6">
                     <div className="relative">
                         <div className="w-24 h-24 bg-gradient-to-br from-[#4ade80] to-[#0f766e] rounded-3xl flex items-center justify-center text-white text-4xl font-semibold shadow-lg">
-                            J
+                            {initial}
                         </div>
                         <button className="absolute -bottom-2 -right-2 bg-white text-green-600 p-2 rounded-full shadow-md hover:bg-gray-50 border border-gray-100 transition-colors focus:outline-none">
                             <Camera className="w-4 h-4" />
                         </button>
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-1">John Doe</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-1">{profile.fullName || "Unknown Citizen"}</h1>
                         <p className="text-sm text-gray-500 flex items-center gap-1.5 mb-1.5">
                             <Leaf className="w-4 h-4 text-green-500" /> 
-                            Eco-conscious Citizen since Jan 2026
+                            Joined in {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                         </p>
                         <p className="text-sm font-medium text-gray-500">
-                            <span className="text-gray-700 font-semibold">2,450</span> Points
+                            <span className="text-gray-700 font-semibold">{profile.points?.toLocaleString() || 0}</span> Points
                         </p>
                     </div>
                 </div>
@@ -42,7 +50,7 @@ const ProfileInfo = () => {
                         <input
                             type="text"
                             className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-md text-sm text-gray-900 bg-gray-50/50 focus:ring-green-500 focus:border-green-500 disabled:opacity-75 disabled:cursor-not-allowed"
-                            value="John Doe"
+                            value={profile.fullName || ""}
                             disabled
                         />
                     </div>
@@ -57,7 +65,7 @@ const ProfileInfo = () => {
                         <input
                             type="text"
                             className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-md text-sm text-gray-900 bg-gray-50/50 focus:ring-green-500 focus:border-green-500 disabled:opacity-75 disabled:cursor-not-allowed"
-                            value="+1(555) 123-4567"
+                            value={profile.phoneNumber || ""}
                             disabled
                         />
                     </div>
@@ -72,7 +80,7 @@ const ProfileInfo = () => {
                         <input
                             type="email"
                             className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-md text-sm text-gray-900 bg-gray-50/50 focus:ring-green-500 focus:border-green-500 disabled:opacity-75 disabled:cursor-not-allowed"
-                            value="john@example.com"
+                            value={profile.email || ""}
                             disabled
                         />
                     </div>
