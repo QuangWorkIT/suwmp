@@ -16,6 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -49,5 +51,11 @@ public class ComplaintService implements IComplaintService {
         complaint.setStatus(status.getStatus());
         Complaint updatedComplaint = complaintRepository.save(complaint);
         return complaintMapper.toDTO(updatedComplaint);
+    }
+
+    @Override
+    public Page<ComplaintResponse> getAllComplaintsByUserId(UUID userId, Pageable pageable) {
+        Page<Complaint> complaints = complaintRepository.findAllByCitizenId(userId, pageable);
+        return complaintMapper.toPageResponse(complaints);
     }
 }

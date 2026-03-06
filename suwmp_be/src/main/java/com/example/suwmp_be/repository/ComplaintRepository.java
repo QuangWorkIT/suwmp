@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.UUID;
+
 @Repository
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
@@ -21,4 +23,6 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
         c.createdAt ASC
 """)
     Page<Complaint> findAllOrderByCustomStatus(Pageable pageable);
+
+    Page<Complaint> findAllByCitizenId(UUID userId, Pageable pageable);
 }
