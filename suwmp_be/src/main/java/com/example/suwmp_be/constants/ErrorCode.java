@@ -30,7 +30,9 @@ public enum ErrorCode {
 
     DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
     NOT_FOUND_DATA("Not Found", "Data is not found"),
-    CAPACITY_NOT_EXISTED("Bad Request", "Corresponding enterprise capacity is not existed");
+    CAPACITY_NOT_EXISTED("Bad Request", "Corresponding enterprise capacity is not existed"),
+    ALREADY_RATED("Bad Request", "You have already rated this report"),
+    INVALID_REPORT_STATUS("Bad Request", "Rating is only allowed for collected reports");
 
     ErrorCode(String title, String message) {
         this.title = title;

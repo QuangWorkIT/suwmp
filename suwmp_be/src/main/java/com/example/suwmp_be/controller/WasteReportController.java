@@ -1,12 +1,15 @@
 package com.example.suwmp_be.controller;
 
-
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.PaginatedResponse;
 import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
+import com.example.suwmp_be.dto.request.RatingRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
+import com.example.suwmp_be.dto.response.RatingStatusResponse;
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
+
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.service.IWasteReportService;
@@ -174,6 +177,39 @@ public class WasteReportController {
         );
     }
 
+    @PreAuthorize("hasRole('CITIZEN')")
+    @PostMapping("/{id}/rating")
+    @Operation(
+            summary = "Submit a rating for a waste report",
+            description = "Submit a star rating (1-5) for a completed waste report."
+    )
+    public ResponseEntity<BaseResponse<Void>> submitRating(
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody RatingRequest request,
+            Authentication authentication
+    ) {
+        UUID citizenId = (UUID) authentication.getPrincipal();
+        wasteService.submitRating(id, citizenId, request);
+        return ResponseEntity.ok(new BaseResponse<>(true, "Submitted rating successfully"));
+    }
+
+    @PreAuthorize("hasRole('CITIZEN')")
+    @GetMapping("/{id}/rating")
+    @Operation(
+            summary = "Get rating status for a waste report",
+            description = "Check if a report can be rated and see existing rating summary."
+    )
+    public ResponseEntity<BaseResponse<RatingStatusResponse>> getRatingStatus(
+            @PathVariable @Positive Long id,
+            Authentication authentication
+    ) {
+        UUID citizenId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Get rating status successfully",
+                wasteService.getRatingStatus(id, citizenId)
+        ));
+    }
 
     @PreAuthorize("hasRole('COLLECTOR')")
     @GetMapping("/collectors/tasks/me")
