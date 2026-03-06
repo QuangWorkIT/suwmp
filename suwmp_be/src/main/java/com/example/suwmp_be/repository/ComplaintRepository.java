@@ -25,4 +25,6 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     Page<Complaint> findAllOrderByCustomStatus(Pageable pageable);
 
     Page<Complaint> findAllByCitizenId(UUID userId, Pageable pageable);
+
+    long countByCitizen_Id(UUID citizenId);
 }

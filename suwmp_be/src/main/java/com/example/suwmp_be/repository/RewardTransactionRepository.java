@@ -44,4 +44,11 @@ public interface RewardTransactionRepository extends JpaRepository<RewardTransac
     List<CitizenPointSum> sumPointsUntil(
             @Param("date") LocalDate date
     );
+
+    @Query("""
+        SELECT COALESCE(SUM(rt.points),0)
+        FROM RewardTransaction rt
+        WHERE rt.citizen.id = :citizenId
+    """)
+    Integer sumPointsByCitizenId(@Param("citizenId") UUID citizenId);
 }
