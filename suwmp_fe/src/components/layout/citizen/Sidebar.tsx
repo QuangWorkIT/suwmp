@@ -110,9 +110,7 @@ function Sidebar() {
                 transition={{ delay: 0.4 }}
                 className="p-3 border-t border-foreground/20 mt-auto"
             >
-                <Link to="/citizen/profile">
-                    <UserProfileBadge />
-                </Link>
+                <UserProfileBadge />
             </motion.div>
         </motion.aside>
     );
