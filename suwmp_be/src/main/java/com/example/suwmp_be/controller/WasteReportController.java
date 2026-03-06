@@ -215,7 +215,7 @@ public class WasteReportController {
     @GetMapping("/collectors/tasks/me")
     public ResponseEntity<PaginatedResponse<IAssignedTaskView>> getCollectorTasks(
             Authentication authentication,
-            @PageableDefault(page = 0, size = 4, sort = "startCollectAt", direction = Sort.Direction.ASC) Pageable pageable
+            @PageableDefault(page = 0, size = 6, sort = "startCollectAt", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         Page<IAssignedTaskView> tasks = wasteService.getCollectorAssignedTasks(
                 (UUID) authentication.getPrincipal(), pageable);

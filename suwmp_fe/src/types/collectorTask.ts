@@ -11,5 +11,6 @@ export type AssignedTask = {
     collectorId: string;
     collectTime: string;
     photoUrl: string;
-    address: string
+    address: string;
+    description: string
 }

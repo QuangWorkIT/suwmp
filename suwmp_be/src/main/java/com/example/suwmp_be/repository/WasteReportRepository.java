@@ -92,6 +92,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
                 wr.priority         AS priority,
                 wr.status           AS currentStatus,
                 wr.photoUrl         AS photoUrl,
+                wr.description      AS description,
                 citizen.fullName    AS citizenName,
                 citizen.phone       AS citizenPhone,
                 collector.id        AS collectorId,

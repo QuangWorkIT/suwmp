@@ -8,6 +8,7 @@ public interface IAssignedTaskView {
     Double getRequestLongitude();
     Double getRequestLatitude();
     Double getVolume();
+    String getDescription();
     String getPriority();
     String getCurrentStatus();
     String getCitizenName();

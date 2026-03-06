@@ -204,7 +204,7 @@ const ReportHistoryPage = () => {
                             <div
                                 key={report.id}
                                 onClick={() =>
-                                    navigate(`/reports/${report.id}`)
+                                    navigate(`/citizen/reports/${report.id}`)
                                 }
                                 className={`p-6 hover:bg-gray-50 cursor-pointer group ${
                                     viewMode === "grid"
