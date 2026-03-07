@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.IOException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -205,5 +207,29 @@ public class GlobalExceptionHandling {
                 .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException exception) {
+        log.error("Max upload size exceeded", exception);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .title("Payload Too Large")
+                .message("The uploaded file exceeds the maximum allowed size")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.valueOf(413)).body(errorResponse);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ErrorResponse> handleMultipartException(MultipartException exception) {
+        log.error("Multipart exception occurred", exception);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .title("Multipart Error")
+                .message("An error occurred during multipart file processing")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 }

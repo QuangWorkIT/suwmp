@@ -1,6 +1,6 @@
 import authClient from "@/config/axios";
 import type { AssignedTask } from "@/types/collectorTask";
-import type { AttachmentResponse, CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, RatingStatusResponse, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, RatingStatusResponse, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
 import { reverseGeocode } from "@/utilities/geocoding";
 import s3Service from "./S3Service";
@@ -101,30 +101,6 @@ const wasteReportService = {
     submitRating: async (reportId: number, rating: number): Promise<void> => {
         await authClient.post(`/waste-reports/${reportId}/rating`, { rating });
     },
-    getAttachments: async (reportId: number): Promise<AttachmentResponse[]> => {
-        try {
-            const response = await authClient.get(`/waste-reports/${reportId}/attachments`);
-            return response.data.data;
-        } catch (error) {
-            console.error("Error getting attachments:", error);
-            throw error;
-        }
-    },
-    uploadAttachments: async (reportId: number, files: File[], description?: string) => {
-        try {
-            const formData = new FormData();
-            for (const file of files) {
-                formData.append("files", file);
-            }
-            if (description) formData.append("description", description);
-
-            const response = await authClient.post(`/waste-reports/${reportId}/attachments`, formData);
-            return response.data;
-        } catch (error) {
-            console.error("Error uploading attachments:", error);
-            throw error;
-        }
-    },
     getRatingStatus: async (reportId: number): Promise<RatingStatusResponse> => {
         const response = await authClient.get(`/waste-reports/${reportId}/rating`);
         return response.data.data as RatingStatusResponse;
@@ -133,4 +109,4 @@ const wasteReportService = {
     uploadImage: s3Service.uploadImage,
 }
 
-export default wasteReportService
+export default wasteReportService;
