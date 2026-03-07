@@ -27,4 +27,6 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     Page<Complaint> findAllByCitizenId(UUID userId, Pageable pageable);
 
     long countByCitizen_Id(UUID citizenId);
+
+    java.util.Optional<Complaint> findByWasteReport_Id(Long wasteReportId);
 }

@@ -14,4 +14,8 @@ public interface IComplaintService {
     ComplaintDTO updateComplaintStatus(Long id, UpdateComplaintStatus status);
 
     Page<ComplaintResponse> getAllComplaintsByUserId(UUID userId, Pageable pageable);
+
+    ComplaintDTO submitIssueReport(Long reportId, UUID userId, String description, org.springframework.web.multipart.MultipartFile file);
+
+    ComplaintDTO getIssueReport(Long reportId, UUID userId);
 }
