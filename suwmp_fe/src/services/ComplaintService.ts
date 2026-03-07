@@ -40,5 +40,19 @@ export const ComplaintService = {
             console.error(error);
             throw error;
         }
-    }
+    },
+
+    createComplaint: async (wasteReportId: number, description: string, photoUrl?: string | null): Promise<{ data: Complaint; message: string; success: boolean }> => {
+        try {
+            const response = await authClient.post(`/complaints`, {
+                wasteReportId,
+                description,
+                photoUrl: photoUrl ?? null,
+            });
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    },
 };

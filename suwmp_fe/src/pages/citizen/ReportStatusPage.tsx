@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CitizenWasteReportStatus } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/WasteReportService";
+import { ComplaintService } from "@/services/ComplaintService";
 import PageLoading from "@/components/common/PageLoading";
 import {
   ArrowLeft,
@@ -107,11 +108,8 @@ function ReportStatusPage() {
 
     try {
       setSubmittingIssue(true);
-      // Since uploadAttachments is deleted, and it was used to update description,
-      // we might need a dedicated updateDescription method or similar.
-      // For now, I will just show a message or use a generic update if available.
-      // Given the instruction to delete, I'll alert that this is disabled or remove the feature.
-      toast.info("Issue reporting is temporarily limited to text. This feature is being updated.");
+      await ComplaintService.createComplaint(Number(id), issueDescription.trim());
+      toast.success("Your complaint has been submitted successfully.");
       setShowIssueForm(false);
       setIssueDescription("");
     } catch (err) {

@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { reverseGeocode } from "@/utilities/geocoding";
+import s3Service from "@/services/S3Service";
 import wasteReportService from "@/services/WasteReportService";
 import type { AssignedTask } from "@/types/collectorTask";
 import type { PaginatedResponse } from "@/types/response";
@@ -39,7 +41,26 @@ function CollectorTask() {
             setIsFetching(true)
             const response = await wasteReportService.getCollectorAssignedTasks(page, size);
 
-            handlePaging(response)
+            // Fetch images and geocode addresses in parallel
+            const enrichedTasks = await Promise.all(
+                response.data.map(async (task) => {
+                    const [photoRes, address] = await Promise.all([
+                        task.photoUrl ? s3Service.getImage(task.photoUrl).catch(() => ({ data: "" })) : Promise.resolve({ data: "" }),
+                        reverseGeocode(task.requestLongitude, task.requestLatitude).catch(() => "Unknown Address")
+                    ]);
+                    
+                    return {
+                        ...task,
+                        address,
+                        photoUrl: photoRes.data || ""
+                    };
+                })
+            );
+
+            handlePaging({
+                ...response,
+                data: enrichedTasks
+            });
             setIsFetching(false)
         } catch (error) {
             toast.error("Error fetching tasks")

@@ -11,6 +11,8 @@ import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.ComplaintRepository;
 import com.example.suwmp_be.service.IComplaintService;
 import com.example.suwmp_be.service.IS3Service;
+import com.example.suwmp_be.repository.UserRepository;
+import com.example.suwmp_be.repository.WasteReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +28,8 @@ public class ComplaintService implements IComplaintService {
     private final ComplaintRepository complaintRepository;
     private final ComplaintMapper complaintMapper;
     private final IS3Service s3Service;
+    private final UserRepository userRepository;
+    private final WasteReportRepository wasteReportRepository;
 
     @Override
     public Page<ComplaintResponse> getAllComplaints(Pageable pageable) {
@@ -57,5 +61,24 @@ public class ComplaintService implements IComplaintService {
     public Page<ComplaintResponse> getAllComplaintsByUserId(UUID userId, Pageable pageable) {
         Page<Complaint> complaints = complaintRepository.findAllByCitizenId(userId, pageable);
         return complaintMapper.toPageResponse(complaints);
+    }
+
+    @Override
+    public ComplaintDTO createComplaint(UUID userId, Long wasteReportId, String description, String photoUrl) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        var report = wasteReportRepository.findById(wasteReportId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
+
+        Complaint complaint = Complaint.builder()
+                .citizen(user)
+                .wasteReport(report)
+                .description(description)
+                .photoUrl(photoUrl)
+                .status(ComplaintStatus.OPEN)
+                .build();
+
+        Complaint saved = complaintRepository.save(complaint);
+        return complaintMapper.toDTO(saved);
     }
 }

@@ -2,10 +2,7 @@ import authClient from "@/config/axios";
 import type { AssignedTask } from "@/types/collectorTask";
 import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, RatingStatusResponse, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
-import { reverseGeocode } from "@/utilities/geocoding";
-import s3Service from "./S3Service";
 import type { PaginatedResponse } from "@/types/response";
-
 const wasteReportService = {
     createWasteReport: async (data: WasteReportRequest) => {
         try {
@@ -53,34 +50,7 @@ const wasteReportService = {
     getCollectorAssignedTasks: async (page: number, size: number): Promise<PaginatedResponse<AssignedTask>> => {
         try {
             const response = await authClient.get("/waste-reports/collectors/tasks/me", { params: { page, size } });
-
-            // Map each task to a promise that performs image fetching and geocoding in parallel
-            const tasksPromises = response.data.data.map(async (task: AssignedTask) => {
-                try {
-                    const [photoRes, address] = await Promise.all([
-                        s3Service.getImage(task.photoUrl).catch(() => ({ data: "" })),
-                        reverseGeocode(task.requestLongitude, task.requestLatitude).catch(() => "Unknown Address")
-                    ]);
-
-                    return {
-                        ...task,
-                        address: address,
-                        photoUrl: photoRes.data || ""
-                    };
-                } catch (itemError) {
-                    console.error(`Error processing task ${task.requestId}:`, itemError);
-                    return {
-                        ...task,
-                        address: "Unknown Address",
-                        photoUrl: ""
-                    };
-                }
-            });
-
-            // Process all task promises in parallel
-            const arr = await Promise.all(tasksPromises);
-
-            return { ...response.data, data: arr };
+            return response.data;
         } catch (error) {
             console.error("Error getting collector assigned tasks:", error);
             throw error;
@@ -105,8 +75,6 @@ const wasteReportService = {
         const response = await authClient.get(`/waste-reports/${reportId}/rating`);
         return response.data.data as RatingStatusResponse;
     },
-    getImage: s3Service.getImage,
-    uploadImage: s3Service.uploadImage,
 }
 
 export default wasteReportService;

@@ -13,5 +13,7 @@ public interface IComplaintService {
     ComplaintDTO getComplaintById(Long id);
     ComplaintDTO updateComplaintStatus(Long id, UpdateComplaintStatus status);
 
+    ComplaintDTO createComplaint(UUID userId, Long wasteReportId, String description, String photoUrl);
+
     Page<ComplaintResponse> getAllComplaintsByUserId(UUID userId, Pageable pageable);
 }

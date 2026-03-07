@@ -23,6 +23,25 @@ public class ComplaintController {
 
     private final IComplaintService complaintService;
 
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping
+    public ResponseEntity<BaseResponse<ComplaintDTO>> createComplaint(
+            Authentication authentication,
+            @RequestBody com.example.suwmp_be.dto.complaint.CreateComplaintRequest request
+    ) {
+        var complaint = complaintService.createComplaint(
+                (UUID) authentication.getPrincipal(),
+                request.getWasteReportId(),
+                request.getDescription(),
+                request.getPhotoUrl()
+        );
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Complaint created successfully",
+                complaint
+        ));
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<BaseResponse<Page<ComplaintResponse>>> getAllComplaints(
