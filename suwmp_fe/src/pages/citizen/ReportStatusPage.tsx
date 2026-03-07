@@ -61,6 +61,8 @@ function ReportStatusPage() {
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [issueDescription, setIssueDescription] = useState("");
   const [submittingIssue, setSubmittingIssue] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -137,6 +139,25 @@ function ReportStatusPage() {
       setRatingMessage("Failed to submit rating. Please try again.");
     } finally {
       setSubmittingRating(false);
+    }
+  };
+  const handleCancelRequest = async () => {
+    if (!id || report?.status !== "PENDING") return;
+
+    try {
+      setCanceling(true);
+      await wasteReportService.cancelWasteReport({
+        wasteReportId: Number(id),
+        note: "Cancelled by citizen",
+      });
+      toast.success("Request cancelled successfully");
+      navigate("/citizen/reports");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to cancel request. Please try again.");
+    } finally {
+      setCanceling(false);
+      setShowCancelConfirm(false);
     }
   };
 
@@ -325,8 +346,32 @@ function ReportStatusPage() {
             <CollectorAndHelpCards 
               collectorName={report.collectorName} 
               onReportIssue={() => setShowIssueForm(true)}
+              onCancelRequest={() => setShowCancelConfirm(true)}
+              isCancelable={report.status === "PENDING"}
+              isCanceling={canceling}
             />
           </div>
+
+          <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to cancel this waste collection request? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={canceling}>No, keep it</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleCancelRequest} 
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                  disabled={canceling}
+                >
+                  {canceling ? "Canceling..." : "Yes, cancel request"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
 
 
@@ -515,9 +560,15 @@ function ReportStatusPage() {
 function CollectorAndHelpCards({
   collectorName,
   onReportIssue,
+  onCancelRequest,
+  isCancelable,
+  isCanceling,
 }: {
   collectorName: string | null;
   onReportIssue: () => void;
+  onCancelRequest: () => void;
+  isCancelable: boolean;
+  isCanceling: boolean;
 }) {
   return (
     <>
@@ -547,9 +598,14 @@ function CollectorAndHelpCards({
           <AlertCircle className="w-4 h-4" />
           Report an issue
         </Button>
-        <Button variant="ghost" className="w-full justify-start text-destructive gap-2">
+        <Button 
+          variant="ghost" 
+          className={`w-full justify-start text-destructive gap-2 ${!isCancelable && "opacity-50"}`}
+          onClick={onCancelRequest}
+          disabled={!isCancelable || isCanceling}
+        >
           <X className="w-4 h-4" />
-          Cancel this request
+          {isCanceling ? "Canceling..." : "Cancel this request"}
         </Button>
       </Card>
     </>

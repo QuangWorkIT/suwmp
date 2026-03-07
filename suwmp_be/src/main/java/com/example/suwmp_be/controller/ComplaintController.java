@@ -2,9 +2,11 @@ package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.complaint.ComplaintDTO;
+import com.example.suwmp_be.dto.complaint.CreateComplaintRequest;
 import com.example.suwmp_be.dto.complaint.UpdateComplaintStatus;
 import com.example.suwmp_be.dto.response.ComplaintResponse;
 import com.example.suwmp_be.service.IComplaintService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,7 +29,7 @@ public class ComplaintController {
     @PostMapping
     public ResponseEntity<BaseResponse<ComplaintDTO>> createComplaint(
             Authentication authentication,
-            @RequestBody com.example.suwmp_be.dto.complaint.CreateComplaintRequest request
+            @Valid @RequestBody CreateComplaintRequest request
     ) {
         var complaint = complaintService.createComplaint(
                 (UUID) authentication.getPrincipal(),

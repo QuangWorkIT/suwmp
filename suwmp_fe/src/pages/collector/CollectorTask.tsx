@@ -3,8 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { reverseGeocode } from "@/utilities/geocoding";
-import s3Service from "@/services/S3Service";
 import wasteReportService from "@/services/WasteReportService";
 import type { AssignedTask } from "@/types/collectorTask";
 import type { PaginatedResponse } from "@/types/response";
@@ -20,7 +18,7 @@ import {
     Phone,
     Search,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 
@@ -35,34 +33,20 @@ function CollectorTask() {
     const [totalPages, setTotalPages] = useState(0)
     const [hasNext, setHasNext] = useState(false)
     const [hasPrev, setHasPrev] = useState(false)
+    const latestFetchIdRef = useRef(0)
 
     const fetchTasks = async (page: number, size: number = 4) => {
+        const fetchId = ++latestFetchIdRef.current
         try {
             setIsFetching(true)
             const response = await wasteReportService.getCollectorAssignedTasks(page, size);
 
-            // Fetch images and geocode addresses in parallel
-            const enrichedTasks = await Promise.all(
-                response.data.map(async (task) => {
-                    const [photoRes, address] = await Promise.all([
-                        task.photoUrl ? s3Service.getImage(task.photoUrl).catch(() => ({ data: "" })) : Promise.resolve({ data: "" }),
-                        reverseGeocode(task.requestLongitude, task.requestLatitude).catch(() => "Unknown Address")
-                    ]);
-                    
-                    return {
-                        ...task,
-                        address,
-                        photoUrl: photoRes.data || ""
-                    };
-                })
-            );
+            if (fetchId !== latestFetchIdRef.current) return
 
-            handlePaging({
-                ...response,
-                data: enrichedTasks
-            });
+            handlePaging(response)
             setIsFetching(false)
         } catch (error) {
+            if (fetchId !== latestFetchIdRef.current) return
             toast.error("Error fetching tasks")
             setIsFetching(false)
             console.log("Error fetching tasks", error);
@@ -218,9 +202,13 @@ function CollectorTask() {
                                     >
                                         <Card className="p-5">
                                             <div className="flex flex-col md:flex-row gap-4 items-center">
-                                                <div className={`group w-24 h-24 rounded-lg flex items-center justify-center shadow-md`}>
-                                                    <img src={task.photoUrl} alt={task.wasteTypeName}
-                                                        className="w-full h-full object-cover rounded-lg" />
+                                                <div className={`group w-24 h-24 rounded-lg flex items-center justify-center shadow-md bg-muted`}>
+                                                    {task.photoUrl ? (
+                                                        <img src={task.photoUrl} alt={task.wasteTypeName}
+                                                            className="w-full h-full object-cover rounded-lg" />
+                                                    ) : (
+                                                        <Package className="w-8 h-8 text-muted-foreground/40" />
+                                                    )}
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">

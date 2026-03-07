@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -64,6 +65,7 @@ public class ComplaintService implements IComplaintService {
     }
 
     @Override
+    @Transactional
     public ComplaintDTO createComplaint(UUID userId, Long wasteReportId, String description, String photoUrl) {
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));

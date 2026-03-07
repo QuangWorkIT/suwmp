@@ -10,6 +10,6 @@ export type AssignedTask = {
     citizenPhone: string;
     collectorId: string;
     collectTime: string;
-    photoUrl: string;
-    address: string
+    photoUrl?: string | null;
+    address?: string;
 }
