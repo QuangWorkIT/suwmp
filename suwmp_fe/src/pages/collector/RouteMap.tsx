@@ -12,6 +12,7 @@ import {
     Camera,
     Upload,
     CheckCircle2,
+    Loader2,
 } from "lucide-react";
 import { useAppSelector } from "@/redux/hooks";
 import { Link } from "react-router";
@@ -28,6 +29,7 @@ export default function RouteMap() {
     const [isNavigating, setIsNavigating] = useState(false);
     const [isUploaded, setIsUploaded] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
+    const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
     const mapRef = useRef<trackasiagl.Map | null>(null)
     const mapContainerRef = useRef<HTMLDivElement | null>(null)
@@ -48,8 +50,9 @@ export default function RouteMap() {
 
         mapRef.current = map
 
-        map.on("load", () => {
+        map.on("load", async () => {
 
+            // render task marker
             if (!taskMarkerRef.current) {
                 taskMarkerRef.current = new Marker()
                     .setLngLat([
@@ -59,13 +62,44 @@ export default function RouteMap() {
                     .addTo(map)
             }
 
+            // render collector marker
+            const { coords } = await getUserLocation()
+            const userPosition: [number, number] = [
+                coords.longitude,
+                coords.latitude
+            ]
+
+            if (!collectorMarkerRef.current) {
+                const el = createTruckMarker()
+                collectorMarkerRef.current = new Marker({ element: el })
+                    .setLngLat(userPosition)
+                    .addTo(map)
+            } else {
+                collectorMarkerRef.current.setLngLat(userPosition)
+            }
+
             map.flyTo({
-                center: [
-                    currentTask.requestLongitude,
-                    currentTask.requestLatitude
-                ],
+                center: userPosition,
                 zoom: 16
             })
+
+            // load route after markers are ready
+            setIsLoadingRoute(true)
+            try {
+                const coordinates = await getCoordinates(
+                    userPosition,
+                    [currentTask.requestLongitude, currentTask.requestLatitude]
+                )
+
+                if (!coordinates) return
+
+                updateRoute(coordinates,
+                    userPosition,
+                    [currentTask.requestLongitude, currentTask.requestLatitude]
+                )
+            } finally {
+                setIsLoadingRoute(false)
+            }
         })
 
         return () => {
@@ -74,60 +108,10 @@ export default function RouteMap() {
 
             map.remove()
             mapRef.current = null
-        }
-    }, [currentTask])
 
-
-    // load route
-    useEffect(() => {
-        if (!mapRef.current || !currentTask) return
-
-        const loadRoute = async () => {
-
-            const { coords } = await getUserLocation()
-
-            const userPosition: [number, number] = [
-                coords.longitude,
-                coords.latitude
-            ]
-
-            const map = mapRef.current
-            if (!map) return
-
-            /* ---------- Render collector marker ---------- */
-
-            if (!collectorMarkerRef.current) {
-                const el = createTruckMarker()
-
-                collectorMarkerRef.current = new Marker({ element: el })
-                    .setLngLat(userPosition)
-                    .addTo(map)
-            } else {
-                collectorMarkerRef.current.setLngLat(userPosition)
-            }
-
-            /* ---------- Get route ---------- */
-
-            const coordinates = await getCoordinates(
-                userPosition,
-                [currentTask.requestLongitude, currentTask.requestLatitude]
-            )
-
-            if (!coordinates) return
-
-            updateRoute(coordinates,
-                userPosition,
-                [currentTask.requestLongitude, currentTask.requestLatitude]
-            )
-        }
-
-        loadRoute()
-
-        return () => {
             collectorMarkerRef.current?.remove()
             collectorMarkerRef.current = null
         }
-
     }, [currentTask])
 
     // helper to render route
@@ -176,7 +160,7 @@ export default function RouteMap() {
             }
         })
 
-        // 🔹 Fit map to both positions
+        // Fit map to both positions
         const bounds = new trackasiagl.LngLatBounds()
         bounds.extend(userPosition)
         bounds.extend(taskPosition)
@@ -212,7 +196,7 @@ export default function RouteMap() {
                 <div className="flex items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>Optimal Route</h1>
-                        <p className="text-sm text-muted-foreground">Generated path for 3 collection stops</p>
+                        <p className="text-sm text-muted-foreground">Generated path for a collection stop</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -251,6 +235,22 @@ export default function RouteMap() {
                         {/* Map Area */}
                         <Card className="relative min-h-[600px] p-0 overflow-hidden bg-muted flex items-center justify-center border-border">
                             <div ref={mapContainerRef} className="w-full h-full"></div>
+
+                            {/* Route loading overlay */}
+                            {isLoadingRoute && (
+                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm transition-opacity">
+                                    <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-card/90 shadow-xl border border-border">
+                                        <div className="relative">
+                                            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+                                            <NavIcon className="w-4 h-4 text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-sm font-bold">Calculating Route</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5">Finding the best path to collection point...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </Card>
 
                         {/* Right Sidebar: Collection Details */}
@@ -331,7 +331,7 @@ export default function RouteMap() {
                                                         <Camera className="w-6 h-6 text-muted-foreground" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-bold">Upload Photo Proof</p>
+                                                        <p className="text-sm font-bold">Upload Photo</p>
                                                         <p className="text-xs text-muted-foreground">Required to complete task</p>
                                                     </div>
                                                     <Button variant="outline" size="sm" className="h-8 text-xs rounded-lg border-blue-200">
