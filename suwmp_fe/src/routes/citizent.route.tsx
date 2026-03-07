@@ -7,6 +7,8 @@ import LeaderBoard from "@/pages/citizen/LeaderBoard";
 import FeedBack from "@/pages/citizen/FeedBack";
 import WasteReportProcess from "@/pages/citizen/WasteReportProcess";
 import ReportStatusPage from "@/pages/citizen/ReportStatusPage";
+import CitizenProfileMain from "@/components/layout/citizen/profile/CitizenProfileMain";
+import ProfileDetail from "@/components/common/citizen/profile/ProfileDetail";
 
 export const citizenRoutes = [
     {
@@ -33,6 +35,22 @@ export const citizenRoutes = [
         element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
         children: [
             { path: "/citizen/new-report", element: <WasteReportProcess /> },
+        ],
+    },
+    {
+        element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
+        children: [
+            {
+                path: "/citizen/profile",
+                element: <CitizenProfileMain />,
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to="details" replace />,
+                    },
+                    { path: "details", element: <ProfileDetail /> },
+                ]
+            }
         ],
     },
 ];

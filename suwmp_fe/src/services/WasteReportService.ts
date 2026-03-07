@@ -1,6 +1,6 @@
 import authClient from "@/config/axios";
 import type { AssignedTask } from "@/types/collectorTask";
-import type { AttachmentResponse, CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { AttachmentResponse, CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, RatingStatusResponse, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import { standardizeWasteReportRequest } from "@/utilities/format";
 import { reverseGeocode } from "@/utilities/geocoding";
 import s3Service from "./S3Service";
@@ -125,6 +125,12 @@ const wasteReportService = {
             throw error;
         }
     },
+    getRatingStatus: async (reportId: number): Promise<RatingStatusResponse> => {
+        const response = await authClient.get(`/waste-reports/${reportId}/rating`);
+        return response.data.data as RatingStatusResponse;
+    },
+    getImage: s3Service.getImage,
+    uploadImage: s3Service.uploadImage,
 }
 
 export default wasteReportService

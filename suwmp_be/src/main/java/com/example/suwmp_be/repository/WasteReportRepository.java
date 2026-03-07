@@ -130,4 +130,13 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
     List<IReportHistoryView> findReportHistoryByCitizenId(
             @Param("citizenId") UUID citizenId
     );
+
+    long countByCitizen_Id(UUID citizenId);
+
+    @Query("""
+    SELECT COALESCE(SUM(wr.volume),0)
+    FROM WasteReport wr
+    WHERE wr.citizen.id = :citizenId
+""")
+    Double sumVolumeByCitizenId(@Param("citizenId") UUID citizenId);
 }

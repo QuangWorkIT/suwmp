@@ -1,6 +1,5 @@
 import { api } from "@/config/api";
 import type { LoginRequest, RegisterRequest, ResetPasswordRequest } from "../types/auth";
-import type { BaseResponse } from "@/types/baseResponse";
 
 export const AuthService = {
   login: async (payload: LoginRequest) => {
@@ -63,6 +62,17 @@ export const AuthService = {
         error: message,
         status: error.response?.status,
       };
+    }
+  },
+
+  logout: async () => {
+    try {
+      await api.delete("/auth/logout", {
+        withCredentials: true,
+      });
+    } catch (error: any) {
+      console.log(error);
+      throw error;
     }
   },
 

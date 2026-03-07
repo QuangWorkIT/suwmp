@@ -72,3 +72,11 @@ export type AttachmentResponse = {
     fileName: string;
     uploadedAt: string;
 };
+
+export interface RatingStatusResponse {
+    canRate: boolean;
+    alreadyRated: boolean;
+    userRating: number | null;
+    averageRating: number;
+    totalRatings: number;
+}
