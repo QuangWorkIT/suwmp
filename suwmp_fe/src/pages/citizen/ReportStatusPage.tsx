@@ -40,7 +40,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import type { RatingStatusResponse } from "@/types/WasteReportRequest";
-import type { Complaint } from "@/types/complaint";
+import type { ComplaintResponse } from "@/services/WasteReportService";
 import { toast } from "sonner";
 
 function ReportStatusPage() {
@@ -64,7 +64,8 @@ function ReportStatusPage() {
   const [issueDescription, setIssueDescription] = useState("");
   const [issueFile, setIssueFile] = useState<File | null>(null);
   const [submittingIssue, setSubmittingIssue] = useState(false);
-  const [existingIssue, setExistingIssue] = useState<Complaint | null>(null);
+  const [existingIssue, setExistingIssue] = useState<ComplaintResponse | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -149,6 +150,10 @@ function ReportStatusPage() {
     try {
       const result = await wasteReportService.submitIssue(Number(id), issueDescription, issueFile ?? undefined);
       setExistingIssue(result);
+      // Reset form state
+      setIssueDescription("");
+      setIssueFile(null);
+      setFileError(null);
       setShowIssueDialog(false);
       toast.success("Issue submitted successfully");
     } catch (err: any) {
@@ -355,11 +360,9 @@ function ReportStatusPage() {
               <div className="flex items-center gap-2 mb-4">
                 <Info className="w-5 h-5 text-orange-500" />
                 <h3 className="font-semibold text-orange-950 text-lg">Reported Issue</h3>
-                {existingIssue.status && (
-                  <Badge variant="outline" className="ml-auto bg-orange-100/50 text-orange-800 border-orange-200">
-                    {existingIssue.status}
-                  </Badge>
-                )}
+                <Badge variant="outline" className="ml-auto bg-orange-100/50 text-orange-800 border-orange-200">
+                  {existingIssue.status}
+                </Badge>
               </div>
               <div className="space-y-4">
                 <div>
@@ -378,12 +381,6 @@ function ReportStatusPage() {
                         className="w-full h-auto object-cover max-h-64 transition-transform group-hover:scale-105"
                       />
                     </div>
-                  </div>
-                )}
-                {existingIssue.createdAt && (
-                  <div className="pt-2 flex items-center gap-1.5 text-xs text-orange-600 font-medium">
-                    <Clock className="w-3.5 h-3.5" />
-                    Submitted on {new Date(existingIssue.createdAt).toLocaleString()}
                   </div>
                 )}
               </div>
@@ -557,12 +554,28 @@ function ReportStatusPage() {
                       id="file"
                       type="file"
                       accept=".jpg,.jpeg,.png,.pdf"
-                      className="cursor-pointer file:cursor-pointer file:text-emerald-700 hover:bg-muted/50 transition-colors"
-                      onChange={(e) => setIssueFile(e.target.files?.[0] || null)}
+                      className={`cursor-pointer file:cursor-pointer file:text-emerald-700 hover:bg-muted/50 transition-colors ${fileError ? 'border-destructive' : ''}`}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && file.size > 5 * 1024 * 1024) {
+                          setFileError("File must be <= 5MB");
+                          setIssueFile(null);
+                          e.target.value = ""; // Clear input
+                        } else {
+                          setFileError(null);
+                          setIssueFile(file || null);
+                        }
+                      }}
                     />
-                    <p className="text-[11px] text-muted-foreground">
-                      Accepted types: .jpg, .png, .pdf (Max 5MB)
-                    </p>
+                    {fileError ? (
+                      <p className="text-[11px] text-destructive font-medium">
+                        {fileError}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        Accepted types: .jpg, .png, .pdf (Max 5MB)
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

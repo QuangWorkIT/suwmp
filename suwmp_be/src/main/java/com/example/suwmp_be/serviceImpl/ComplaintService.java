@@ -11,7 +11,6 @@ import com.example.suwmp_be.entity.User;
 import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.exception.*;
 import com.example.suwmp_be.repository.ComplaintRepository;
-import com.example.suwmp_be.repository.UserRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.service.IComplaintService;
 import com.example.suwmp_be.service.IS3Service;
@@ -22,8 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 
@@ -35,7 +32,6 @@ public class ComplaintService implements IComplaintService {
     private final ComplaintMapper complaintMapper;
     private final IS3Service s3Service;
     private final WasteReportRepository wasteReportRepository;
-    private final UserRepository userRepository;
 
     @Override
     public Page<ComplaintResponse> getAllComplaints(Pageable pageable) {
@@ -47,11 +43,12 @@ public class ComplaintService implements IComplaintService {
     public ComplaintDTO getComplaintById(Long id) {
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_DATA));
+        ComplaintDTO dto = complaintMapper.toDTO(complaint);
         if (complaint.getPhotoUrl() != null) {
             String presignedUrl = s3Service.generatePresignedUrl(complaint.getPhotoUrl());
-            complaint.setPhotoUrl(presignedUrl);
+            dto.setPhotoUrl(presignedUrl);
         }
-        return complaintMapper.toDTO(complaint);
+        return dto;
     }
 
     @Override
@@ -96,8 +93,7 @@ public class ComplaintService implements IComplaintService {
             }
         }
 
-        User citizen = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        User citizen = report.getCitizen();
 
         Complaint complaint = Complaint.builder()
                 .citizen(citizen)
@@ -108,7 +104,11 @@ public class ComplaintService implements IComplaintService {
                 .build();
 
         Complaint saved = complaintRepository.save(complaint);
-        return complaintMapper.toDTO(saved);
+        ComplaintDTO dto = complaintMapper.toDTO(saved);
+        if (saved.getPhotoUrl() != null) {
+            dto.setPhotoUrl(s3Service.generatePresignedUrl(saved.getPhotoUrl()));
+        }
+        return dto;
     }
 
     @Override
@@ -123,11 +123,12 @@ public class ComplaintService implements IComplaintService {
         Complaint complaint = complaintRepository.findByWasteReport_Id(reportId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_DATA));
 
+        ComplaintDTO dto = complaintMapper.toDTO(complaint);
         if (complaint.getPhotoUrl() != null) {
-            complaint.setPhotoUrl(s3Service.generatePresignedUrl(complaint.getPhotoUrl()));
+            dto.setPhotoUrl(s3Service.generatePresignedUrl(complaint.getPhotoUrl()));
         }
 
-        return complaintMapper.toDTO(complaint);
+        return dto;
     }
 
     private void validateFile(MultipartFile file) {
@@ -136,8 +137,27 @@ public class ComplaintService implements IComplaintService {
         }
 
         String contentType = file.getContentType();
-        List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "application/pdf");
-        if (contentType == null || !allowedTypes.contains(contentType)) {
+        if (contentType == null) {
+            throw new BadRequestException(ErrorCode.INVALID_FILE_TYPE);
+        }
+        contentType = contentType.toLowerCase();
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || !originalFilename.contains(".")) {
+            throw new BadRequestException(ErrorCode.INVALID_FILE_TYPE);
+        }
+        String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+
+        boolean isValid = false;
+        if (contentType.equals("image/jpeg") && (extension.equals(".jpg") || extension.equals(".jpeg"))) {
+            isValid = true;
+        } else if (contentType.equals("image/png") && extension.equals(".png")) {
+            isValid = true;
+        } else if (contentType.equals("application/pdf") && extension.equals(".pdf")) {
+            isValid = true;
+        }
+
+        if (!isValid) {
             throw new BadRequestException(ErrorCode.INVALID_FILE_TYPE);
         }
     }
