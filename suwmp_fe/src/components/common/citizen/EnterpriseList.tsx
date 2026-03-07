@@ -93,7 +93,7 @@ function EnterpriseList({
                 </motion.div>
 
                 <motion.div
-                    className="grid gap-4 mb-8"
+                    className="grid gap-4 p-3 mb-8 overflow-y-auto overflow-x-hidden thin-scrollbar max-h-[400px]"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -134,7 +134,7 @@ function EnterpriseList({
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-border">
-                                        <img src={enterprise?.photoUrl || "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80"} alt={enterprise.name} className="w-full h-full object-cover" />
+                                        <img src={enterprise.photoUrl ? enterprise.photoUrl : "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80"} alt={enterprise.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-1">
@@ -148,8 +148,8 @@ function EnterpriseList({
                                             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {Number(enterprise.distance).toPrecision(2)} Km</span>
                                         </div>
 
-                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                                            <span className="flex items-center gap-1"><Plus className="w-3 h-3" /> {enterprise.rewardPoints}</span>
+                                        <div className="flex items-center gap-3 text-xs text-primary mb-2 font-semibold">
+                                            <span className="flex items-center gap-1"><Plus className="w-3 h-3" /> {enterprise.rewardPoints} pts</span>
                                         </div>
                                     </div>
                                     <motion.div

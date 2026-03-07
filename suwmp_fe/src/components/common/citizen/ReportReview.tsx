@@ -3,16 +3,17 @@ import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, MapPin } from 'lucide-react'
-import type { WasteType } from './WasteClassification'
 import { reverseGeocode } from '@/utilities/geocoding'
 import { useEffect, useState } from 'react'
+import type { WasteCategory } from '@/types/WasteCategory';
+import { wasteTypeConfig } from './WasteClassification';
 
 interface WasteClassificationProps {
     handleNextStep: () => void,
     handlePreviousStep: () => void,
     location: number[],
     notes: string,
-    selectedType: WasteType | null,
+    selectedType: WasteCategory | null,
     uploadedImg: File | null
 }
 
@@ -82,15 +83,17 @@ function ReportReview({ handleNextStep, handlePreviousStep, location, notes, sel
                                 className="p-5 rounded-2xl bg-muted/40 border border-border/50 hover:border-primary/30 transition-colors"
                             >
                                 <p className="text-sm text-muted-foreground font-bold tracking-tighter mb-2">Waste Type</p>
-                                <div className="flex items-center gap-3">
-                                    <motion.div
-                                        whileHover={{ scale: 1.1, rotate: 5 }}
-                                        className={`w-8 h-8 rounded-lg bg-gradient-to-br ${selectedType?.color} flex items-center justify-center`}
-                                    >
-                                        {selectedType && <selectedType.icon className={`w-4 h-4 text-white`} />}
-                                    </motion.div>
-                                    <p className="font-semibold text-lg capitalize">{selectedType?.name || "Not selected"}</p>
-                                </div>
+                                {selectedType && (
+                                    <div className="flex items-center gap-3">
+                                        <motion.div
+                                            whileHover={{ scale: 1.1, rotate: 5 }}
+                                            className={`p-2 rounded-lg bg-gradient-to-br ${wasteTypeConfig.find(t => t.id === selectedType.id)?.color} flex items-center justify-center`}
+                                        >
+                                            {wasteTypeConfig.find(t => t.id === selectedType.id)?.icon}
+                                        </motion.div>
+                                        <p className="font-semibold capitalize">{selectedType?.name || "Not selected"}</p>
+                                    </div>
+                                )}
                             </motion.div>
 
                             <motion.div

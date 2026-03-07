@@ -20,6 +20,7 @@ export type WasteReportRequest = {
     wasteTypeId: number;
     aiSuggestedTypeId: number;
     status: string;
+    volume: number
 };
 
 export type WasteReportEnterprise = {
