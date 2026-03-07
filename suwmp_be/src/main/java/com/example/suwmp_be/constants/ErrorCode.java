@@ -27,6 +27,7 @@ public enum ErrorCode {
     COLLECTOR_NOT_IN_ENTERPRISE("Bad Request", "Collector does not belong to this enterprise"),
     COLLECTOR_NOT_AVAILABLE("Bad Request", "Collector is not available for assignment"),
     USER_NOT_ENTERPRISE_OWNER("Bad Request","User is not the owner of the enterprise"),
+    USER_NOT_COLLECTOR("Unauthorized", "User is not a collector"),
 
     DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
     NOT_FOUND_DATA("Not Found", "Data is not found"),

@@ -83,32 +83,43 @@ const TaskCard = ({ task, nextTask, index }: TaskCardProps) => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 border-t border-border p-4 pt-3">
-                    <Link to={"/collector/route"}
-                        onClick={() => {
-                            dispatch(setCurrentTask(task))
-                            dispatch(setNextTask(nextTask))
-                        }}
-                        className="flex-1"
-                    >
-                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer">
-                            <Play className="h-3.5 w-3.5" />
-                            Start
+                {task.currentStatus === "COLLECTED" ?
+                    <div className="border-border p-4 pt-3">
+                        <Button
+                            disabled
+                            size="sm"
+                            className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer">
+                            Collected
                         </Button>
-                    </Link>
-                    <Link to={"/collector/route"}
-                        onClick={() => {
-                            dispatch(setCurrentTask(task))
-                            dispatch(setNextTask(nextTask))
-                        }}
-                        className="flex-1"
-                    >
-                        <Button variant={"outline"} size="sm" className="w-full cursor-pointer">
-                            <Navigation className="h-3.5 w-3.5" />
-                            Map
-                        </Button>
-                    </Link>
-                </div>
+                    </div>
+                    : (
+                        <div className="flex gap-2 border-t border-border p-4 pt-3">
+                            <Link to={"/collector/route"}
+                                onClick={() => {
+                                    dispatch(setCurrentTask(task))
+                                    dispatch(setNextTask(nextTask))
+                                }}
+                                className="flex-1"
+                            >
+                                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer">
+                                    <Play className="h-3.5 w-3.5" />
+                                    Start
+                                </Button>
+                            </Link>
+                            <Link to={"/collector/route"}
+                                onClick={() => {
+                                    dispatch(setCurrentTask(task))
+                                    dispatch(setNextTask(nextTask))
+                                }}
+                                className="flex-1"
+                            >
+                                <Button variant={"outline"} size="sm" className="w-full cursor-pointer">
+                                    <Navigation className="h-3.5 w-3.5" />
+                                    Map
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
             </Card>
         </motion.div>
     );

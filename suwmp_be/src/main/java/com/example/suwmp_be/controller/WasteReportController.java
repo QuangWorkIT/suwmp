@@ -4,6 +4,7 @@ import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.PaginatedResponse;
 import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
 import com.example.suwmp_be.dto.request.RatingRequest;
+import com.example.suwmp_be.dto.request.UpdateWasteReportStatusRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
@@ -175,6 +176,19 @@ public class WasteReportController {
                 "Canceled waste report request",
                 wasteService.cancelWasteReport(rq.getWasteReportId(), rq.getNote()))
         );
+    }
+
+    @PatchMapping("/status")
+    public ResponseEntity<BaseResponse<Long>> updateReportStatus(
+            @RequestBody @Valid UpdateWasteReportStatusRequest request
+    ) {
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Updated waste report status successfully",
+                wasteService.updateStatusWasteReport(
+                        request.getWasteReportId(),
+                        request.getStatus())
+        ));
     }
 
     @PreAuthorize("hasRole('CITIZEN')")

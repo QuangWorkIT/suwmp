@@ -96,7 +96,8 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
                 citizen.fullName    AS citizenName,
                 citizen.phone       AS citizenPhone,
                 collector.id        AS collectorId,
-                ca.startCollectAt   AS collectTime
+                ca.startCollectAt   AS collectTime,
+                ca.id               AS assignmentId
             FROM CollectionAssignment ca
             JOIN ca.wasteReport wr
             JOIN wr.wasteType wt

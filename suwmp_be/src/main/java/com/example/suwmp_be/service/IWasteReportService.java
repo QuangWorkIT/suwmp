@@ -23,6 +23,8 @@ public interface IWasteReportService {
 
     long cancelWasteReport(Long wasteReportId, String note);
 
+    long updateStatusWasteReport(Long wasteReportId, String status);
+
     CitizenWasteReportStatusResponse getCitizenReportStatus(Long reportId, UUID citizenId);
 
     List<CitizenWasteReportStatusResponse> getCitizenReports(UUID citizenId);

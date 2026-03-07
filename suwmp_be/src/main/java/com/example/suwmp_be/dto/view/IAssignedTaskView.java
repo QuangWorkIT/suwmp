@@ -16,4 +16,5 @@ public interface IAssignedTaskView {
     String getCollectorId();
     String getPhotoUrl();
     OffsetDateTime getCollectTime();
+    Long getAssignmentId();
 }

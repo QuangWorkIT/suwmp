@@ -119,6 +119,14 @@ public class WasteReportServiceImpl implements IWasteReportService {
     }
 
     @Override
+    public long updateStatusWasteReport(Long wasteReportId, String status) {
+        WasteReport wasteReport = wasteReportRepo.findById(wasteReportId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
+        wasteReport.setStatus(WasteReportStatus.from(status));
+        return wasteReportRepo.save(wasteReport).getId();
+    }
+
+    @Override
     public CitizenWasteReportStatusResponse getCitizenReportStatus(Long reportId, UUID citizenId) {
         WasteReport report = wasteReportRepo.findByIdAndCitizen_Id(reportId, citizenId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));

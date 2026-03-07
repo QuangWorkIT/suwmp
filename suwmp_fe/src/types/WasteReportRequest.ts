@@ -1,3 +1,15 @@
+export type WasteReportStatus =
+  | "PENDING"
+  | "REJECTED"
+  | "ASSIGNED"
+  | "ON_THE_WAY"
+  | "COLLECTED";
+
+export type UpdateWasteReportRequest ={
+    wasteReportId: number,
+    status: WasteReportStatus
+}
+
 export type WasteReportRequest = {
     photoUrl: string | null;
     longitude: number;

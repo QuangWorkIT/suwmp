@@ -20,17 +20,31 @@ import 'trackasia-gl/dist/trackasia-gl.css'
 import trackasiagl, { Marker } from 'trackasia-gl'
 import { getCoordinates, getUserLocation } from "@/utilities/geocoding";
 import type { Feature, LineString } from "geojson"
+import { toast } from "sonner";
+import ImageDetail from "@/components/common/ImageDetail";
+import s3Service from "@/services/S3Service";
+import { collectionLogService } from "@/services/CollectionLogService";
+import wasteReportService from "@/services/WasteReportService";
 
 const apiKey = import.meta.env.VITE_MAPS_API_KEY
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const ALLOWED_TYPES = ["image/jpeg", "image/png"]
 
 export default function RouteMap() {
     const { currentTask, nextTask } = useAppSelector(state => state.assignedTask)
+    const user = useAppSelector(state => state.user.user)
 
-    const [isNavigating, setIsNavigating] = useState(false);
-    const [isUploaded, setIsUploaded] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
     const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+    const inputRef = useRef<HTMLInputElement | null>(null)
+    const [file, setFile] = useState<File | null>(null)
+    const [imgPreview, setImageReview] = useState<string | null>(null)
 
+    const [isProofPreviewOpen, setProofPreviewOpen] = useState(false)
+    const [isTaskPreviewOpen, setTaskPreviewOpen] = useState(false)
+
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    // map data
     const mapRef = useRef<trackasiagl.Map | null>(null)
     const mapContainerRef = useRef<HTMLDivElement | null>(null)
     const taskMarkerRef = useRef<Marker | null>(null)
@@ -45,7 +59,7 @@ export default function RouteMap() {
             container: mapContainerRef.current,
             style: `https://maps.track-asia.com/styles/v2/streets.json?key=${apiKey}`,
             center: [currentTask.requestLongitude, currentTask.requestLatitude],
-            zoom: 14
+            zoom: 9
         })
 
         mapRef.current = map
@@ -91,7 +105,10 @@ export default function RouteMap() {
                     [currentTask.requestLongitude, currentTask.requestLatitude]
                 )
 
-                if (!coordinates) return
+                if (!coordinates) {
+                    toast.error("Error navigating!")
+                    return
+                }
 
                 updateRoute(coordinates,
                     userPosition,
@@ -188,6 +205,64 @@ export default function RouteMap() {
         return el
     }
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (!ALLOWED_TYPES.includes(file.type)) {
+            toast.error("File is not supported")
+            return
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error("File size exceeds 10MB limit")
+            return
+        }
+
+        const imgObj = URL.createObjectURL(file)
+        setImageReview(imgObj)
+        setFile(file)
+    }
+
+    const handleCompleteTask = async () => {
+        if (!file || !currentTask || !user) return
+
+        try {
+            setIsSubmitting(true)
+            const photoResponse = await s3Service.uploadImage(file)
+            if (!photoResponse) return
+
+            const payload = {
+                wasteReportId: currentTask.requestId,
+                collectionAssignmentId: currentTask.assignmentId,
+                photoUrl: photoResponse.data,
+                collectorId: user.id
+            }
+
+            const logCreationResponse = await collectionLogService.createCollectionLog(payload)
+            if (!logCreationResponse.isSuccess)
+                throw new Error(logCreationResponse.message)
+
+
+            const statusUpdateResponse = await wasteReportService.updateWasteReportStatus(
+                {
+                    wasteReportId: currentTask.requestId,
+                    status: "COLLECTED"
+                }
+            )
+            if (!statusUpdateResponse.isSuccess)
+                throw new Error(statusUpdateResponse.message)
+
+            toast.success("Upload proof successfully")
+            setIsCompleted(true)
+
+        } catch (error) {
+            toast.error("Fail to upload image")
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
     return (
         <div className="pb-10">
             <header className="sticky top-0 left-[250px] w-[calc(100%-250px)] z-50
@@ -200,13 +275,6 @@ export default function RouteMap() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button
-                        className={`${isNavigating ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
-                        onClick={() => setIsNavigating(!isNavigating)}
-                    >
-                        <NavIcon className="w-4 h-4 mr-2" />
-                        {isNavigating ? "Stop Navigation" : "Start Navigation"}
-                    </Button>
                     <button className="p-2 rounded-lg hover:bg-muted/50"><Bell className="w-5 h-5" /></button>
                 </div>
             </header>
@@ -233,7 +301,7 @@ export default function RouteMap() {
                 ) : (
                     <div className="grid lg:grid-cols-[1fr_440px] gap-6">
                         {/* Map Area */}
-                        <Card className="relative min-h-[600px] p-0 overflow-hidden bg-muted flex items-center justify-center border-border">
+                        <Card className="relative min-h-[500px] p-0 overflow-hidden bg-muted flex items-center justify-center border-border">
                             <div ref={mapContainerRef} className="w-full h-full"></div>
 
                             {/* Route loading overlay */}
@@ -265,9 +333,14 @@ export default function RouteMap() {
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-4">
                                         <img
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setTaskPreviewOpen(true);
+                                            }}
                                             src={currentTask.photoUrl}
                                             alt={currentTask.wasteTypeName}
-                                            className="h-24 w-32 rounded-lg object-cover"
+                                            className="h-24 w-32 rounded-lg object-cover
+                                            cursor-zoom-in hover:scale-105 transition-transform duration-300"
                                         />
                                         <div>
                                             <h3 className="text-xl font-bold">{currentTask.citizenName}</h3>
@@ -299,34 +372,54 @@ export default function RouteMap() {
                                     </div>
 
                                     <div className="flex gap-2">
-                                        <Button variant="outline" className="flex-1 rounded-xl h-11 border-blue-100 hover:bg-blue-50">
-                                            <Phone className="w-4 h-4 mr-2 text-blue-600" />
-                                            Call
-                                        </Button>
-                                        <Button variant="outline" className="flex-1 rounded-xl h-11 border-blue-100 hover:bg-blue-50">
-                                            <MessageSquare className="w-4 h-4 mr-2 text-blue-600" />
-                                            Chat
-                                        </Button>
+                                        <a href={`tel:${currentTask.citizenPhone}`} className="flex-1">
+                                            <Button variant="outline" className="w-full rounded-xl h-11 border-blue-100 hover:bg-blue-50 cursor-pointer">
+                                                <Phone className="w-4 h-4 mr-2 text-blue-600" />
+                                                Call
+                                            </Button>
+                                        </a>
+                                        <a href={`sms:${currentTask.citizenPhone}`} className="flex-1">
+                                            <Button variant="outline" className="w-full rounded-xl h-11 border-blue-100 hover:bg-blue-50 cursor-pointer">
+                                                <MessageSquare className="w-4 h-4 mr-2 text-blue-600" />
+                                                SMS
+                                            </Button>
+                                        </a>
                                     </div>
 
                                     <div className="pt-6 border-t border-border/50 space-y-4">
                                         <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Proof of Collection</h4>
 
                                         <div
-                                            className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer ${isUploaded ? "border-blue-500 bg-blue-50/50" : "border-border hover:border-blue-500/50 hover:bg-muted/50"
-                                                }`}
-                                            onClick={() => setIsUploaded(true)}
+                                            className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer hover:bg-muted/30
+                                                ${imgPreview ? "border-blue-500 bg-blue-50/50" : "border-border hover:border-blue-500/50 "}`}
+                                            onClick={() => {
+                                                if (!isCompleted) {
+                                                    inputRef.current?.click()
+                                                }
+                                            }}
                                         >
-                                            {isUploaded ? (
+                                            <input type="file" ref={inputRef} className="hidden" onChange={handleFileChange} />
+                                            {file && imgPreview ? (
                                                 <div className="space-y-2">
                                                     <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mx-auto">
                                                         <CheckCircle2 className="w-6 h-6 text-blue-600" />
                                                     </div>
-                                                    <p className="text-sm font-bold text-blue-600">Photo Uploaded</p>
-                                                    <p className="text-xs text-muted-foreground">waste_proof_001.jpg</p>
+                                                    <div className="p-4 w-full flex items-center justify-center overflow-hidden rounded-lg">
+                                                        <img
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setProofPreviewOpen(true);
+                                                            }}
+                                                            src={imgPreview}
+                                                            alt={file.name}
+                                                            className="w-full h-32 border border-blue-200 rounded-lg object-cover 
+                                                            cursor-zoom-in hover:scale-105 transition-transform duration-300" />
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground">{file.name}</p>
                                                 </div>
                                             ) : (
-                                                <div className="space-y-3">
+                                                <div className="space-y-3" >
+
                                                     <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto">
                                                         <Camera className="w-6 h-6 text-muted-foreground" />
                                                     </div>
@@ -342,18 +435,42 @@ export default function RouteMap() {
                                             )}
                                         </div>
 
+                                        {file && imgPreview && (
+                                            <ImageDetail
+                                                imgUrl={imgPreview}
+                                                file={file}
+                                                open={isProofPreviewOpen}
+                                                onClose={() => setProofPreviewOpen(false)}
+                                            />
+                                        )}
+
+                                        <ImageDetail
+                                            imgUrl={currentTask.photoUrl}
+                                            open={isTaskPreviewOpen}
+                                            onClose={() => setTaskPreviewOpen(false)}
+                                        />
+
                                         <Button
                                             className="w-full h-12 rounded-xl shadow-lg bg-blue-600 hover:bg-blue-700 shadow-blue-500/20 text-white font-bold disabled:opacity-50"
-                                            disabled={!isUploaded || isCompleted}
-                                            onClick={() => setIsCompleted(true)}
+                                            disabled={!file || isCompleted || isSubmitting}
+                                            onClick={handleCompleteTask}
                                         >
-                                            {isCompleted ? (
+                                            {isCompleted && (
                                                 <>
                                                     <CheckCircle2 className="w-5 h-5 mr-2" />
                                                     Collection Completed
                                                 </>
-                                            ) : (
-                                                "Complete Collection"
+                                            )}
+
+                                            {isSubmitting && (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                    Submitting...
+                                                </>
+                                            )}
+
+                                            {!isCompleted && !isSubmitting && (
+                                                <>Complete task</>
                                             )}
                                         </Button>
                                     </div>
@@ -363,7 +480,6 @@ export default function RouteMap() {
                             <Card className="p-4 border-none hover:border-blue-400 hover:bg-blue-50 bg-muted/30 cursor-pointer">
                                 <div className="flex items-center justify-between text-[11px] text-muted-foreground uppercase font-bold tracking-widest">
                                     <span>Next Stop</span>
-                                    <span className="text-blue-600">2.4 km</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     {!nextTask ? <div>No more task found</div> : (
