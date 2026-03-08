@@ -2,6 +2,7 @@ package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.PaginatedResponse;
+import com.example.suwmp_be.dto.complaint.ComplaintDTO;
 import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
 import com.example.suwmp_be.dto.request.RatingRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
@@ -9,9 +10,8 @@ import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.response.RatingStatusResponse;
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
-
-import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
+import com.example.suwmp_be.service.IComplaintService;
 import com.example.suwmp_be.service.IWasteReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,8 +43,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/waste-reports")
 @Tag(name = "Waste Reports", description = "Waste report submission and lookup endpoints")
+@Validated
 public class WasteReportController {
     private final IWasteReportService wasteService;
+    private final IComplaintService complaintService;
 
     @PreAuthorize("hasRole('CITIZEN')")
     @PostMapping
@@ -224,4 +228,35 @@ public class WasteReportController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('CITIZEN')")
+    @PostMapping("/{id}/issue")
+    @Operation(
+            summary = "Report an issue for a waste report",
+            description = "Submit a complaint for a specific waste report with a description and an optional attachment."
+    )
+    public ResponseEntity<BaseResponse<ComplaintDTO>> submitIssue(
+            @PathVariable @Positive Long id,
+            @RequestParam("description") @NotBlank String description,
+            @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
+            Authentication authentication
+    ) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        ComplaintDTO response = complaintService.submitIssueReport(id, userId, description, file);
+        return ResponseEntity.status(201).body(new BaseResponse<>(true, "Submitted issue successfully", response));
+    }
+
+    @PreAuthorize("hasRole('CITIZEN')")
+    @GetMapping("/{id}/issue")
+    @Operation(
+            summary = "Get issue report for a waste report",
+            description = "Retrieve the submitted issue report for a specific waste report if it exists."
+    )
+    public ResponseEntity<BaseResponse<ComplaintDTO>> getIssue(
+            @PathVariable @Positive Long id,
+            Authentication authentication
+    ) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        ComplaintDTO response = complaintService.getIssueReport(id, userId);
+        return ResponseEntity.ok(new BaseResponse<>(true, "Get issue report successfully", response));
+    }
 }
