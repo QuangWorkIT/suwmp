@@ -24,7 +24,7 @@ import java.util.UUID;
 public class CollectionLogController {
     private final ICollectionLogService logService;
 
-    @PreAuthorize("hashRole('COLLECTOR')")
+    @PreAuthorize("hasRole('COLLECTOR')")
     @PostMapping
     public ResponseEntity<BaseResponse<Long>> createCollectionLog(
             @RequestBody @Valid CreateCollectionLogRequest logRequest,

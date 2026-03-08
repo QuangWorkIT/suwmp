@@ -32,7 +32,7 @@ public class CollectionLog {
     @JoinColumn(name = "created_by")
     private User collector;
 
-    @Column(name = "photo_url")
+    @Column(name = "photo_url", nullable = false)
     private String photoUrl;
 
     @Column(name = "created_at", insertable = false, updatable = false)

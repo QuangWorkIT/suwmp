@@ -107,12 +107,15 @@ export const reverseGeocode = async (longitude: number, latitude: number): Promi
 
 
 // return coordinates from origin and destination [longitude, latitude]
-export const getCoordinates = async (origin: [number, number] | string, destination: [number, number] | string) => {
+export const getCoordinates = async (origin: [number, number], destination: [number, number]) => {
     try {
         const response = await fetch(`https://maps.track-asia.com/route/v1/car/${origin[0]},${origin[1]};${destination[0]},${destination[1]}.json?geometries=polyline&steps=true&overview=full&key=${apiKey}`)
+        if (!response.ok) {
+            throw new Error("Route request failed");
+        }
+        
         const data = await response.json()
         const geometry = data.routes[0].geometry
-
         const coordinates = polyline.decode(geometry).map(([lat, lng]) => [
             lng,
             lat

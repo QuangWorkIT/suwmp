@@ -76,12 +76,18 @@ export default function RouteMap() {
                     .addTo(map)
             }
 
+            let userPosition: [number, number]
             // render collector marker
-            const { coords } = await getUserLocation()
-            const userPosition: [number, number] = [
-                coords.longitude,
-                coords.latitude
-            ]
+            try {
+                const { coords } = await getUserLocation()
+                userPosition = [
+                    coords.longitude,
+                    coords.latitude
+                ]
+            } catch (error) {
+                toast.error("Fail to get user location")
+                return
+            }
 
             if (!collectorMarkerRef.current) {
                 const el = createTruckMarker()
@@ -223,6 +229,15 @@ export default function RouteMap() {
         setImageReview(imgObj)
         setFile(file)
     }
+
+    useEffect(() => {
+        // clean up function preventing memory leak
+        return () => {
+            if (imgPreview) {
+                URL.revokeObjectURL(imgPreview)
+            }
+        }
+    }, [imgPreview])
 
     const handleCompleteTask = async () => {
         if (!file || !currentTask || !user) return

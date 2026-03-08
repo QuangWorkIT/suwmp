@@ -11,6 +11,7 @@ import wasteReportService from "@/services/WasteReportService";
 import type { WasteCategory } from "@/types/WasteCategory";
 import { useState } from "react";
 import { toast } from "sonner";
+import { WasteReportStatus } from "@/types/WasteReportRequest"
 
 function WasteReportProcess() {
     const user = useAppSelector(state => state.user)
@@ -54,7 +55,7 @@ function WasteReportProcess() {
             citizenId: user.user?.id,
             wasteTypeId: selectedType.id,
             aiSuggestedTypeId: selectedType.id,
-            status: "PENDING",
+            status: WasteReportStatus.PENDING,
             volume: volume
         }
     }
