@@ -166,7 +166,7 @@ const CitizenHome = () => {
         />
 
         <StatCard
-          title="CO₂ Saved (kg)"
+          title="Total Volume"
           value="156"
           icon={<Leaf />}
           bg="bg-linear-to-br from-green-400 to-green-600"
