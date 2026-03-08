@@ -1,7 +1,7 @@
 import authClient from "@/config/axios";
 import type { AssignedTask } from "@/types/collectorTask";
 
-import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, RatingStatusResponse, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, RatingStatusResponse, UpdateWasteReportRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 export interface ComplaintResponse {
     description: string;
     status: string;
