@@ -19,9 +19,11 @@ public interface IWasteReportService {
 
     Page<ICollectionRequestView> getWasteReportRequestsByEnterprise(UUID enterpriseId, Pageable pageable);
 
-    List<EnterpriseNearbyResponse> getEnterprisesNearbyCitizen(Double citizenLong, Double citizenLat, Long wasteTypeId);
+    List<EnterpriseNearbyResponse> getEnterprisesNearby(Double longitude, Double latitude, Long wasteTypeId);
 
     long cancelWasteReport(Long wasteReportId, String note);
+
+    long updateStatusWasteReport(Long wasteReportId, String status);
 
     CitizenWasteReportStatusResponse getCitizenReportStatus(Long reportId, UUID citizenId);
 

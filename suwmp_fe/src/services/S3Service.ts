@@ -14,7 +14,7 @@ const s3Service = {
             });
             return response.data;
         } catch (error) {
-            console.log("Error uploading image:", error);
+            console.log("Error uploading image");
             throw new Error("Failed to upload image");
         }
     },
@@ -25,7 +25,7 @@ const s3Service = {
             );
             return response.data;
         } catch (error) {
-            console.log("Error getting image:", error);
+            console.log("Error getting image");
             throw new Error("Failed to get image");
         }
     }

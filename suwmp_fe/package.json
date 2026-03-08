@@ -13,6 +13,7 @@
     "@base-ui/react": "^1.1.0",
     "@fontsource-variable/inter": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
+    "@mapbox/polyline": "^1.2.1",
     "@react-oauth/google": "^0.13.4",
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.1.17",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/mapbox__polyline": "^1.0.5",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",

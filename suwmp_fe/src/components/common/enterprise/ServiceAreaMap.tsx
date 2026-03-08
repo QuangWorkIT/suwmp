@@ -17,8 +17,7 @@ const TRACKASIA_STYLE =
 export default function ServiceAreaMap({ areas, onMapClick, focusZone }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<trackasiagl.Map | null>(null);
-  const onMapClickRef = useRef<typeof onMapClick>();
-  onMapClickRef.current = onMapClick;
+  const onMapClickRef = useRef<typeof onMapClick>(onMapClick);
 
   const geojson = useMemo(() => {
     return {

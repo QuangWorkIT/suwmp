@@ -27,12 +27,17 @@ public enum ErrorCode {
     COLLECTOR_NOT_IN_ENTERPRISE("Bad Request", "Collector does not belong to this enterprise"),
     COLLECTOR_NOT_AVAILABLE("Bad Request", "Collector is not available for assignment"),
     USER_NOT_ENTERPRISE_OWNER("Bad Request","User is not the owner of the enterprise"),
+    USER_NOT_COLLECTOR("Forbidden", "User is not a collector"),
 
     DUPLICATED_DATA("Duplicated Data", "Data is duplicated"),
     NOT_FOUND_DATA("Not Found", "Data is not found"),
     CAPACITY_NOT_EXISTED("Bad Request", "Corresponding enterprise capacity is not existed"),
     ALREADY_RATED("Bad Request", "You have already rated this report"),
-    INVALID_REPORT_STATUS("Bad Request", "Rating is only allowed for collected reports");
+    INVALID_REPORT_STATUS("Bad Request", "Rating is only allowed for collected reports"),
+    REPORT_NOT_OWNED("Forbidden", "You do not own this report"),
+    ISSUE_ALREADY_SUBMITTED("Conflict", "An issue has already been submitted for this report"),
+    INVALID_FILE_TYPE("Bad Request", "Invalid file type. Only .jpg, .png, and .pdf are allowed"),
+    FILE_SIZE_EXCEEDED("Bad Request", "File size exceeds the 5MB limit");
 
     ErrorCode(String title, String message) {
         this.title = title;

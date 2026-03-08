@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.ContentStreamProvider;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -13,7 +14,9 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -35,8 +38,17 @@ public class S3ServiceImpl implements IS3Service {
                 .contentType(file.getContentType())
                 .build();
 
+        // Provide a fresh stream for each SDK read/retry attempt.
+        ContentStreamProvider streamProvider = () -> {
+            try {
+                return file.getInputStream();
+            } catch (IOException e) {
+                throw new UncheckedIOException("Cannot read upload file stream", e);
+            }
+        };
+
         s3Client.putObject(putRequest,
-                RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+                RequestBody.fromContentProvider(streamProvider, file.getSize(), Objects.requireNonNull(file.getContentType())));
         return key;
     }
 

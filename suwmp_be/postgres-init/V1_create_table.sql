@@ -163,9 +163,9 @@ CREATE TABLE report_collection_status_logs
     id                       BIGSERIAL PRIMARY KEY,
     waste_report_id          BIGINT NOT NULL REFERENCES waste_reports (id),
     collection_assignment_id BIGINT NOT NULL REFERENCES collection_assignments (id),
-    photo_url                VARCHAR(500),
+    photo_url                VARCHAR(500) NOT NULL,
     created_by               UUID   NOT NULL REFERENCES users (id),
-    created_at               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at               TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ===========================================

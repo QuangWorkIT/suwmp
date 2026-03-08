@@ -2,16 +2,18 @@ package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.PaginatedResponse;
+import com.example.suwmp_be.dto.complaint.ComplaintDTO;
 import com.example.suwmp_be.dto.request.CancelWasteReportRequest;
 import com.example.suwmp_be.dto.request.RatingRequest;
+import com.example.suwmp_be.dto.request.UpdateWasteReportStatusRequest;
 import com.example.suwmp_be.dto.request.WasteReportRequest;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
 import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.response.RatingStatusResponse;
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
 
-import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
+import com.example.suwmp_be.service.IComplaintService;
 import com.example.suwmp_be.service.IWasteReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,6 +35,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,8 +45,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/waste-reports")
 @Tag(name = "Waste Reports", description = "Waste report submission and lookup endpoints")
+@Validated
 public class WasteReportController {
     private final IWasteReportService wasteService;
+    private final IComplaintService complaintService;
 
     @PreAuthorize("hasRole('CITIZEN')")
     @PostMapping
@@ -135,10 +141,10 @@ public class WasteReportController {
         );
     }
 
-    @GetMapping("/enterprises/nearby/citizens")
+    @GetMapping("/nearby/enterprises")
     @Operation(
-            summary = "Find nearby enterprises for a citizen",
-            description = "Find enterprises that can collect a specific waste type near the citizen's location."
+            summary = "Find nearby enterprises for a waste report",
+            description = "Find enterprises that can collect a specific waste type near the waste report's location."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -149,16 +155,16 @@ public class WasteReportController {
             @ApiResponse(responseCode = "400", description = "Invalid query parameters"),
     })
     public ResponseEntity<BaseResponse<List<EnterpriseNearbyResponse>>> getNearByEnterprises(
-            @Parameter(description = "Citizen longitude in decimal degrees", required = true, example = "106.70098")
+            @Parameter(description = "Waste report longitude in decimal degrees", required = true, example = "106.70098")
             @DecimalMin("-180.0") @DecimalMax("180.0") @RequestParam("longitude") double longitude,
-            @Parameter(description = "Citizen latitude in decimal degrees", required = true, example = "10.77689")
+            @Parameter(description = "Waste report latitude in decimal degrees", required = true, example = "10.77689")
             @DecimalMin("-90.0") @DecimalMax("90.0") @RequestParam("latitude") double latitude,
             @Parameter(description = "Waste type ID to match enterprise capability", required = true, example = "1")
             @Positive @RequestParam("wasteTypeId") long wasteTypeId
     ) {
         return ResponseEntity.ok(new BaseResponse<>(
                 true, "Get nearby enterprises success",
-                wasteService.getEnterprisesNearbyCitizen(
+                wasteService.getEnterprisesNearby(
                         longitude,
                         latitude,
                         wasteTypeId)
@@ -175,6 +181,19 @@ public class WasteReportController {
                 "Canceled waste report request",
                 wasteService.cancelWasteReport(rq.getWasteReportId(), rq.getNote()))
         );
+    }
+
+    @PatchMapping("/status")
+    public ResponseEntity<BaseResponse<Long>> updateReportStatus(
+            @RequestBody @Valid UpdateWasteReportStatusRequest request
+    ) {
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Updated waste report status successfully",
+                wasteService.updateStatusWasteReport(
+                        request.getWasteReportId(),
+                        request.getStatus())
+        ));
     }
 
     @PreAuthorize("hasRole('CITIZEN')")
@@ -215,7 +234,7 @@ public class WasteReportController {
     @GetMapping("/collectors/tasks/me")
     public ResponseEntity<PaginatedResponse<IAssignedTaskView>> getCollectorTasks(
             Authentication authentication,
-            @PageableDefault(page = 0, size = 4, sort = "startCollectAt", direction = Sort.Direction.ASC) Pageable pageable
+            @PageableDefault(page = 0, size = 6, sort = "startCollectAt", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         Page<IAssignedTaskView> tasks = wasteService.getCollectorAssignedTasks(
                 (UUID) authentication.getPrincipal(), pageable);
@@ -224,4 +243,35 @@ public class WasteReportController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('CITIZEN')")
+    @PostMapping("/{id}/issue")
+    @Operation(
+            summary = "Report an issue for a waste report",
+            description = "Submit a complaint for a specific waste report with a description and an optional attachment."
+    )
+    public ResponseEntity<BaseResponse<ComplaintDTO>> submitIssue(
+            @PathVariable @Positive Long id,
+            @RequestParam("description") @NotBlank String description,
+            @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
+            Authentication authentication
+    ) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        ComplaintDTO response = complaintService.submitIssueReport(id, userId, description, file);
+        return ResponseEntity.status(201).body(new BaseResponse<>(true, "Submitted issue successfully", response));
+    }
+
+    @PreAuthorize("hasRole('CITIZEN')")
+    @GetMapping("/{id}/issue")
+    @Operation(
+            summary = "Get issue report for a waste report",
+            description = "Retrieve the submitted issue report for a specific waste report if it exists."
+    )
+    public ResponseEntity<BaseResponse<ComplaintDTO>> getIssue(
+            @PathVariable @Positive Long id,
+            Authentication authentication
+    ) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        ComplaintDTO response = complaintService.getIssueReport(id, userId);
+        return ResponseEntity.ok(new BaseResponse<>(true, "Get issue report successfully", response));
+    }
 }

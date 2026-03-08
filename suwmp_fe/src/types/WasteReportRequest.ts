@@ -1,3 +1,19 @@
+export const WasteReportStatus = {
+    PENDING: "PENDING",
+    REJECTED: "REJECTED",
+    ASSIGNED: "ASSIGNED",
+    ON_THE_WAY: "ON_THE_WAY",
+    COLLECTED: "COLLECTED",
+} as const;
+
+export type WasteReportStatus = (typeof WasteReportStatus)[keyof typeof WasteReportStatus];
+
+
+export type UpdateWasteReportRequest = {
+    wasteReportId: number,
+    status: WasteReportStatus
+}
+
 export type WasteReportRequest = {
     photoUrl: string | null;
     longitude: number;
@@ -7,7 +23,8 @@ export type WasteReportRequest = {
     citizenId: string;
     wasteTypeId: number;
     aiSuggestedTypeId: number;
-    status: string;
+    status: WasteReportStatus;
+    volume: number
 };
 
 export type WasteReportEnterprise = {

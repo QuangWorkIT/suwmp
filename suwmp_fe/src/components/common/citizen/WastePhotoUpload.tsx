@@ -3,11 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Camera, Check, ImageIcon, Upload } from "lucide-react";
 import { Button } from "../../ui/button";
 import { useRef, useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface WastePhotoUploadProps {
   imageUploaded: File | null,
   setImageUploaded: (uploaded: File | null) => void,
-  handleNextStep: () => void
+  handleNextStep: () => void,
+  volume: number | null,
+  setVolume: (volume: number | null) => void
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -15,7 +19,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
 
 
-function WastePhotoUpload({ imageUploaded, setImageUploaded, handleNextStep }: WastePhotoUploadProps) {
+function WastePhotoUpload({ imageUploaded, setImageUploaded, handleNextStep, volume, setVolume }: WastePhotoUploadProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [error, setError] = useState<string | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -166,10 +170,38 @@ function WastePhotoUpload({ imageUploaded, setImageUploaded, handleNextStep }: W
           )}
         </AnimatePresence>
 
+        <div className="flex flex-col gap-2">
+          <Label>Volume (kg)</Label>
+          <Input
+            type="number"
+            placeholder="Ex: 5"
+            min={1}
+            max={299}
+            value={volume?.toString() || ""}
+            onKeyDown={(event) => {
+              if (event.key === "e" || event.key === "E") {
+                event.preventDefault();
+              }
+            }}
+            onChange={(e) => {
+              const { value } = e.target;
+              if (value === "") {
+                setVolume(null);
+                return;
+              }
+              const numericValue = Number(value);
+
+              if (Number.isNaN(numericValue) || numericValue <= 0 || numericValue >= 300) {
+                return;
+              }
+              setVolume(numericValue);
+            }}
+          />
+        </div>
         <div className="flex justify-end mt-8">
           <Button
             onClick={handleNextStep}
-            disabled={!imageUploaded}
+            disabled={!imageUploaded || !volume}
             data-testid="button-next"
             className="transition-all duration-300"
           >
