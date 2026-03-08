@@ -11,7 +11,8 @@ import wasteReportService from "@/services/WasteReportService";
 import type { WasteCategory } from "@/types/WasteCategory";
 import { useState } from "react";
 import { toast } from "sonner";
-import { WasteReportStatus } from "@/types/WasteReportRequest"
+import { WasteReportStatus, type NearbyEnterpriseResponse } from "@/types/WasteReportRequest"
+import { RewardTransactionService } from "@/services/RewardTransactionService";
 
 function WasteReportProcess() {
     const user = useAppSelector(state => state.user)
@@ -21,7 +22,7 @@ function WasteReportProcess() {
     const [selectedType, setSelectedType] = useState<WasteCategory | null>(null);
     const [location, setLocation] = useState<number[]>([]); // [longitude, latitude]
     const [notes, setNotes] = useState<string>("");
-    const [selectedEnterprise, setSelectedEnterprise] = useState<number | null>(null);
+    const [selectedEnterprise, setSelectedEnterprise] = useState<NearbyEnterpriseResponse | null>(null);
     const [isSubmitting, setSubmitting] = useState(false)
 
     const steps: Step[] = [
@@ -51,7 +52,7 @@ function WasteReportProcess() {
             longitude: location[0],
             latitude: location[1],
             description: notes,
-            enterprisesId: selectedEnterprise,
+            enterprisesId: selectedEnterprise.id,
             citizenId: user.user?.id,
             wasteTypeId: selectedType.id,
             aiSuggestedTypeId: selectedType.id,
@@ -82,8 +83,22 @@ function WasteReportProcess() {
                 throw new Error("Missing waste report data")
             }
 
-            await wasteReportService.createWasteReport(payload)
+            const wastedReportResponse = await wasteReportService.createWasteReport(payload)
+            if (!wastedReportResponse) {
+                throw new Error("Fail to create waste report")
+            }
 
+            const rewardTransactionResponse = await RewardTransactionService.createRewardTransaction({
+                citizenId: user.user.id,
+                wasteReportId: wastedReportResponse.data,
+                points: selectedEnterprise.rewardPoints,
+                reason: "Waste report submission success"
+            })
+
+            if (!rewardTransactionResponse.isSuccess) {
+                throw new Error(rewardTransactionResponse.message)
+            }
+            
             toast.success("Report submitted successfully", {
                 position: "top-right"
             })

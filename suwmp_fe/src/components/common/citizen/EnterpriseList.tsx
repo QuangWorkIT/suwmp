@@ -35,8 +35,8 @@ interface EnterpriseListProps {
     wasteTypeId: number,
     handleSubmit: () => void,
     handlePreviousStep: () => void,
-    selectedEnterprise: number | null,
-    setSelectedEnterprise: (enterprise: number) => void
+    selectedEnterprise: NearbyEnterpriseResponse | null,
+    setSelectedEnterprise: (enterprise: NearbyEnterpriseResponse) => void
 }
 
 function EnterpriseList({
@@ -113,7 +113,7 @@ function EnterpriseList({
                             </p>
                         </div>
                     ) : enterprises.map((enterprise) => {
-                        const isSelected = selectedEnterprise === enterprise.id
+                        const isSelected = selectedEnterprise?.id === enterprise.id
                         return (
                             <motion.div
                                 key={enterprise.id}
@@ -121,7 +121,7 @@ function EnterpriseList({
                                 transition={{ duration: motionDuration, ease: motionEase }}
                                 className={`p-4 rounded-2xl border-2 cursor-pointer hover:border-primary/50 group ${isSelected ? "border-primary bg-primary/5" : "border-border"
                                     }`}
-                                onClick={() => setSelectedEnterprise(enterprise.id)}
+                                onClick={() => setSelectedEnterprise(enterprise)}
                                 data-testid={`enterprise-${enterprise.id}`}
                                 initial={false}
                                 animate={{
