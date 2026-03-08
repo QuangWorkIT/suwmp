@@ -11,7 +11,6 @@ import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.response.RatingStatusResponse;
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
 
-import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.service.IWasteReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -136,10 +135,10 @@ public class WasteReportController {
         );
     }
 
-    @GetMapping("/enterprises/nearby/citizens")
+    @GetMapping("/nearby/enterprises")
     @Operation(
-            summary = "Find nearby enterprises for a citizen",
-            description = "Find enterprises that can collect a specific waste type near the citizen's location."
+            summary = "Find nearby enterprises for a waste report",
+            description = "Find enterprises that can collect a specific waste type near the waste report's location."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -150,16 +149,16 @@ public class WasteReportController {
             @ApiResponse(responseCode = "400", description = "Invalid query parameters"),
     })
     public ResponseEntity<BaseResponse<List<EnterpriseNearbyResponse>>> getNearByEnterprises(
-            @Parameter(description = "Citizen longitude in decimal degrees", required = true, example = "106.70098")
+            @Parameter(description = "Waste report longitude in decimal degrees", required = true, example = "106.70098")
             @DecimalMin("-180.0") @DecimalMax("180.0") @RequestParam("longitude") double longitude,
-            @Parameter(description = "Citizen latitude in decimal degrees", required = true, example = "10.77689")
+            @Parameter(description = "Waste report latitude in decimal degrees", required = true, example = "10.77689")
             @DecimalMin("-90.0") @DecimalMax("90.0") @RequestParam("latitude") double latitude,
             @Parameter(description = "Waste type ID to match enterprise capability", required = true, example = "1")
             @Positive @RequestParam("wasteTypeId") long wasteTypeId
     ) {
         return ResponseEntity.ok(new BaseResponse<>(
                 true, "Get nearby enterprises success",
-                wasteService.getEnterprisesNearbyCitizen(
+                wasteService.getEnterprisesNearby(
                         longitude,
                         latitude,
                         wasteTypeId)

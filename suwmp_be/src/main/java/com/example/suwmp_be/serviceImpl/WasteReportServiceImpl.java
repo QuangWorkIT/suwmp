@@ -16,24 +16,18 @@ import com.example.suwmp_be.entity.EnterpriseUser;
 import com.example.suwmp_be.entity.ReportRating;
 import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.exception.ApplicationException;
-import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.repository.EnterpriseUserRepository;
 import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.CollectionAssignmentRepository;
-import com.example.suwmp_be.repository.EnterpriseRepository;
-import com.example.suwmp_be.repository.EnterpriseUserRepository;
 import com.example.suwmp_be.repository.ReportRatingRepository;
-import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,10 +75,10 @@ public class WasteReportServiceImpl implements IWasteReportService {
     }
 
     @Override
-    public List<EnterpriseNearbyResponse> getEnterprisesNearbyCitizen(Double citizenLong, Double citizenLat, Long wasteTypeId) {
-        List<IEnterpriseDistanceView> enterprisesFound = wasteReportRepo.getEnterprisesNearbyCitizen(
-                citizenLong,
-                citizenLat,
+    public List<EnterpriseNearbyResponse> getEnterprisesNearby(Double longitude, Double latitude, Long wasteTypeId) {
+        List<IEnterpriseDistanceView> enterprisesFound = wasteReportRepo.getEnterprisesNearbyWasteReport(
+                longitude,
+                latitude,
                 wasteTypeId
         );
 

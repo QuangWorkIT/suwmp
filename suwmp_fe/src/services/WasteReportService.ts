@@ -31,9 +31,9 @@ const wasteReportService = {
             throw new Error("Error getting waste reports by enterprise");
         }
     },
-    getEnterprisesNearbyCitizen: async (payload: NearbyEnterpriseRequest) => {
+    getEnterprisesNearby: async (payload: NearbyEnterpriseRequest) => {
         try {
-            const response = await authClient.get("/waste-reports/enterprises/nearby/citizens",
+            const response = await authClient.get("/waste-reports/nearby/enterprises",
                 { params: payload }
             );
             return response.data;

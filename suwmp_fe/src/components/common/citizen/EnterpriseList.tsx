@@ -54,7 +54,7 @@ function EnterpriseList({
         const fetchEnterprises = async () => {
             try {
                 setIsFinding(true)
-                const res = await wasteReportService.getEnterprisesNearbyCitizen(
+                const res = await wasteReportService.getEnterprisesNearby(
                     {
                         longitude,
                         latitude,
