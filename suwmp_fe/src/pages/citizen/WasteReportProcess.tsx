@@ -1,21 +1,24 @@
 import EnterpriseList from "@/components/common/citizen/EnterpriseList";
 import LocationDetail from "@/components/common/citizen/LocationDetail";
 import ReportReview from "@/components/common/citizen/ReportReview";
-import WasteClassification, { type WasteType } from "@/components/common/citizen/WasteClassification";
+import WasteClassification from "@/components/common/citizen/WasteClassification";
 import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload"
 import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep"
 import ReportHeader from "@/components/layout/citizen/ReportHeader"
 import { useAppSelector } from "@/redux/hooks";
 import s3Service from "@/services/S3Service";
 import wasteReportService from "@/services/WasteReportService";
+import type { WasteCategory } from "@/types/WasteCategory";
 import { useState } from "react";
 import { toast } from "sonner";
+import { WasteReportStatus } from "@/types/WasteReportRequest"
 
 function WasteReportProcess() {
     const user = useAppSelector(state => state.user)
     const [currentStep, setCurrentStep] = useState(0);
     const [imageUploaded, setImageUploaded] = useState<File | null>(null);
-    const [selectedType, setSelectedType] = useState<WasteType | null>(null);
+    const [volume, setVolume] = useState<number | null>(null);
+    const [selectedType, setSelectedType] = useState<WasteCategory | null>(null);
     const [location, setLocation] = useState<number[]>([]); // [longitude, latitude]
     const [notes, setNotes] = useState<string>("");
     const [selectedEnterprise, setSelectedEnterprise] = useState<number | null>(null);
@@ -42,7 +45,7 @@ function WasteReportProcess() {
     }
 
     const getWasteReportPayload = (photoUrl: string) => {
-        if (!selectedType || !user.user || !selectedEnterprise) return null
+        if (!selectedType || !user.user || !selectedEnterprise || !volume) return null
         return {
             photoUrl: photoUrl,
             longitude: location[0],
@@ -50,9 +53,10 @@ function WasteReportProcess() {
             description: notes,
             enterprisesId: selectedEnterprise,
             citizenId: user.user?.id,
-            wasteTypeId: Number(selectedType.id),
-            aiSuggestedTypeId: Number(selectedType.id),
-            status: "PENDING"
+            wasteTypeId: selectedType.id,
+            aiSuggestedTypeId: selectedType.id,
+            status: WasteReportStatus.PENDING,
+            volume: volume
         }
     }
 
@@ -124,6 +128,8 @@ function WasteReportProcess() {
                 <div className="min-w-3xl">
                     {currentStep === 0 && (
                         <WastePhotoUpload
+                            volume={volume}
+                            setVolume={setVolume}
                             imageUploaded={imageUploaded}
                             setImageUploaded={setImageUploaded}
                             handleNextStep={handleNextStep}
@@ -167,7 +173,7 @@ function WasteReportProcess() {
                             <EnterpriseList
                                 longitude={location[0]}
                                 latitude={location[1]}
-                                wasteTypeId={Number(selectedType?.id) || 1}
+                                wasteTypeId={selectedType?.id || 1}
                                 handleSubmit={handleSubmit}
                                 handlePreviousStep={handlePreviousStep}
                                 selectedEnterprise={selectedEnterprise}

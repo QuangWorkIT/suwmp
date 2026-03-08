@@ -12,6 +12,7 @@ import ServiceAreaMap from "@/components/common/enterprise/ServiceAreaMap";
 import { reverseGeocode, forwardGeocode, autocompleteAddress, type AddressSuggestion } from "@/utilities/geocoding";
 import { useDebounce } from "@/hooks/useDebouse";
 import { CollectorService } from "@/services/CollectorService";
+import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
 
 import { useAppSelector } from "@/redux/hooks";
 
@@ -50,7 +51,7 @@ const ServiceAreasPage = () => {
       const results = await Promise.allSettled([
         ServiceAreaService.list(enterpriseId),
         CollectorService.getCollectors(enterpriseId, 0, 1),
-        WasteReportService.getWasteReportsByEnterprise(enterpriseId)
+        WasteReportService.getWasteReportsByEnterprise(0, 1000)
       ]);
 
       // Service Areas
@@ -78,7 +79,8 @@ const ServiceAreasPage = () => {
       // Reports
       const reportsResult = results[2];
       if (reportsResult.status === "fulfilled") {
-        const activeCount = reportsResult.value.filter(r => 
+        const data = reportsResult.value.data as WasteReportEnterprise[];
+        const activeCount = data.filter((r: WasteReportEnterprise) =>
           ["PENDING", "ACCEPTED", "ASSIGNED"].includes(r.currentStatus)
         ).length;
         setActiveRequestCount(activeCount);
@@ -170,7 +172,7 @@ const ServiceAreasPage = () => {
 
     try {
       let coords: { longitude: number; latitude: number };
-      
+
       // Use coordinates from suggestion if available
       if (suggestion.geometry?.location) {
         coords = {
@@ -224,11 +226,11 @@ const ServiceAreasPage = () => {
     setSaving(true);
     setError(null);
     try {
-    const res = await ServiceAreaService.create(enterpriseId!, {
-      latitude: pendingCoordinates.lat,
-      longitude: pendingCoordinates.lng,
-      radius: Math.round(radiusValue),
-    });
+      const res = await ServiceAreaService.create(enterpriseId!, {
+        latitude: pendingCoordinates.lat,
+        longitude: pendingCoordinates.lng,
+        radius: Math.round(radiusValue),
+      });
 
       if (!res.success) {
         setError(res.error || "Failed to create service area");
@@ -345,7 +347,7 @@ const ServiceAreasPage = () => {
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   {/* Address input with autocomplete */}
                   <div className="space-y-1 relative">
                     <p className="text-xs text-muted-foreground">Address</p>
@@ -384,7 +386,7 @@ const ServiceAreasPage = () => {
                       {geocodingAddress && (
                         <LoaderCircle className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
                       )}
-                      
+
                       {/* Autocomplete suggestions dropdown */}
                       {showSuggestions && addressSuggestions.length > 0 && (
                         <div
@@ -423,9 +425,9 @@ const ServiceAreasPage = () => {
                       inputMode="numeric"
                     />
                   </div>
-                  <Button 
-                    onClick={handleCreate} 
-                    disabled={saving || !pendingCoordinates || geocodingAddress} 
+                  <Button
+                    onClick={handleCreate}
+                    disabled={saving || !pendingCoordinates || geocodingAddress}
                     className="w-full gap-2"
                   >
                     <Plus className="h-4 w-4" />
@@ -512,8 +514,8 @@ const ServiceAreasPage = () => {
                   <Separator />
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => handleViewZone(a)}
                     >

@@ -8,6 +8,7 @@ public interface IAssignedTaskView {
     Double getRequestLongitude();
     Double getRequestLatitude();
     Double getVolume();
+    String getDescription();
     String getPriority();
     String getCurrentStatus();
     String getCitizenName();
@@ -15,4 +16,5 @@ public interface IAssignedTaskView {
     String getCollectorId();
     String getPhotoUrl();
     OffsetDateTime getCollectTime();
+    Long getAssignmentId();
 }
