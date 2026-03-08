@@ -28,7 +28,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import type { RatingStatusResponse } from "@/types/WasteReportRequest";
+import type { ComplaintResponse } from "@/services/WasteReportService";
+import { toast } from "sonner";
 
 function ReportStatusPage() {
   const { id } = useParams();
@@ -45,6 +58,14 @@ function ReportStatusPage() {
   const [ratingMessage, setRatingMessage] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
+
+  // Issue Reporting State
+  const [showIssueDialog, setShowIssueDialog] = useState(false);
+  const [issueDescription, setIssueDescription] = useState("");
+  const [issueFile, setIssueFile] = useState<File | null>(null);
+  const [submittingIssue, setSubmittingIssue] = useState(false);
+  const [existingIssue, setExistingIssue] = useState<ComplaintResponse | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -76,6 +97,17 @@ function ReportStatusPage() {
           console.error("Failed to load rating status:", ratingErr);
           // Don't set error state globally, just leave ratingStatus as null
         }
+
+        // Fetch issue if it exists
+        try {
+          const issueData = await wasteReportService.getIssue(Number(id));
+          setExistingIssue(issueData);
+        } catch (issueErr: any) {
+          // 404 is expected if no issue exists
+          if (issueErr.response?.status !== 404) {
+            console.error("Failed to load issue status:", issueErr);
+          }
+        }
       } catch (err) {
         console.error(err);
         setError("Unable to load report status. Please try again.");
@@ -105,6 +137,31 @@ function ReportStatusPage() {
       setRatingMessage("Failed to submit rating. Please try again.");
     } finally {
       setSubmittingRating(false);
+    }
+  };
+
+  const handleIssueSubmit = async () => {
+    if (!id || !issueDescription.trim()) {
+      toast.error("Description is required");
+      return;
+    }
+
+    setSubmittingIssue(true);
+    try {
+      const result = await wasteReportService.submitIssue(Number(id), issueDescription, issueFile ?? undefined);
+      setExistingIssue(result);
+      // Reset form state
+      setIssueDescription("");
+      setIssueFile(null);
+      setFileError(null);
+      setShowIssueDialog(false);
+      toast.success("Issue submitted successfully");
+    } catch (err: any) {
+      console.error(err);
+      const message = err.response?.data?.message || "Failed to submit issue";
+      toast.error(message);
+    } finally {
+      setSubmittingIssue(false);
     }
   };
 
@@ -290,8 +347,45 @@ function ReportStatusPage() {
 
           {/* Collector Assigned + Need Help row directly under card (image 2) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CollectorAndHelpCards collectorName={report.collectorName} />
+            <CollectorAndHelpCards 
+              collectorName={report.collectorName} 
+              onReportIssue={() => setShowIssueDialog(true)}
+              hasIssue={!!existingIssue}
+            />
           </div>
+
+          {/* Issue Details Section */}
+          {existingIssue && (
+            <Card className="p-6 border-l-4 border-l-orange-500 bg-orange-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Info className="w-5 h-5 text-orange-500" />
+                <h3 className="font-semibold text-orange-950 text-lg">Reported Issue</h3>
+                <Badge variant="outline" className="ml-auto bg-orange-100/50 text-orange-800 border-orange-200">
+                  {existingIssue.status}
+                </Badge>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-orange-900 mb-1">Description</p>
+                  <p className="text-sm text-orange-800 leading-relaxed whitespace-pre-wrap">
+                    {existingIssue.description}
+                  </p>
+                </div>
+                {existingIssue.photoUrl && (
+                  <div>
+                    <p className="text-sm font-medium text-orange-900 mb-2">Attachment</p>
+                    <div className="relative group max-w-sm rounded-xl overflow-hidden border border-orange-200 shadow-sm bg-white">
+                      <img 
+                        src={existingIssue.photoUrl} 
+                        alt="Issue Attachment" 
+                        className="w-full h-auto object-cover max-h-64 transition-transform group-hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
         </div>
 
         {/* Right column: tracking timeline + rating (image 1) */}
@@ -433,6 +527,72 @@ function ReportStatusPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          <Dialog open={showIssueDialog} onOpenChange={setShowIssueDialog}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Report an Issue</DialogTitle>
+                <DialogDescription>
+                  Explain what went wrong with this collection. You can attach one photo or PDF (max 5MB).
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description <span className="text-destructive">*</span></Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Provide details about the issue..."
+                    className="min-h-[120px] resize-none focus-visible:ring-emerald-500"
+                    value={issueDescription}
+                    onChange={(e) => setIssueDescription(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="file">Attachment (Optional)</Label>
+                  <div className="grid w-full items-center gap-1.5">
+                    <Input
+                      id="file"
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      className={`cursor-pointer file:cursor-pointer file:text-emerald-700 hover:bg-muted/50 transition-colors ${fileError ? 'border-destructive' : ''}`}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && file.size > 5 * 1024 * 1024) {
+                          setFileError("File must be <= 5MB");
+                          setIssueFile(null);
+                          e.target.value = ""; // Clear input
+                        } else {
+                          setFileError(null);
+                          setIssueFile(file || null);
+                        }
+                      }}
+                    />
+                    {fileError ? (
+                      <p className="text-[11px] text-destructive font-medium">
+                        {fileError}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        Accepted types: .jpg, .png, .pdf (Max 5MB)
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setShowIssueDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleIssueSubmit}
+                  disabled={submittingIssue || !issueDescription.trim()}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[100px]"
+                >
+                  {submittingIssue ? "Submitting..." : "Submit Report"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
@@ -441,8 +601,12 @@ function ReportStatusPage() {
 
 function CollectorAndHelpCards({
   collectorName,
+  onReportIssue,
+  hasIssue,
 }: {
   collectorName: string | null;
+  onReportIssue: () => void;
+  hasIssue: boolean;
 }) {
   return (
     <>
@@ -468,8 +632,14 @@ function CollectorAndHelpCards({
 
       <Card className="p-5 space-y-3">
         <h3 className="text-sm font-medium">Need Help?</h3>
-        <Button variant="outline" className="w-full justify-start">
-          Report an issue
+        <Button 
+          variant="outline" 
+          className="w-full justify-start gap-2"
+          onClick={onReportIssue}
+          disabled={hasIssue}
+        >
+          <Info className="w-4 h-4" />
+          {hasIssue ? "Issue Reported" : "Report an issue"}
         </Button>
         <Button variant="ghost" className="w-full justify-start text-destructive">
           Cancel this request
