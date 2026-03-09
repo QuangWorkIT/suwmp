@@ -2,12 +2,12 @@ import authClient from "../config/axios";
 
 export interface DashboardStats {
   totalUsers: number;
-  userGrowth: number;
+  userGrowth: number | null;
   activeToday: number;
-  activeTodayGrowth: number;
+  activeTodayGrowth: number | null;
   openComplaints: number;
-  openComplaintsDelta: number;
-  systemHealthPercent: number;
+  openComplaintsDelta: number | null;
+  systemHealthPercent: number | null;
   systemHealthStatus: string;
 }
 

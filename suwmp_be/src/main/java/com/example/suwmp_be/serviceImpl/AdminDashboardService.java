@@ -3,8 +3,7 @@ package com.example.suwmp_be.serviceImpl;
 import com.example.suwmp_be.constants.ComplaintStatus;
 import com.example.suwmp_be.dto.response.*;
 
-import com.example.suwmp_be.entity.Complaint;
-import com.example.suwmp_be.entity.User;
+
 
 import com.example.suwmp_be.repository.ComplaintRepository;
 import com.example.suwmp_be.repository.UserRepository;
@@ -32,29 +31,22 @@ public class AdminDashboardService {
     public DashboardStatsResponse getDashboardStats() {
         long totalUsers = userRepository.count();
         
-        // Mock growth values for now as requested or until real logic is wired in
-        long userGrowth = 324; 
-        
         // "Active Today" proxy: users updated in the last 24 hours
         Instant todayStart = Instant.now().minus(24, ChronoUnit.HOURS);
-        // This is a simplified proxy. In a real app, we'd have a lastActiveAt field.
-        long activeToday = userRepository.findAll().stream()
-                .filter(u -> u.getUpdatedAt() != null && u.getUpdatedAt().isAfter(todayStart))
-                .count();
+        long activeToday = userRepository.countByUpdatedAtAfter(todayStart);
 
-        long openComplaints = complaintRepository.findAll().stream()
-                .filter(c -> c.getStatus() == ComplaintStatus.OPEN)
-                .count();
+        long openComplaints = complaintRepository.countByStatus(ComplaintStatus.OPEN);
 
+        // TODO: Implement real logic for growth metrics and system health once sources are available
         return DashboardStatsResponse.builder()
                 .totalUsers(totalUsers)
-                .userGrowth(userGrowth)
-                .activeToday(activeToday == 0 ? 12 : activeToday) // Fallback for demo
-                .activeTodayGrowth(12)
+                .userGrowth(null) // unavailable
+                .activeToday(activeToday)
+                .activeTodayGrowth(null) // unavailable
                 .openComplaints(openComplaints)
-                .openComplaintsDelta(-8)
-                .systemHealthPercent(99.2)
-                .systemHealthStatus("Stable")
+                .openComplaintsDelta(null) // unavailable
+                .systemHealthPercent(null) // unavailable
+                .systemHealthStatus("unavailable")
                 .build();
     }
 
@@ -73,11 +65,7 @@ public class AdminDashboardService {
     @Transactional(readOnly = true)
     public List<ComplaintResponse> getRecentOpenComplaints(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
-        // Note: The existing repository has findAllOrderByCustomStatus or similar
-        // We'll filter here for simplicity given the constraints if the repo doesn't have exactly what we need
-        return complaintRepository.findAll(PageRequest.of(0, 100)).stream()
-                .filter(c -> c.getStatus() == ComplaintStatus.OPEN)
-                .limit(limit)
+        return complaintRepository.findAllByStatusOrderByCreatedAtDesc(ComplaintStatus.OPEN, pageable).stream()
                 .map(c -> {
                     ComplaintResponse res = new ComplaintResponse();
                     res.setId(c.getId());
@@ -89,6 +77,7 @@ public class AdminDashboardService {
                 })
                 .collect(Collectors.toList());
     }
+
 
 
 }

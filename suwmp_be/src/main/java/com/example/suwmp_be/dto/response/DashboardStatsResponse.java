@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DashboardStatsResponse {
     private long totalUsers;
-    private long userGrowth;
+    private Long userGrowth;
     private long activeToday;
-    private int activeTodayGrowth;
+    private Long activeTodayGrowth;
     private long openComplaints;
-    private long openComplaintsDelta;
-    private double systemHealthPercent;
+    private Long openComplaintsDelta;
+    private Double systemHealthPercent;
     private String systemHealthStatus;
 }

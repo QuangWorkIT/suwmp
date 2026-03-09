@@ -1,10 +1,10 @@
 import React from "react";
 import { Eye, Edit, Trash2, Filter, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
-import { DashboardUser } from "../services/AdminDashboardService";
+import type { DashboardUser } from "../services/AdminDashboardService";
 
 interface UserManagementSectionProps {
   users: DashboardUser[];
@@ -48,11 +48,11 @@ const UserManagementSection: React.FC<UserManagementSectionProps> = ({
       <div className="p-6 flex items-center justify-between border-b border-gray-50">
         <h3 className="text-lg font-bold text-gray-900">User Management</h3>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="h-9 gap-2 text-gray-600 border-gray-200">
+          <Button variant="outline" size="sm" className="h-9 gap-2 text-gray-600 border-gray-200" disabled aria-label="Filter users">
             <Filter size={16} />
             Filter
           </Button>
-          <Button size="sm" className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white border-none">
+          <Button size="sm" className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white border-none" disabled aria-label="Add new user">
             <Plus size={16} />
             Add User
           </Button>
@@ -120,9 +120,9 @@ const UserManagementSection: React.FC<UserManagementSectionProps> = ({
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2 text-gray-400">
-                      <button className="hover:text-blue-600 transition-colors"><Eye size={18} /></button>
-                      <button className="hover:text-emerald-600 transition-colors"><Edit size={18} /></button>
-                      <button className="hover:text-rose-600 transition-colors"><Trash2 size={18} /></button>
+                      <button className="hover:text-blue-600 transition-colors disabled:opacity-50" disabled aria-label="View user details"><Eye size={18} /></button>
+                      <button className="hover:text-emerald-600 transition-colors disabled:opacity-50" disabled aria-label="Edit user"><Edit size={18} /></button>
+                      <button className="hover:text-rose-600 transition-colors disabled:opacity-50" disabled aria-label="Delete user"><Trash2 size={18} /></button>
                     </div>
                   </td>
                 </tr>

@@ -68,43 +68,48 @@ const AdminDashboardPage: React.FC = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Stat Cards Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
+            <StatCard
                     title="Total Users"
-                    value={stats?.totalUsers.toLocaleString() || "—"}
-                    delta={stats?.userGrowth}
+                    value={stats?.totalUsers ?? "—"}
+                    delta={stats?.userGrowth ?? undefined}
                     icon={Users}
                     iconBgColor="bg-purple-100/50"
                     iconColor="text-purple-600"
                     loading={loading.stats}
+                    error={errors.stats}
                 />
                 <StatCard
                     title="Active Today"
-                    value={stats?.activeToday.toLocaleString() || "—"}
-                    delta={stats?.activeTodayGrowth}
+                    value={stats?.activeToday ?? "—"}
+                    delta={stats?.activeTodayGrowth ?? undefined}
                     deltaType="percentage"
                     icon={UserCheck}
                     iconBgColor="bg-green-100/50"
                     iconColor="text-green-600"
                     loading={loading.stats}
+                    error={errors.stats}
                 />
                 <StatCard
                     title="Open Complaints"
-                    value={stats?.openComplaints.toLocaleString() || "—"}
-                    delta={stats?.openComplaintsDelta}
+                    value={stats?.openComplaints ?? "—"}
+                    delta={stats?.openComplaintsDelta ?? undefined}
                     icon={AlertCircle}
                     iconBgColor="bg-orange-100/50"
                     iconColor="text-orange-600"
                     loading={loading.stats}
+                    error={errors.stats}
                 />
                 <StatCard
                     title="System Health"
-                    value={`${stats?.systemHealthPercent || 99.2}%`}
-                    statusText={stats?.systemHealthStatus || "Stable"}
+                    value={stats?.systemHealthPercent !== null && stats?.systemHealthPercent !== undefined ? `${stats.systemHealthPercent}%` : "—"}
+                    statusText={stats?.systemHealthStatus || ""}
                     icon={ShieldCheck}
                     iconBgColor="bg-blue-100/50"
                     iconColor="text-blue-600"
                     loading={loading.stats}
+                    error={errors.stats}
                 />
+
             </div>
 
             {/* Main Content Grid */}

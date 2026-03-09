@@ -1,8 +1,8 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
-import { DashboardComplaint } from "../services/AdminDashboardService";
+import type { DashboardComplaint } from "../services/AdminDashboardService";
 
 interface OpenComplaintsSidebarProps {
   complaints: DashboardComplaint[];
@@ -32,7 +32,7 @@ const OpenComplaintsSidebar: React.FC<OpenComplaintsSidebarProps> = ({
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-fit">
       <div className="p-6 flex items-center justify-between border-b border-gray-50">
         <h3 className="text-lg font-bold text-gray-900">Open Complaints</h3>
-        {!loading && (
+        {!loading && !error && complaints.length > 0 && (
           <Badge className="bg-amber-100 text-amber-700 border-amber-200 px-2 h-6 text-[10px] font-bold">
             {complaints.length} pending
           </Badge>
@@ -52,8 +52,8 @@ const OpenComplaintsSidebar: React.FC<OpenComplaintsSidebarProps> = ({
             </div>
           ))
         ) : error ? (
-          <div className="py-8 text-center text-gray-400 text-sm">
-            Unable to load complaints
+          <div className="py-8 text-center text-red-500 text-sm font-medium">
+            {error || "Unable to load complaints"}
           </div>
         ) : complaints.length === 0 ? (
           <div className="py-8 text-center text-gray-400 text-sm">
@@ -91,5 +91,6 @@ const OpenComplaintsSidebar: React.FC<OpenComplaintsSidebarProps> = ({
     </div>
   );
 };
+
 
 export default OpenComplaintsSidebar;
