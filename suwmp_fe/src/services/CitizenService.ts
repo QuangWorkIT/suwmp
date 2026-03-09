@@ -16,7 +16,7 @@ export const CitizenService = {
     updateCitizenProfile: async (citizenId: string, request: CitizenProfileUpdateRequest) => {
         try {
             await authClient.put(`/citizens/profile/${citizenId}`, request);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating citizen profile:", error);
             throw error;
         }

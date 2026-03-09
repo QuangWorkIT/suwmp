@@ -1,7 +1,7 @@
 export interface CitizenProfileGetResponse {
     citizenId: string;
     fullName: string;
-    phoneNumber: string;
+    phone: string;
     email: string;
     createdAt: string;
     points: number;

@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -58,14 +59,15 @@ public class CitizenServiceImpl {
         );
     }
 
+    @Transactional
     public void updateCitizenProfile(UUID citizenId, CitizenProfileUpdateRequest request) {
         User user = userRepository.findById(citizenId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        if (!request.email().equals(user.getEmail()) && userRepository.existsByEmail(request.email()))
+        if (userRepository.existsByEmailAndIdNot(request.email(), citizenId))
             throw new BadRequestException(ErrorCode.EMAIL_EXISTED);
 
-        if (!request.phone().equals(user.getPhone()) && userRepository.existsByPhone(request.phone()))
+        if (userRepository.existsByPhoneAndIdNot(request.phone(), citizenId))
             throw new BadRequestException(ErrorCode.PHONE_EXISTED);
 
         citizenMapper.toCitizen(user, request);

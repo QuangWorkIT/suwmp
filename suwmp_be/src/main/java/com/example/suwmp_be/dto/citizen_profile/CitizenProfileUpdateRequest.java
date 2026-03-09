@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Pattern;
 
 public record CitizenProfileUpdateRequest(
         @Pattern(
-                regexp = "^[A-Z][a-z]+( [A-Z][a-z]+)*$",
-                message = "Each word must start with uppercase letter"
+                regexp = "^[A-Za-zÀ-ỹà-ỹ]+(?:\\s[A-Za-zÀ-ỹà-ỹ]+)*$",
+                message = "Full name must contain valid characters"
         )
         String fullName,
 

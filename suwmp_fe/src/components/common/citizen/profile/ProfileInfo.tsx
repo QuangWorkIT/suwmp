@@ -11,7 +11,7 @@ import { toast } from "sonner";
 const profileSchema = z.object({
   fullName: z
     .string()
-    .regex(/^[A-Z][a-z]+( [A-Z][a-z]+)*$/, "Each word must start with uppercase letter"),
+    .regex(/^[A-Za-zÀ-ỹà-ỹ]+(?:\s[A-Za-zÀ-ỹà-ỹ]+)*$/, "Full name must contain valid characters"),
   phone: z
     .string()
     .regex(/^(0|\+84)[0-9]{9}$/, "Invalid phone number"),
@@ -39,7 +39,7 @@ const ProfileInfo = ({ profile, onProfileUpdate }: ProfileInfoProps) => {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       fullName: profile.fullName || "",
-      phone: profile.phoneNumber || "",
+      phone: profile.phone || "",
       email: profile.email || "",
     },
   });
@@ -51,7 +51,7 @@ const ProfileInfo = ({ profile, onProfileUpdate }: ProfileInfoProps) => {
       setIsEditing(false);
       onProfileUpdate?.();
       toast.success("Profile updated successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update profile", error);
       toast.error("Failed to update profile");
     } finally {
@@ -62,7 +62,7 @@ const ProfileInfo = ({ profile, onProfileUpdate }: ProfileInfoProps) => {
   const handleCancel = () => {
     reset({
       fullName: profile.fullName || "",
-      phone: profile.phoneNumber || "",
+      phone: profile.phone || "",
       email: profile.email || "",
     });
     setIsEditing(false);
