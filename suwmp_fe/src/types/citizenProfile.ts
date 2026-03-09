@@ -9,3 +9,9 @@ export interface CitizenProfileGetResponse {
     volume: number;
     feedbacks: number;
 }
+
+export interface CitizenProfileUpdateRequest {
+    fullName: string;
+    phone: string;
+    email: string;
+}
