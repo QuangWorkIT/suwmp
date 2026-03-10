@@ -28,24 +28,22 @@ function statusPillClass(status: ReturnType<typeof getCapacityStatus>) {
 export default function OverallCapacityCard({
   items,
   isLoading,
-  usedKg,
 }: {
   items: EnterpriseCapacity[];
   isLoading?: boolean;
-  usedKg: number;
 }) {
   const totalCapacity = items.reduce(
     (sum, i) => sum + (i.dailyCapacityKg || 0),
     0,
   );
-  const used = usedKg;
+  const used = items.reduce((sum, i) => sum + (i.totalVolume || 0), 0);
   const available = Math.max(0, totalCapacity - used);
   const utilization = getUtilizationPct(used, totalCapacity);
 
   // overall status: worst among items
   const status = items.reduce<ReturnType<typeof getCapacityStatus>>(
     (acc, item) => {
-      const s = getCapacityStatus(usedKg, item);
+      const s = getCapacityStatus(used, item);
       if (acc === "WARNING" || s === "WARNING") return "WARNING";
       return "NORMAL";
     },
@@ -128,7 +126,7 @@ export default function OverallCapacityCard({
               <div className="flex h-full">
                 {items.map((i) => {
                   const w =
-                    totalCapacity > 0 ? (i.usedKg / totalCapacity) * 100 : 0;
+                    totalCapacity > 0 ? (i.totalVolume / totalCapacity) * 100 : 0;
                   const barColor = generateColorFromWasteType(
                     i.wasteTypeId,
                     i.wasteTypeName,
@@ -141,7 +139,7 @@ export default function OverallCapacityCard({
                         width: `${Math.max(0, w)}%`,
                         backgroundColor: barColor,
                       }}
-                      title={`${i.wasteTypeName}: ${formatKg(i.usedKg)} kg`}
+                      title={`${i.wasteTypeName}: ${formatKg(i.totalVolume)} kg`}
                     />
                   );
                 })}

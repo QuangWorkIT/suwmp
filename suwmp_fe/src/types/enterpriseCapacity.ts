@@ -18,7 +18,7 @@ export interface EnterpriseCapacity {
   dailyCapacityKg: number;
   warningThreshold: number;
   active: boolean;
-  usedKg: number;
+  totalVolume: number;
 }
 
 export interface UpdateEnterpriseCapacityRequest {

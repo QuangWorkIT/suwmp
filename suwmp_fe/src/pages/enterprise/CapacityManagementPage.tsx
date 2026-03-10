@@ -24,7 +24,6 @@ export default function CapacityManagementPage() {
   const user = useAppSelector((state) => state.user).user;
   const [wasteTypes, setWasteTypes] = useState<WasteTypeEnterpriseCapacity[]>([]);
 
-  const [usedKg, setUsedKg] = useState(200);
   const [enterpriseId, setEnterpriseId] = useState<number | null>(null);
 
   const fetchCapacities = async () => {
@@ -161,7 +160,7 @@ export default function CapacityManagementPage() {
   return (
     <div className="h-full bg-background overflow-hidden relative">
       <div className="mx-auto h-full max-w-7xl overflow-y-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-        <OverallCapacityCard items={items} isLoading={isLoading} usedKg={usedKg} />
+        <OverallCapacityCard items={items} isLoading={isLoading} />
 
         <div className="flex items-center justify-end">
           <Button
@@ -192,7 +191,7 @@ export default function CapacityManagementPage() {
                 item={item}
                 onUpdate={handleUpdate}
                 onDelete={handleDelete}
-                usedKg={usedKg}
+                usedKg={item.totalVolume}
               />
             ))}
           </div>
