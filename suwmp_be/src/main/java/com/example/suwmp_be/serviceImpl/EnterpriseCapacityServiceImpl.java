@@ -1,6 +1,7 @@
 package com.example.suwmp_be.serviceImpl;
 
 import com.example.suwmp_be.constants.ErrorCode;
+import com.example.suwmp_be.constants.WasteReportStatus;
 import com.example.suwmp_be.dto.enterprise_capacity.CreateEnterpriseCapacityRequest;
 import com.example.suwmp_be.dto.enterprise_capacity.GetCapacitiesResponse;
 import com.example.suwmp_be.dto.enterprise_capacity.UpdateEnterpriseCapacityRequest;
@@ -65,7 +66,8 @@ public class EnterpriseCapacityServiceImpl implements IEnterpriseCapacityService
 
                             double totalVolume = 0;
                             for (WasteReport wt: wasteReports)
-                                if (Objects.equals(wt.getWasteType().getId(), c.getWasteType().getId()))
+                                if (Objects.equals(wt.getWasteType().getId(), c.getWasteType().getId()) &&
+                                        WasteReportStatus.COLLECTED == wt.getStatus())
                                     totalVolume += wt.getVolume();
                             getCapacitiesResponse.setTotalVolume(totalVolume);
 
