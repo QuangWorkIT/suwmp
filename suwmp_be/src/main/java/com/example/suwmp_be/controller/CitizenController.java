@@ -50,6 +50,7 @@ public class CitizenController {
         );
     }
 
+    @PreAuthorize("hasRole('CITIZEN')")
     @GetMapping("/dashboard/monthly-progress")
     public ResponseEntity<BaseResponse<MonthlyProgressDTO>> getMonthlyProgress(
             Authentication authentication

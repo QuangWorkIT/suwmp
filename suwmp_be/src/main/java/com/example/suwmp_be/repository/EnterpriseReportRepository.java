@@ -34,7 +34,7 @@ public interface EnterpriseReportRepository extends JpaRepository<WasteReport, L
     @Query(value = """
         SELECT 
         ROUND(
-            (1 - (COUNT(c.id)::decimal / COUNT(wr.id))) * 100
+            (1 - (COUNT(c.id)::decimal / NULLIF(COUNT(wr.id), 0))) * 100
         ,2)
         FROM waste_reports wr
         LEFT JOIN complaints c 

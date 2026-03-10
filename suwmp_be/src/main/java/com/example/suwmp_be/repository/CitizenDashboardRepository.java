@@ -34,7 +34,7 @@ public interface CitizenDashboardRepository extends JpaRepository<WasteReport, L
         SELECT COALESCE(SUM(wr.volume), 0) 
         FROM waste_reports wr
         JOIN waste_types wt ON wr.waste_type_id = wt.id
-        WHERE wr.citizen_id = :userId AND wt.name = 'RECYCLABLE'
+        WHERE wr.citizen_id = :userId AND wr.status = 'COLLECTED' AND wt.name = 'RECYCLABLE'
           AND EXTRACT(MONTH FROM wr.created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
           AND EXTRACT(YEAR FROM wr.created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
     """, nativeQuery = true)
