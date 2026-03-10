@@ -73,7 +73,7 @@ public interface EnterpriseReportRepository extends JpaRepository<WasteReport, L
     @Query(value = """
         SELECT
             COALESCE(u.full_name, 'Unassigned Test Collector') AS collectorName,
-            MAX(sa.id) AS zone, 
+            sa.id AS zone, 
             COUNT(wr.id) AS collections,
             COALESCE(AVG(EXTRACT(EPOCH FROM (ca.last_updated_at - wr.created_at)) / 3600.0), 2) AS avgHoursTaken,
             COALESCE(AVG(rr.rating), 4.5) AS rating
@@ -81,11 +81,12 @@ public interface EnterpriseReportRepository extends JpaRepository<WasteReport, L
 
         JOIN collection_assignments ca ON wr.id = ca.waste_report_id
         JOIN users u ON ca.collector_id = u.id
-        LEFT JOIN service_area sa ON wr.enterprise_id = sa.enterprise_id
+        LEFT JOIN service_area sa ON u.service_area_id = sa.id 
         LEFT JOIN report_ratings rr ON rr.report_id = wr.id
 
         WHERE wr.status = 'COLLECTED' 
-        GROUP BY u.full_name
+
+        GROUP BY u.id, u.full_name, sa.id
         ORDER BY collections DESC
     """, nativeQuery = true)
     List<Object[]> getCollectorPerformance();
