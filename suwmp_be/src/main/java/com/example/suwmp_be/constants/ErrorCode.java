@@ -18,6 +18,9 @@ public enum ErrorCode {
     USER_ID_INVALID("Bad Request", "Invalid user ID in token"),
     GOOGLE_ID_TOKEN_INVALID("Unauthenticated", "Invalid Google ID Token"),
 
+    EMAIL_EXISTED("Bad Request", "Email existed"),
+    PHONE_EXISTED("Bad Request", "Phone existed"),
+
     USER_NOT_FOUND("Not Found", "User not found"),
     USER_ALREADY_EXISTS("Bad Request", "User already exists"),
     USER_INACTIVE("Unauthenticated", "User is inactive"),

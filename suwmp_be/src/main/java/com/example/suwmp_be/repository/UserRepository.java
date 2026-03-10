@@ -30,4 +30,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT u FROM User u WHERE u.email = :email")
     User findByEmail(@Param("email") String email);
+
+    long countByUpdatedAtAfter(java.time.Instant since);
 }

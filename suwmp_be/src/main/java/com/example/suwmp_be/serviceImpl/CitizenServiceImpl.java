@@ -5,7 +5,10 @@ import com.example.suwmp_be.dto.citizen_dashboard.CitizenWidgetDTO;
 import com.example.suwmp_be.dto.citizen_dashboard.MonthlyProgressDTO;
 import com.example.suwmp_be.dto.citizen_profile.CitizenProfileGetRequest;
 import com.example.suwmp_be.dto.citizen_profile.CitizenProfileGetResponse;
+import com.example.suwmp_be.dto.citizen_profile.CitizenProfileUpdateRequest;
+import com.example.suwmp_be.dto.mapper.ICitizenMapper;
 import com.example.suwmp_be.entity.User;
+import com.example.suwmp_be.exception.BadRequestException;
 import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.*;
 import com.example.suwmp_be.service.ICitizenDashboardService;
@@ -14,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -27,6 +31,8 @@ public class CitizenServiceImpl implements ICitizenDashboardService {
     final RewardTransactionRepository rewardTransactionRepository;
     final ComplaintRepository complaintRepository;
     final CitizenDashboardRepository citizenDashboardRepository;
+
+    final ICitizenMapper citizenMapper;
 
     public CitizenProfileGetResponse getCitizenProfile(CitizenProfileGetRequest request) {
         User user = userRepository.findById(request.citizenId())
@@ -76,5 +82,21 @@ public class CitizenServiceImpl implements ICitizenDashboardService {
                 citizenDashboardRepository.getMonthlyPointsEarned(userId),
                 targetPoints
         );
+    }
+
+    @Transactional
+    public void updateCitizenProfile(UUID citizenId, CitizenProfileUpdateRequest request) {
+        User user = userRepository.findById(citizenId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        if (userRepository.existsByEmailAndIdNot(request.email(), citizenId))
+            throw new BadRequestException(ErrorCode.EMAIL_EXISTED);
+
+        if (userRepository.existsByPhoneAndIdNot(request.phone(), citizenId))
+            throw new BadRequestException(ErrorCode.PHONE_EXISTED);
+
+        citizenMapper.toCitizen(user, request);
+        userRepository.save(user);
+        log.info("Update citizen profile successful: {}", citizenId);
     }
 }
