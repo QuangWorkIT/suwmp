@@ -16,4 +16,5 @@ public class GetCapacitiesResponse {
     int dailyCapacityKg;
     int warningThreshold;
     boolean active;
+    double totalVolume;
 }

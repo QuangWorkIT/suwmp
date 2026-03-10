@@ -25,6 +25,10 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 """)
     Page<Complaint> findAllOrderByCustomStatus(Pageable pageable);
 
+    long countByStatus(com.example.suwmp_be.constants.ComplaintStatus status);
+
+    Page<Complaint> findAllByStatusOrderByCreatedAtDesc(com.example.suwmp_be.constants.ComplaintStatus status, Pageable pageable);
+
     Page<Complaint> findAllByCitizenId(UUID userId, Pageable pageable);
 
     long countByCitizen_Id(UUID citizenId);
