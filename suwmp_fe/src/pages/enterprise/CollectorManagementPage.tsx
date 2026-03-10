@@ -53,7 +53,7 @@ const CollectorManagementPage = () => {
     try {
       const results = await Promise.allSettled([
         CollectorService.getCollectors(enterpriseId, pagination.page, pagination.size),
-        WasteReportService.getWasteReportsByEnterprise(enterpriseId)
+        WasteReportService.getWasteReportsByEnterprise(0, 1000)
       ]);
 
       // Handle Collectors result
@@ -78,7 +78,7 @@ const CollectorManagementPage = () => {
       // Handle Reports result separately
       const reportsResult = results[1];
       if (reportsResult.status === "fulfilled") {
-        setActiveRequestCount(reportsResult.value.length);
+        setActiveRequestCount(reportsResult.value.data.length);
       } else {
         console.error("Waste reports fetch error:", reportsResult.reason);
         // We don't discard collectorsRes if this fails

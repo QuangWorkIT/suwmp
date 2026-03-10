@@ -55,7 +55,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             
                     ST_Distance(
                         ST_MakePoint(sa.longitude, sa.latitude)::geography,
-                        ST_MakePoint(:citizenLong, :citizenLat)::geography
+                        ST_MakePoint(:wasteReportLong, :wasteReportLat)::geography
                     ) / 1000 AS distance
             
                 FROM enterprises e
@@ -67,14 +67,14 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             
                 WHERE ST_DWithin(
                     ST_MakePoint(sa.longitude, sa.latitude)::geography,
-                    ST_MakePoint(:citizenLong, :citizenLat)::geography,
+                    ST_MakePoint(:wasteReportLong, :wasteReportLat)::geography,
                     sa.radius
                 )
                 ORDER BY distance
             """, nativeQuery = true)
-    List<IEnterpriseDistanceView> getEnterprisesNearbyCitizen(
-            @Param("citizenLong") Double citizenLong,
-            @Param("citizenLat") Double citizenLat,
+    List<IEnterpriseDistanceView> getEnterprisesNearbyWasteReport(
+            @Param("wasteReportLong") Double wasteReportLong,
+            @Param("wasteReportLat") Double wasteReportLat,
             @Param("wasteTypeId") Long wasteTypeId
     );
 
@@ -92,10 +92,12 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
                 wr.priority         AS priority,
                 wr.status           AS currentStatus,
                 wr.photoUrl         AS photoUrl,
+                wr.description      AS description,
                 citizen.fullName    AS citizenName,
                 citizen.phone       AS citizenPhone,
                 collector.id        AS collectorId,
-                ca.startCollectAt   AS collectTime
+                ca.startCollectAt   AS collectTime,
+                ca.id               AS assignmentId
             FROM CollectionAssignment ca
             JOIN ca.wasteReport wr
             JOIN wr.wasteType wt

@@ -11,5 +11,14 @@ export type AssignedTask = {
     collectorId: string;
     collectTime: string;
     photoUrl: string;
-    address: string
+    address: string;
+    description: string,
+    assignmentId: number
+}
+
+export type CreateCollectionLogReq = {
+    wasteReportId: number,
+    collectionAssignmentId: number,
+    photoUrl: string,
+    collectorId: string
 }

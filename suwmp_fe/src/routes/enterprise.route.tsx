@@ -6,23 +6,25 @@ import CollectorManagementPage from "@/pages/enterprise/CollectorManagementPage"
 import CollectionRequest from "@/pages/enterprise/CollectionRequest";
 import ServiceAreasPage from "@/pages/enterprise/ServiceAreasPage";
 import CapacityManagementPage from "@/pages/enterprise/CapacityManagementPage";
+import EnterpriseReports from "@/pages/enterprise/EnterpriseReports";
 
 export const enterpriseRoutes = [
-    {
-        element: <ProtectedRoute allowedRoles={["ENTERPRISE"]} />,
+  {
+    element: <ProtectedRoute allowedRoles={["ENTERPRISE"]} />,
+    children: [
+      {
+        path: "/enterprise",
+        element: <EnterpriseMain />,
         children: [
-            {
-                path: "/enterprise",
-                element: <EnterpriseMain />,
-                children: [
-                    { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: "dashboard", element: <EnterpriseDashboard /> },
-                    { path: "collectors", element: <CollectorManagementPage /> },
-                    { path: "areas", element: <ServiceAreasPage /> },
-                    { path: "requests", element: <CollectionRequest /> },
-                    { path: "capacity", element: <CapacityManagementPage /> },
-                ]
-            }
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: "dashboard", element: <EnterpriseDashboard /> },
+          { path: "collectors", element: <CollectorManagementPage /> },
+          { path: "areas", element: <ServiceAreasPage /> },
+          { path: "requests", element: <CollectionRequest /> },
+          { path: "capacity", element: <CapacityManagementPage /> },
+          { path: "reports", element: <EnterpriseReports /> },
         ],
-    }
-]
+      },
+    ],
+  },
+];

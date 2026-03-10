@@ -5,6 +5,7 @@ import com.example.suwmp_be.dto.complaint.UpdateComplaintStatus;
 import com.example.suwmp_be.dto.response.ComplaintResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -14,4 +15,8 @@ public interface IComplaintService {
     ComplaintDTO updateComplaintStatus(Long id, UpdateComplaintStatus status);
 
     Page<ComplaintResponse> getAllComplaintsByUserId(UUID userId, Pageable pageable);
+
+    ComplaintDTO submitIssueReport(Long reportId, UUID userId, String description, MultipartFile file);
+
+    ComplaintDTO getIssueReport(Long reportId, UUID userId);
 }
