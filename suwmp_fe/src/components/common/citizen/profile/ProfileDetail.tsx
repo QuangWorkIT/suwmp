@@ -17,19 +17,20 @@ const ProfileDetail = () => {
     const [profile, setProfile] = useState<CitizenProfileGetResponse | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const fetchProfile = async () => {
+        if (user?.id) {
+            try {
+                const res = await CitizenService.getCitizenProfile(user.id);
+                if (res.data) setProfile(res.data);
+            } catch (error) {
+                console.error("Failed to load profile", error);
+            } finally {
+                setLoading(false);
+            }
+        } else setLoading(false);
+    };
+
     useEffect(() => {
-        const fetchProfile = async () => {
-            if (user?.id) {
-                try {
-                    const res = await CitizenService.getCitizenProfile(user.id);
-                    if (res.data) setProfile(res.data);
-                } catch (error) {
-                    console.error("Failed to load profile", error);
-                } finally {
-                    setLoading(false);
-                }
-            } else setLoading(false);
-        };
         fetchProfile();
     }, [user?.id]);
 
@@ -47,7 +48,7 @@ const ProfileDetail = () => {
 
     return (
         <div className="flex-1 space-y-6">
-            <ProfileInfo profile={profile} />
+            <ProfileInfo profile={profile} onProfileUpdate={fetchProfile} />
             <ProfileStats profile={profile} />
         </div>
     );
