@@ -61,9 +61,10 @@ const transformUser = (apiUser: ApiLeaderboardUser): LeaderboardUser => {
 };
 
 export const LeaderboardService = {
-    getRankings: async (): Promise<LeaderboardUser[]> => {
+    getRankings: async (date?: string, page: number = 0, size: number = 5): Promise<LeaderboardUser[]> => {
         try {
-            const response = await authClient.get<ApiLeaderboardResponse>('/leaderboard');
+            const params = { date, page, size };
+            const response = await authClient.get<ApiLeaderboardResponse>('/leaderboard', { params });
             return response.data.data.map(transformUser);
         } catch (error) {
             console.error("Error fetching leaderboard rankings:", error);
