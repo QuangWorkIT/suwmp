@@ -27,7 +27,7 @@ function LeaderBoard() {
                 // Fetch all data in parallel
                 const [podiumData, rankingsData, myRankData] = await Promise.all([
                     LeaderboardService.getPodium(),
-                    LeaderboardService.getRankings(),
+                    LeaderboardService.getRankings(new Date().toISOString().split('T')[0], 0, 50),
                     LeaderboardService.getMyRank()
                 ]);
 

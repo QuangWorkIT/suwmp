@@ -12,61 +12,21 @@ import {
   Circle,
 } from "lucide-react";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { CitizenService } from "../../services/CitizenService";
+import type { DashboardWidgetsResponse, MonthlyProgressResponse } from "../../services/CitizenService";
+import wasteReportService from "../../services/WasteReportService";
+import { LeaderboardService } from "../../services/LeaderboardService";
+import type { CitizenWasteReportStatus } from "../../types/WasteReportRequest";
+import type { LeaderboardUser } from "../../types/leaderboard";
 
-type ReportStatus = "Collected" | "In Progress" | "Pending";
-
-interface Report {
-  id: number;
-  title: string;
-  address: string;
-  date: string;
-  status: ReportStatus;
-}
-
-interface LeaderboardUser {
-  rank: number;
-  name: string;
-  points: number;
-  isYou?: boolean;
-}
-
-const reports: Report[] = [
-  {
-    id: 1,
-    title: "Recyclables",
-    address: "123 Green Street",
-    date: "Jan 10, 2026",
-    status: "Collected",
-  },
-  {
-    id: 2,
-    title: "Organic Waste",
-    address: "456 Eco Lane",
-    date: "Jan 11, 2026",
-    status: "In Progress",
-  },
-  {
-    id: 3,
-    title: "E-Waste",
-    address: "789 Tech Road",
-    date: "Jan 12, 2026",
-    status: "Pending",
-  },
-];
-
-const leaderboard: LeaderboardUser[] = [
-  { rank: 1, name: "Sarah Green", points: 2450 },
-  { rank: 2, name: "Mike Rivers", points: 2280 },
-  { rank: 3, name: "Anna Forest", points: 2150 },
-  { rank: 4, name: "You", points: 1890, isYou: true },
-  { rank: 5, name: "Tom Woods", points: 1750 },
-];
-
-const statusStyles: Record<ReportStatus, string> = {
-  Collected: "bg-green-100 text-green-600",
-  "In Progress": "bg-blue-100 text-blue-600",
-  Pending: "bg-yellow-100 text-yellow-600",
+const getStatusStyle = (status: string) => {
+  switch (status) {
+    case "COLLECTED": return "bg-green-100 text-green-600";
+    case "ACCEPTED":
+    case "ASSIGNED": return "bg-blue-100 text-blue-600";
+    default: return "bg-yellow-100 text-yellow-600";
+  }
 };
 
 interface StatCardProps {
@@ -142,6 +102,53 @@ const ProgressItem = ({
 };
 
 const CitizenHome = () => {
+  const [widgets, setWidgets] = useState<DashboardWidgetsResponse | null>(null);
+  const [progress, setProgress] = useState<MonthlyProgressResponse | null>(null);
+  const [recentReports, setRecentReports] = useState<CitizenWasteReportStatus[]>([]);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const [widgetsRes, progressRes, reportsData, leaderboardRes] = await Promise.all([
+          CitizenService.getDashboardWidgets(),
+          CitizenService.getMonthlyProgress(),
+          wasteReportService.getMyReports(),
+          LeaderboardService.getRankings(new Date().toISOString().split('T')[0], 0, 5)
+        ]);
+        
+        // Ensure success property exists or access data directly based on BaseResponse type
+        if (widgetsRes?.data) {
+          // Some backend endpoints wrap in success, some just return the object directly based on how BaseResponse is typed
+          setWidgets(widgetsRes.data);
+        } else if (widgetsRes && !('data' in widgetsRes)) {
+            // If the response IS the data (e.g. some backend APIs are flattened)
+            setWidgets(widgetsRes as unknown as DashboardWidgetsResponse);
+        }
+
+        if (progressRes?.data) {
+          setProgress(progressRes.data);
+        } else if (progressRes && !('data' in progressRes)) {
+          setProgress(progressRes as unknown as MonthlyProgressResponse);
+        }
+
+        setRecentReports(reportsData || []);
+        setLeaderboardData(leaderboardRes || []);
+      } catch (error) {
+        console.error("Error fetching homepage data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 bg-gray-100 min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -153,28 +160,28 @@ const CitizenHome = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <StatCard
           title="Total Reports"
-          value="24"
+          value={widgets?.totalReports?.toLocaleString() || "0"}
           icon={<FileText />}
           bg="bg-linear-to-br from-emerald-500 to-emerald-700"
         />
 
         <StatCard
           title="Reward Points"
-          value="1,890"
+          value={widgets?.rewardPoints?.toLocaleString() || "0"}
           icon={<Award />}
           bg="bg-linear-to-br from-orange-500 to-orange-700"
         />
 
         <StatCard
           title="Total Volume"
-          value="156"
+          value={widgets?.totalVolume?.toLocaleString() || "0"}
           icon={<Leaf />}
           bg="bg-linear-to-br from-green-400 to-green-600"
         />
 
         <StatCard
           title="Items Recycled"
-          value="89"
+          value={widgets?.itemsRecycled?.toLocaleString() || "0"}
           icon={<Recycle />}
           bg="bg-linear-to-br from-blue-500 to-blue-700"
         />
@@ -204,57 +211,61 @@ const CitizenHome = () => {
           </div>
 
           <div className="space-y-4">
-            {reports.map((report) => (
-              <div
-                key={report.id}
-                className="border rounded-xl p-4 flex items-center justify-between hover:shadow transition"
-              >
-                <div className="flex items-center gap-4">
-                  {/* Icon */}
-                  <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center">
-                    <Recycle className="text-gray-600" />
-                  </div>
-
-                  {/* Info */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold">{report.title}</p>
-
-                      <span
-                        className={`flex gap-1.5 items-center px-2 py-1 text-xs rounded-full ${
-                          statusStyles[report.status]
-                        }`}
-                      >
-                        {report.status === "Collected" && (
-                          <CircleCheck className="size-3.5" />
-                        )}
-                        {report.status === "In Progress" && (
-                          <Truck className="size-3.5" />
-                        )}
-                        {report.status === "Pending" && (
-                          <Circle className="size-3.5" />
-                        )}
-                        {report.status}
-                      </span>
+            {recentReports.length > 0 ? (
+              recentReports.slice(0, 3).map((report) => (
+                <div
+                  key={report.id}
+                  className="border rounded-xl p-4 flex items-center justify-between hover:shadow transition"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Icon */}
+                    <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center">
+                      <Recycle className="text-gray-600" />
                     </div>
 
-                    <div className="flex text-sm text-gray-500 gap-4">
-                      <span className="flex items-center gap-1">
-                        <MapPin size={14} />
-                        {report.address}
-                      </span>
+                    {/* Info */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold">{report.wasteTypeName || "Waste Report"}</p>
 
-                      <span className="flex items-center gap-1">
-                        <Clock size={14} />
-                        {report.date}
-                      </span>
+                        <span
+                          className={`flex gap-1.5 items-center px-2 py-1 text-xs rounded-full ${
+                            getStatusStyle(report.status)
+                          }`}
+                        >
+                          {report.status === "COLLECTED" && (
+                            <CircleCheck className="size-3.5" />
+                          )}
+                          {(report.status === "ASSIGNED" || report.status === "ACCEPTED") && (
+                            <Truck className="size-3.5" />
+                          )}
+                          {report.status === "PENDING" && (
+                            <Circle className="size-3.5" />
+                          )}
+                          {report.status}
+                        </span>
+                      </div>
+
+                      <div className="flex text-sm text-gray-500 gap-4">
+                        <span className="flex items-center gap-1">
+                          <MapPin size={14} />
+                          {report.latitude && report.longitude ? `${report.latitude.toFixed(2)}, ${report.longitude.toFixed(2)}` : "Location saved"}
+                        </span>
+
+                        <span className="flex items-center gap-1">
+                          <Clock size={14} />
+                          {new Date(report.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  <ChevronRight className="text-gray-400" />
                 </div>
-
-                <ChevronRight className="text-gray-400" />
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-gray-500 py-4 text-center">No recent reports found.</p>
+            )}
           </div>
         </motion.div>
 
@@ -275,22 +286,22 @@ const CitizenHome = () => {
           </div>
 
           <div className="space-y-4">
-            {leaderboard.map((user) => (
+            {leaderboardData.slice(0, 5).map((user) => (
               <div
                 key={user.rank}
                 className={`flex items-center justify-between p-3 rounded-lg ${
-                  user.isYou ? "bg-green-100 border border-green-200" : ""
+                  user.isCurrentUser ? "bg-green-100 border border-green-200" : ""
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-gray-500 w-4">{user.rank}</span>
 
-                  <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold">
-                    {user.name[0]}
+                  <div className={`w-9 h-9 rounded-full ${user.avatarColor || 'bg-gray-200'} flex items-center justify-center text-sm font-semibold text-white`}>
+                    {user.avatarInitial || user.name.charAt(0)}
                   </div>
 
                   <span
-                    className={user.isYou ? "text-green-600 font-medium" : ""}
+                    className={user.isCurrentUser ? "text-green-600 font-medium" : ""}
                   >
                     {user.name}
                   </span>
@@ -301,6 +312,9 @@ const CitizenHome = () => {
                 </span>
               </div>
             ))}
+            {leaderboardData.length === 0 && (
+               <p className="text-gray-500 py-4 text-center">Loading leaderboard...</p>
+            )}
           </div>
 
           <motion.button
@@ -349,22 +363,22 @@ const CitizenHome = () => {
         <div className="grid grid-cols-3 gap-6">
           <ProgressItem
             label="Plastic Recycled"
-            value={12}
-            max={15}
+            value={progress?.currentPlasticKg || 0}
+            max={progress?.targetPlasticKg || 15}
             unit="kg"
             delay={0.5}
           />
           <ProgressItem
             label="Reports Submitted"
-            value={8}
-            max={10}
+            value={progress?.currentReports || 0}
+            max={progress?.targetReports || 10}
             unit="reports"
             delay={0.65}
           />
           <ProgressItem
             label="Points Earned"
-            value={340}
-            max={500}
+            value={progress?.currentPoints || 0}
+            max={progress?.targetPoints || 500}
             unit="pts"
             delay={0.8}
           />
