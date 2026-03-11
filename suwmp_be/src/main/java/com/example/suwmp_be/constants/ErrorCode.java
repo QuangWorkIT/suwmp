@@ -26,7 +26,7 @@ public enum ErrorCode {
     USER_INACTIVE("Unauthenticated", "User is inactive"),
 
     ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found"),
-    ENTERPRISE_NOT_ACITVE("Not Found", "Enterprise not active"),
+    ENTERPRISE_NOT_ACTIVE("Bad Request", "Enterprise not active"),
     WASTE_REPORT_NOT_FOUND("Not Found", "Waste report not found"),
     COLLECTOR_NOT_IN_ENTERPRISE("Bad Request", "Collector does not belong to this enterprise"),
     COLLECTOR_NOT_AVAILABLE("Bad Request", "Collector is not available for assignment"),

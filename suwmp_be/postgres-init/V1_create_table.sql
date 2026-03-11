@@ -218,6 +218,7 @@ CREATE TABLE complaints
     id              BIGSERIAL PRIMARY KEY,
     citizen_id      UUID   NOT NULL REFERENCES users (id),
     waste_report_id BIGINT NOT NULL REFERENCES waste_reports (id),
+    new_waste_report_id BIGINT REFERENCES waste_reports (id),
     description     TEXT,
     photo_url       VARCHAR(500),
     status          VARCHAR(20) CHECK (

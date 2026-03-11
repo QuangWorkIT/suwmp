@@ -1,12 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import wasteReportService from "@/services/WasteReportService";
-import type { Complaint, ComplaintGetResponse } from "@/types/complaint";
+import type { ComplaintGetResponse } from "@/types/complaint";
 import type { NearbyEnterpriseResponse, WasteReportDetailForComplaint } from "@/types/WasteReportRequest";
+import { formatWasteTypeName } from "@/utilities/capacityUtils";
 import { Input } from "@base-ui/react";
 import { Building2, Loader2, Search, Trash2, UserCheck, UserRound, Weight } from "lucide-react";
 import { useEffect, useState } from "react";
 import NearByEnterprise from "./NearByEnterprise";
-import { formatWasteTypeName } from "@/utilities/capacityUtils";
+import { toast } from "sonner";
 
 // ─── Info Row helper ──────────────────────────────────────────────────────────
 
@@ -91,8 +92,10 @@ const AssignEnterpriseDialog = ({
             await wasteReportService.createWasteReportForComplaint(complaint.wasteReportId, enterpriseId);
             onOpenChange(false);
             onAssigned();
+
+            toast.success("Complaint assigned successfully");
         } catch {
-            /* handle error if needed */
+            toast.error("Failed to assign complaint");
         } finally {
             setAssigningId(null);
         }

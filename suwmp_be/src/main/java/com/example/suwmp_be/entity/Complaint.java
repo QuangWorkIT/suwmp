@@ -27,6 +27,10 @@ public class Complaint {
     @JoinColumn(name = "waste_report_id", nullable = false)
     private WasteReport wasteReport;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "new_waste_report_id")
+    private WasteReport newWasteReport;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
