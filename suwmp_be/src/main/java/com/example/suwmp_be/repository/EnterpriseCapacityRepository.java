@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface EnterpriseCapacityRepository extends JpaRepository<EnterpriseCapacity, Long> {
     boolean existsByEnterpriseIdAndWasteTypeId(long enterpriseId, long wasteTypeId);
+    Optional<EnterpriseCapacity> findByEnterpriseIdAndWasteTypeId(long enterpriseId, long wasteTypeId);
 
     @EntityGraph(attributePaths = {"enterprise", "wasteType"})
     Optional<List<EnterpriseCapacity>> findByEnterpriseId(Long enterpriseId);

@@ -2,6 +2,7 @@ package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.complaint.ComplaintDTO;
+import com.example.suwmp_be.dto.complaint.ComplaintGetResponse;
 import com.example.suwmp_be.dto.complaint.UpdateComplaintStatus;
 import com.example.suwmp_be.dto.response.ComplaintResponse;
 import com.example.suwmp_be.service.IComplaintService;
@@ -74,6 +75,17 @@ public class ComplaintController {
                 true,
                 "User complaints retrieved successfully",
                 complaints
+        ));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}/with-waste-report")
+    public ResponseEntity<BaseResponse<ComplaintGetResponse>> getComplaintWithWasteReportById(@PathVariable Long id) {
+        var complaint = complaintService.getComplaintWithWasteReportById(id);
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Complaint retrieved successfully",
+                complaint
         ));
     }
 }
