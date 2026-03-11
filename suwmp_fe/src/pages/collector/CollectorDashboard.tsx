@@ -21,6 +21,12 @@ import {
 import { CollectorDashboardService } from "@/services/CollectorDashboardService";
 import type { DashboardSummary, DashboardTask, DashboardFeedback } from "@/types/collector-dashboard";
 
+import { useNavigate } from "react-router";
+import { useAppDispatch } from "@/redux/hooks";
+import { setCurrentTask, setNextTask } from "@/redux/features/assignedTaskSlice";
+import wasteReportService from "@/services/WasteReportService";
+import { toast } from "sonner";
+
 type TaskStatus = "In Progress" | "Assigned" | "Completed" | "COLLECTED" | string;
 
 const StarRating = ({ rating }: { rating: number }) => {
@@ -95,12 +101,15 @@ const getWasteTypeInfo = (wasteType: string) => {
 };
 
 const CollectorDashboard = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<"Today" | "Upcoming">("Today");
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [tasks, setTasks] = useState<DashboardTask[]>([]);
   const [feedbacks, setFeedbacks] = useState<DashboardFeedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,6 +132,32 @@ const CollectorDashboard = () => {
     };
     fetchData();
   }, []);
+
+  const handleTaskClick = async (taskId: number) => {
+    try {
+      setIsNavigating(true);
+      // Fetch full task details since dashboard API only provides summary
+      const response = await wasteReportService.getCollectorAssignedTasks(0, 100);
+      const allAssignedTasks = response.data;
+
+      const taskIndex = allAssignedTasks.findIndex(t => t.requestId === taskId);
+      if (taskIndex !== -1) {
+        const task = allAssignedTasks[taskIndex];
+        const nextTask = (taskIndex + 1 < allAssignedTasks.length) ? allAssignedTasks[taskIndex + 1] : null;
+
+        dispatch(setCurrentTask(task));
+        dispatch(setNextTask(nextTask));
+        navigate("/collector/route");
+      } else {
+        toast.error("Task details not found. Please check your tasks list.");
+      }
+    } catch (error) {
+      console.error("Error navigating to task:", error);
+      toast.error("Failed to load task details");
+    } finally {
+      setIsNavigating(false);
+    }
+  };
 
   const statCards = [
     {
@@ -348,7 +383,8 @@ const CollectorDashboard = () => {
                               backgroundColor: "#f8fafc",
                               transition: { duration: 0.15 },
                             }}
-                            className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white cursor-pointer group"
+                            onClick={() => !isNavigating && handleTaskClick(task.taskId)}
+                            className={`flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white cursor-pointer group transition-opacity ${isNavigating ? "opacity-50 cursor-wait" : ""}`}
                           >
                             <div className="flex items-center gap-3">
                               {/* Icon */}
