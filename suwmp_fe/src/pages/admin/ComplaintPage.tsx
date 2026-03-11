@@ -25,7 +25,7 @@ const StatusBadge = ({ status }: { status: Complaint["status"] }) => {
         return <Badge className="bg-red-100 text-red-600 hover:bg-red-300 font-semibold">Open</Badge>;
     }
     if (status === "IN_PROGRESS") {
-        return <Badge className="bg-blue-100 text-blue-600 hover:bg-blue-300 font-semibold">Investigating</Badge>;
+        return <Badge className="bg-blue-100 text-blue-600 hover:bg-blue-300 font-semibold">In Progress</Badge>;
     }
     return <Badge className="bg-green-100 text-green-600 hover:bg-green-300 font-semibold">Resolved</Badge>;
 };
