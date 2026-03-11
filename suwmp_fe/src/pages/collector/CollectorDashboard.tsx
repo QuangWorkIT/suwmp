@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,60 +16,12 @@ import {
   Circle,
   Truck,
   User,
+  Loader2,
 } from "lucide-react";
+import { CollectorDashboardService } from "@/services/CollectorDashboardService";
+import type { DashboardSummary, DashboardTask, DashboardFeedback } from "@/types/collector-dashboard";
 
-type TaskStatus = "In Progress" | "Assigned" | "Completed";
-
-interface Task {
-  id: number;
-  title: string;
-  status: TaskStatus;
-  priority?: boolean;
-  distance: string;
-  eta: string;
-  assignee: string;
-  color: string;
-  icon: React.ReactNode;
-}
-
-interface Feedback {
-  id: number;
-  name: string;
-  date: string;
-  rating: number;
-  comment: string;
-}
-
-const statCards = [
-  {
-    label: "Today's Tasks",
-    value: "8",
-    icon: <ClipboardList className="w-6 h-6 text-white" />,
-    bg: "bg-linear-to-br from-blue-500 to-blue-700",
-    shadow: "shadow-blue-200",
-  },
-  {
-    label: "Completed",
-    value: "5",
-    icon: <CheckCircle2 className="w-6 h-6 text-white" />,
-    bg: "bg-linear-to-br from-emerald-500 to-emerald-700",
-    shadow: "shadow-emerald-200",
-  },
-  {
-    label: "Avg. Response Time",
-    value: "12 min",
-    icon: <Clock className="w-6 h-6 text-white" />,
-    bg: "bg-linear-to-br from-orange-400 to-orange-600",
-    shadow: "shadow-orange-200",
-  },
-  {
-    label: "Rating",
-    value: "4.8★",
-    icon: <Award className="w-6 h-6 text-white" />,
-    bg: "bg-linear-to-br from-purple-500 to-purple-700",
-    shadow: "shadow-purple-200",
-  },
-];
+type TaskStatus = "In Progress" | "Assigned" | "Completed" | "COLLECTED" | string;
 
 const StarRating = ({ rating }: { rating: number }) => {
   return (
@@ -89,27 +41,26 @@ const StarRating = ({ rating }: { rating: number }) => {
 };
 
 const StatusBadge = ({ status }: { status: TaskStatus }) => {
-  const map: Record<
-    TaskStatus,
-    { label: string; icon: React.ReactNode; className: string }
-  > = {
-    "In Progress": {
-      label: "In Progress",
-      icon: <Truck className="size-3.5" />,
-      className: "bg-blue-50 text-blue-600 border border-blue-200",
-    },
-    Assigned: {
-      label: "Assigned",
-      icon: <Circle className="size-3.5" />,
-      className: "bg-amber-50 text-amber-600 border border-amber-200",
-    },
-    Completed: {
-      label: "Completed",
-      icon: <CheckCircle2 className="size-3.5" />,
-      className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
-    },
-  };
-  const { label, icon, className } = map[status];
+  let label = "Assigned";
+  let icon = <Circle className="size-3.5" />;
+  let className = "bg-amber-50 text-amber-600 border border-amber-200";
+
+  switch (status?.toUpperCase()) {
+    case "IN PROGRESS":
+      label = "In Progress";
+      icon = <Truck className="size-3.5" />;
+      className = "bg-blue-50 text-blue-600 border border-blue-200";
+      break;
+    case "COMPLETED":
+    case "COLLECTED":
+      label = "Completed";
+      icon = <CheckCircle2 className="size-3.5" />;
+      className = "bg-emerald-50 text-emerald-600 border border-emerald-200";
+      break;
+    default:
+      label = status || "Assigned";
+  }
+
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${className}`}
@@ -129,94 +80,82 @@ function PriorityBadge() {
   );
 }
 
-const allTasks: { tab: "Today" | "Upcoming"; tasks: Task[] } = {
-  tab: "Today",
-  tasks: [
-    {
-      id: 1,
-      title: "Recyclables",
-      status: "In Progress",
-      priority: true,
-      distance: "0.8 km",
-      eta: "10 mins",
-      assignee: "John D.",
-      color: "bg-linear-to-br from-blue-700 to-blue-500",
-      icon: <Recycle className="w-5 h-5 text-white" />,
-    },
-    {
-      id: 2,
-      title: "Organic Waste",
-      status: "Assigned",
-      distance: "1.2 km",
-      eta: "15 mins",
-      assignee: "Sarah M.",
-      color: "bg-linear-to-br from-emerald-700 to-emerald-500",
-      icon: <Leaf className="w-5 h-5 text-white" />,
-    },
-    {
-      id: 3,
-      title: "E-Waste",
-      status: "Assigned",
-      distance: "2.1 km",
-      eta: "25 mins",
-      assignee: "Mike R.",
-      color: "bg-linear-to-br from-purple-700 to-purple-500",
-      icon: <Zap className="w-5 h-5 text-white" />,
-    },
-  ],
+const getWasteTypeInfo = (wasteType: string) => {
+  const type = wasteType?.toLowerCase() || "";
+  if (type.includes("organic")) {
+    return { color: "bg-linear-to-br from-emerald-700 to-emerald-500", icon: <Leaf className="w-5 h-5 text-white" /> };
+  }
+  if (type.includes("e-waste") || type.includes("electronic")) {
+    return { color: "bg-linear-to-br from-purple-700 to-purple-500", icon: <Zap className="w-5 h-5 text-white" /> };
+  }
+  if (type.includes("hazardous")) {
+    return { color: "bg-red-500", icon: <AlertCircle className="w-5 h-5 text-white" /> };
+  }
+  return { color: "bg-linear-to-br from-blue-700 to-blue-500", icon: <Recycle className="w-5 h-5 text-white" /> };
 };
-
-const upcomingTasks: Task[] = [
-  {
-    id: 4,
-    title: "Hazardous Waste",
-    status: "Assigned",
-    distance: "3.4 km",
-    eta: "35 mins",
-    assignee: "Lisa K.",
-    color: "bg-red-500",
-    icon: <AlertCircle className="w-5 h-5 text-white" />,
-  },
-  {
-    id: 5,
-    title: "Glass & Metal",
-    status: "Assigned",
-    distance: "1.8 km",
-    eta: "20 mins",
-    assignee: "Tom B.",
-    color: "bg-cyan-500",
-    icon: <Recycle className="w-5 h-5 text-white" />,
-  },
-];
-
-const feedbacks: Feedback[] = [
-  {
-    id: 1,
-    name: "John D.",
-    date: "Today",
-    rating: 5,
-    comment: "Very professional and quick service. Thank you!",
-  },
-  {
-    id: 2,
-    name: "Sarah M.",
-    date: "Yesterday",
-    rating: 4,
-    comment: "Good service, could have called before arrival.",
-  },
-  {
-    id: 3,
-    name: "Mike R.",
-    date: "2 days ago",
-    rating: 5,
-    comment: "Excellent work! Exactly what we needed.",
-  },
-];
 
 const CollectorDashboard = () => {
   const [activeTab, setActiveTab] = useState<"Today" | "Upcoming">("Today");
 
-  const displayedTasks = activeTab === "Today" ? allTasks.tasks : upcomingTasks;
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [tasks, setTasks] = useState<DashboardTask[]>([]);
+  const [feedbacks, setFeedbacks] = useState<DashboardFeedback[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [summaryRes, tasksRes, feedbacksRes] = await Promise.all([
+          CollectorDashboardService.getSummary(),
+          CollectorDashboardService.getTasks(),
+          CollectorDashboardService.getFeedbacks(),
+        ]);
+
+        if (summaryRes.success && summaryRes.data) setSummary(summaryRes.data);
+        if (tasksRes.success && tasksRes.data) setTasks(tasksRes.data);
+        if (feedbacksRes.success && feedbacksRes.data) setFeedbacks(feedbacksRes.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const statCards = [
+    {
+      label: "Today's Tasks",
+      value: summary?.totalTasksToday.toString() || "0",
+      icon: <ClipboardList className="w-6 h-6 text-white" />,
+      bg: "bg-linear-to-br from-blue-500 to-blue-700",
+      shadow: "shadow-blue-200",
+    },
+    {
+      label: "Completed",
+      value: summary?.completedTasksToday.toString() || "0",
+      icon: <CheckCircle2 className="w-6 h-6 text-white" />,
+      bg: "bg-linear-to-br from-emerald-500 to-emerald-700",
+      shadow: "shadow-emerald-200",
+    },
+    {
+      label: "Avg. Response Time",
+      value: `${summary?.avgResponseTimeMins || 0} min`,
+      icon: <Clock className="w-6 h-6 text-white" />,
+      bg: "bg-linear-to-br from-orange-400 to-orange-600",
+      shadow: "shadow-orange-200",
+    },
+    {
+      label: "Rating",
+      value: `${summary?.averageRating?.toFixed(1) || "0.0"}★`,
+      icon: <Award className="w-6 h-6 text-white" />,
+      bg: "bg-linear-to-br from-purple-500 to-purple-700",
+      shadow: "shadow-purple-200",
+    },
+  ];
+
+  const displayedTasks = activeTab === "Today" ? tasks : []; // Only Today's tasks are fetched for now
 
   // Animation variants
   const containerVariants = {
@@ -233,6 +172,19 @@ const CollectorDashboard = () => {
     },
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-gray-50 to-green-50/30">
+        <Loader2 className="w-10 h-10 animate-spin text-green-500" />
+      </div>
+    );
+  }
+
+  const progressPercentage = Math.min(
+    ((summary?.completedTasksToday || 0) / Math.max(summary?.totalTasksToday || 1, 1)) * 100,
+    100
+  );
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-gray-50 to-green-50/30 p-6 font-sans">
       {/* ── Greeting ── */}
@@ -243,10 +195,10 @@ const CollectorDashboard = () => {
         transition={{ duration: 0.5 }}
       >
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-          Good Morning, Alex! 🚛
+          Good Morning! 🚛
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          You have 3 tasks remaining today
+          You have {summary?.remainingTasksToday || 0} tasks remaining today
         </p>
       </motion.div>
 
@@ -298,11 +250,13 @@ const CollectorDashboard = () => {
           >
             <Card className="border border-gray-100 rounded-2xl shadow-sm">
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 mt-2">
                   <h2 className="text-base font-semibold text-gray-900">
                     Today's Progress
                   </h2>
-                  <span className="text-sm text-gray-400">5/8 tasks</span>
+                  <span className="text-sm text-gray-400">
+                    {summary?.completedTasksToday || 0}/{summary?.totalTasksToday || 0} tasks
+                  </span>
                 </div>
 
                 {/* Animated progress bar */}
@@ -310,7 +264,7 @@ const CollectorDashboard = () => {
                   <motion.div
                     className="absolute left-0 top-0 h-full rounded-full bg-linear-to-r from-emerald-400 to-green-500"
                     initial={{ width: "0%" }}
-                    animate={{ width: "62.5%" }}
+                    animate={{ width: `${progressPercentage}%` }}
                     transition={{ delay: 0.5, duration: 1, ease: "easeOut" }}
                   />
                 </div>
@@ -318,10 +272,12 @@ const CollectorDashboard = () => {
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-500">
                     Estimated completion:{" "}
-                    <span className="text-gray-700 font-medium">4:30 PM</span>
+                    <span className="text-gray-700 font-medium">
+                      {summary?.estimatedCompletionTime || "N/A"}
+                    </span>
                   </p>
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100">
-                    On Schedule
+                    {summary?.scheduleStatus || "On Schedule"}
                   </span>
                 </div>
               </CardContent>
@@ -337,7 +293,7 @@ const CollectorDashboard = () => {
             <Card className="border border-gray-100 rounded-2xl shadow-sm">
               <CardContent>
                 {/* Header */}
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center justify-between mb-5 mt-2">
                   <h2 className="text-base font-semibold text-gray-900">
                     Active Tasks
                   </h2>
@@ -379,55 +335,64 @@ const CollectorDashboard = () => {
                     transition={{ duration: 0.25 }}
                     className="flex flex-col gap-3"
                   >
-                    {displayedTasks.map((task, i) => (
-                      <motion.div
-                        key={task.id}
-                        initial={{ opacity: 0, x: -12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.07, duration: 0.3 }}
-                        whileHover={{
-                          backgroundColor: "#f8fafc",
-                          transition: { duration: 0.15 },
-                        }}
-                        className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-3">
-                          {/* Icon */}
-                          <div
-                            className={`w-10 h-10 rounded-xl ${task.color} flex items-center justify-center shrink-0`}
+                    {displayedTasks.length > 0 ? (
+                      displayedTasks.map((task, i) => {
+                        const styleInfo = getWasteTypeInfo(task.wasteType);
+                        return (
+                          <motion.div
+                            key={task.taskId}
+                            initial={{ opacity: 0, x: -12 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.07, duration: 0.3 }}
+                            whileHover={{
+                              backgroundColor: "#f8fafc",
+                              transition: { duration: 0.15 },
+                            }}
+                            className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white cursor-pointer group"
                           >
-                            {task.icon}
-                          </div>
+                            <div className="flex items-center gap-3">
+                              {/* Icon */}
+                              <div
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${styleInfo.color}`}
+                              >
+                                {styleInfo.icon}
+                              </div>
 
-                          {/* Info */}
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-semibold text-gray-900">
-                                {task.title}
-                              </span>
-                              <StatusBadge status={task.status} />
-                              {task.priority && <PriorityBadge />}
+                              {/* Info */}
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-semibold text-gray-900">
+                                    {task.wasteType}
+                                  </span>
+                                  <StatusBadge status={task.status} />
+                                  {task.priority && <PriorityBadge />}
+                                </div>
+                                <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    {task.distanceKm ? `${task.distanceKm} km` : "N/A"}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {task.estimatedMins ? `${task.estimatedMins} mins` : "N/A"}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <User className="w-3 h-3" />
+                                    {task.citizenName || "Unknown"}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                              <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {task.distance}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {task.eta}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                {task.assignee}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
 
-                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
-                      </motion.div>
-                    ))}
+                            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                          </motion.div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-8 text-gray-500 text-sm">
+                        No tasks available for {activeTab.toLowerCase()}.
+                      </div>
+                    )}
                   </motion.div>
                 </AnimatePresence>
               </CardContent>
@@ -441,9 +406,9 @@ const CollectorDashboard = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          <Card className="border border-gray-100 rounded-2xl shadow-sm">
+          <Card className="border border-gray-100 rounded-2xl shadow-sm h-full">
             <CardContent>
-              <h2 className="text-base font-semibold text-gray-900 mb-5">
+              <h2 className="text-base font-semibold text-gray-900 mb-5 mt-2">
                 User Feedbacks
               </h2>
 
@@ -453,26 +418,32 @@ const CollectorDashboard = () => {
                 initial="hidden"
                 animate="show"
               >
-                {feedbacks.map((fb) => (
-                  <motion.div
-                    key={fb.id}
-                    whileHover={{ scale: 1.01 }}
-                    className="p-4 rounded-xl border border-gray-100 bg-gray-50/60 cursor-default"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {fb.name}
-                        </p>
-                        <p className="text-xs text-gray-400">{fb.date}</p>
+                {feedbacks.length > 0 ? (
+                  feedbacks.map((fb, idx) => (
+                    <motion.div
+                      key={fb.id || idx}
+                      whileHover={{ scale: 1.01 }}
+                      className="p-4 rounded-xl border border-gray-100 bg-gray-50/60 cursor-default"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {fb.name || fb.citizenName || "Anonymous"}
+                          </p>
+                          <p className="text-xs text-gray-400">{fb.date || fb.createdAt || "Recently"}</p>
+                        </div>
+                        <StarRating rating={fb.rating || 5} />
                       </div>
-                      <StarRating rating={fb.rating} />
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      {fb.comment}
-                    </p>
-                  </motion.div>
-                ))}
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        {fb.comment || "No comment provided."}
+                      </p>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    No feedbacks available yet.
+                  </div>
+                )}
               </motion.div>
             </CardContent>
           </Card>
