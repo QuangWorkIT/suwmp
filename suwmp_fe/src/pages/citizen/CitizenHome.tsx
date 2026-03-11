@@ -13,12 +13,14 @@ import {
 } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { CitizenService } from "../../services/CitizenService";
 import type { DashboardWidgetsResponse, MonthlyProgressResponse } from "../../services/CitizenService";
 import wasteReportService from "../../services/WasteReportService";
 import { LeaderboardService } from "../../services/LeaderboardService";
 import type { CitizenWasteReportStatus } from "../../types/WasteReportRequest";
 import type { LeaderboardUser } from "../../types/leaderboard";
+import { reverseGeocode } from "../../utilities/geocoding";
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -102,9 +104,11 @@ const ProgressItem = ({
 };
 
 const CitizenHome = () => {
+  const navigate = useNavigate();
   const [widgets, setWidgets] = useState<DashboardWidgetsResponse | null>(null);
   const [progress, setProgress] = useState<MonthlyProgressResponse | null>(null);
   const [recentReports, setRecentReports] = useState<CitizenWasteReportStatus[]>([]);
+  const [reportAddresses, setReportAddresses] = useState<Record<string, string>>({});
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -135,6 +139,31 @@ const CitizenHome = () => {
         }
 
         setRecentReports(reportsData || []);
+        
+        // Resolve addresses for the first few reports
+        if (reportsData && reportsData.length > 0) {
+          const topReports = reportsData.slice(0, 3);
+          const addressPromises = topReports.map(async (report) => {
+            if (report.longitude && report.latitude) {
+              try {
+                const address = await reverseGeocode(report.longitude, report.latitude);
+                return { id: report.id, address };
+              } catch (err) {
+                console.error(`Failed to geocode report ${report.id}`, err);
+                return { id: report.id, address: "Location saved" };
+              }
+            }
+            return { id: report.id, address: "Location saved" };
+          });
+          
+          const resolvedAddresses = await Promise.all(addressPromises);
+          const addressMap = resolvedAddresses.reduce((acc, curr) => ({
+            ...acc,
+            [curr.id]: curr.address
+          }), {});
+          setReportAddresses(addressMap);
+        }
+
         setLeaderboardData(leaderboardRes || []);
       } catch (error) {
         console.error("Error fetching homepage data", error);
@@ -204,6 +233,7 @@ const CitizenHome = () => {
             <h2 className="text-lg font-semibold">Recent Reports</h2>
             <motion.button
               whileHover={{ x: 3 }}
+              onClick={() => navigate("/citizen/reports")}
               className="text-sm flex items-center gap-1 text-gray-500 hover:text-black"
             >
               View All <ChevronRight size={16} />
@@ -215,7 +245,8 @@ const CitizenHome = () => {
               recentReports.slice(0, 3).map((report) => (
                 <div
                   key={report.id}
-                  className="border rounded-xl p-4 flex items-center justify-between hover:shadow transition"
+                  onClick={() => navigate(`/citizen/reports/${report.id}`)}
+                  className="border rounded-xl p-4 flex items-center justify-between hover:shadow transition cursor-pointer"
                 >
                   <div className="flex items-center gap-4">
                     {/* Icon */}
@@ -249,7 +280,7 @@ const CitizenHome = () => {
                       <div className="flex text-sm text-gray-500 gap-4">
                         <span className="flex items-center gap-1">
                           <MapPin size={14} />
-                          {report.latitude && report.longitude ? `${report.latitude.toFixed(2)}, ${report.longitude.toFixed(2)}` : "Location saved"}
+                          {reportAddresses[report.id] || "Resolving location..."}
                         </span>
 
                         <span className="flex items-center gap-1">
@@ -320,6 +351,7 @@ const CitizenHome = () => {
           <motion.button
             whileHover={{ backgroundColor: "#f9fafb", scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/citizen/leaderboard")}
             className="w-full mt-6 border rounded-lg py-2 text-sm cursor-pointer"
           >
             View Full Leaderboard
