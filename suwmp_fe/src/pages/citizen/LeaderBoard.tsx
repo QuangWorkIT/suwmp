@@ -25,15 +25,19 @@ function LeaderBoard() {
             setLoading(true);
             try {
                 // Fetch all data in parallel
-                const [podiumData, rankingsData, myRankData] = await Promise.all([
+                const [podiumData, rankingsData] = await Promise.all([
                     LeaderboardService.getPodium(),
-                    LeaderboardService.getRankings(new Date().toISOString().split('T')[0], 0, 50),
-                    LeaderboardService.getMyRank()
+                    LeaderboardService.getRankings(new Date().toISOString().split('T')[0], 0, 50)
                 ]);
 
                 setPodium(podiumData);
                 setRankings(rankingsData);
-                setMyRank(myRankData.rank);
+                
+                // Extract current user rank from rankings
+                const currentUser = rankingsData.find(r => r.isCurrentUser);
+                if (currentUser) {
+                    setMyRank(currentUser.rank);
+                }
             } catch (error) {
                 console.error("Failed to fetch leaderboard data", error);
             } finally {

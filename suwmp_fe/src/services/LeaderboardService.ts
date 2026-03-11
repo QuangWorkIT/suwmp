@@ -80,15 +80,5 @@ export const LeaderboardService = {
             console.error("Error fetching leaderboard podium:", error);
             throw error;
         }
-    },
-
-    getMyRank: async (): Promise<ApiMyRankResponse> => {
-        try {
-            const response = await authClient.get<ApiMyRankResponse>('/leaderboard/me');
-            return response.data;
-        } catch (error) {
-            console.error("Error fetching my rank:", error);
-            throw error;
-        }
     }
 };

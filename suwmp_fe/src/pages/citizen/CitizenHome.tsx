@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { CitizenService } from "../../services/CitizenService";
 import type { DashboardWidgetsResponse, MonthlyProgressResponse } from "../../services/CitizenService";
 import wasteReportService from "../../services/WasteReportService";
@@ -102,6 +103,7 @@ const ProgressItem = ({
 };
 
 const CitizenHome = () => {
+  const navigate = useNavigate();
   const [widgets, setWidgets] = useState<DashboardWidgetsResponse | null>(null);
   const [progress, setProgress] = useState<MonthlyProgressResponse | null>(null);
   const [recentReports, setRecentReports] = useState<CitizenWasteReportStatus[]>([]);
@@ -204,6 +206,7 @@ const CitizenHome = () => {
             <h2 className="text-lg font-semibold">Recent Reports</h2>
             <motion.button
               whileHover={{ x: 3 }}
+              onClick={() => navigate("/citizen/reports")}
               className="text-sm flex items-center gap-1 text-gray-500 hover:text-black"
             >
               View All <ChevronRight size={16} />
@@ -320,6 +323,7 @@ const CitizenHome = () => {
           <motion.button
             whileHover={{ backgroundColor: "#f9fafb", scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/citizen/leaderboard")}
             className="w-full mt-6 border rounded-lg py-2 text-sm cursor-pointer"
           >
             View Full Leaderboard
