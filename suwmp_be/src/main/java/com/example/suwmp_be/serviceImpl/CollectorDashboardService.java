@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -80,7 +80,7 @@ public class CollectorDashboardService implements ICollectorDashboardService {
                     .ratingId(((Number) row.get("rating_id")).longValue())
                     .citizenName((String) row.get("citizen_name"))
                     .rating(((Number) row.get("rating")).intValue())
-                    .timeAgo(calculateTimeAgo(createdAt.getTimestamp().toInstant()))
+                    .timeAgo(calculateTimeAgo(createdAt.toInstant()))
                     .comment("Great service!") // Placeholder until you add the column
                     .build();
         }).toList();
