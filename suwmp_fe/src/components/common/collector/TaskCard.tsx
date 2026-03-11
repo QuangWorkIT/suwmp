@@ -72,7 +72,7 @@ const TaskCard = ({ task, nextTask, index }: TaskCardProps) => {
                     {/* Phone */}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Phone className="h-4 w-4 shrink-0 text-blue-500" />
-                        <span>{task.citizenPhone}</span>
+                        <span>{task.citizenPhone || "N/A"}</span>
                     </div>
 
                     {/* Time */}
