@@ -265,9 +265,12 @@ public class WasteReportServiceImpl implements IWasteReportService {
         var enterpriseCapacity = enterpriseCapacityRepo.findByEnterpriseIdAndWasteTypeId(enterprise.getId(), wasteReport.getWasteType().getId())
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ENTERPRISE_CAPACITY_NOT_FOUND));
         if (!enterpriseCapacity.isActive())
-            throw new BadRequestException(ErrorCode.ENTERPRISE_NOT_ACITVE);
+            throw new BadRequestException(ErrorCode.ENTERPRISE_NOT_ACTIVE);
         editedWasteReport.setEnterprise(enterprise);
         wasteReportRepo.save(editedWasteReport);
+
+        complaint.setNewWasteReport(editedWasteReport);
+        complaintRepo.save(complaint);
 
         log.info("Create waste report for complaint successfully");
     }

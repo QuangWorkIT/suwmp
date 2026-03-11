@@ -89,7 +89,7 @@ const AssignEnterpriseDialog = ({
         if (!complaint.wasteReportId) return;
         setAssigningId(enterpriseId);
         try {
-            await wasteReportService.createWasteReportForComplaint(complaint.wasteReportId, enterpriseId);
+            await wasteReportService.createWasteReportForComplaint(complaint.id, enterpriseId);
             onOpenChange(false);
             onAssigned();
 
