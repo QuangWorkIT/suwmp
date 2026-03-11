@@ -44,7 +44,7 @@ public class CollectionLogController {
                 ));
     }
 
-    @PreAuthorize("hasRole('COLLECTOR)")
+    @PreAuthorize("hasRole('COLLECTOR')")
     @GetMapping("/history")
     public ResponseEntity<PaginatedResponse<ICollectionLogHistoryView>> getCollectionLogHistory(
             @PageableDefault(page = 0, size = 10) Pageable pageable,

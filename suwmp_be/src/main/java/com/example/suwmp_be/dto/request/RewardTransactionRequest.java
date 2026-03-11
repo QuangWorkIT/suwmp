@@ -4,6 +4,7 @@ import com.example.suwmp_be.entity.RewardTransaction;
 import com.example.suwmp_be.entity.User;
 import com.example.suwmp_be.entity.WasteReport;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -21,6 +22,7 @@ public class RewardTransactionRequest {
     @NotNull(message = "Points cannot be null")
     private Integer points;
 
+    @Size(max = 255, message = "Reason cannot exceed 255 characters")
     private String reason;
 
     public static RewardTransaction toEntity(User citizen, WasteReport wasteReport, Integer points, String reason) {

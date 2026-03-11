@@ -22,14 +22,14 @@ public class RewardTransactionServiceImpl implements IRewardTransactionService {
 
     @Override
     public Long createRewardTransaction(RewardTransactionRequest transactionDto) {
-        User citizen = userRepository.findById(transactionDto.getCitizenId())
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-
-        WasteReport wr = wasteReportRepository.findById(transactionDto.getWasteReportId())
+        WasteReport report = wasteReportRepository.findByIdAndCitizen_Id(transactionDto.getWasteReportId(), transactionDto.getCitizenId())
                 .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
 
+        User citizen = userRepository.findById((transactionDto.getCitizenId()))
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        
         RewardTransaction transaction = RewardTransactionRequest.toEntity(
-                citizen, wr, transactionDto.getPoints(), transactionDto.getReason());
+                citizen, report, transactionDto.getPoints(), transactionDto.getReason());
 
         return transactionRepository.save(transaction).getId();
     }
