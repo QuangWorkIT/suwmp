@@ -29,3 +29,7 @@ export interface PaginatedComplaints {
     totalElements: number;
     totalPages: number;
 }
+
+export interface ComplaintUpdateStatusWithReportIdRequest {
+    status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
+}

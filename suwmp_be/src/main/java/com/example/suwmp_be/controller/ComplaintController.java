@@ -3,9 +3,11 @@ package com.example.suwmp_be.controller;
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.complaint.ComplaintDTO;
 import com.example.suwmp_be.dto.complaint.ComplaintGetResponse;
+import com.example.suwmp_be.dto.complaint.ComplaintUpdateStatusWithReportIdRequest;
 import com.example.suwmp_be.dto.complaint.UpdateComplaintStatus;
 import com.example.suwmp_be.dto.response.ComplaintResponse;
 import com.example.suwmp_be.service.IComplaintService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -86,6 +88,16 @@ public class ComplaintController {
                 true,
                 "Complaint retrieved successfully",
                 complaint
+        ));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{wasteReportId}/update-status")
+    public ResponseEntity<BaseResponse<?>> updateComplaintStatusWithWasteReportId(@PathVariable("wasteReportId") long newWasteReportId, @Valid @RequestBody ComplaintUpdateStatusWithReportIdRequest request) {
+        complaintService.updateComplaintStatusWithWasteReportId(newWasteReportId, request);
+        return ResponseEntity.ok(new BaseResponse<>(
+                true,
+                "Update complaint successfully"
         ));
     }
 }

@@ -25,6 +25,7 @@ import ImageDetail from "@/components/common/ImageDetail";
 import s3Service from "@/services/S3Service";
 import { collectionLogService } from "@/services/CollectionLogService";
 import wasteReportService from "@/services/WasteReportService";
+import { ComplaintService } from "@/services/ComplaintService";
 
 const apiKey = import.meta.env.VITE_MAPS_API_KEY
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -267,6 +268,10 @@ export default function RouteMap() {
             )
             if (!statusUpdateResponse.isSuccess)
                 throw new Error(statusUpdateResponse.message)
+            
+            await ComplaintService.updateComplaintStatusWithWasteReportId(currentTask.requestId, {
+                status: "RESOLVED"
+            })
 
             toast.success("Upload proof successfully")
             setIsCompleted(true)
