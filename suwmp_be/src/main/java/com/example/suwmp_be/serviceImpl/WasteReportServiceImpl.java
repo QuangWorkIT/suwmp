@@ -1,6 +1,8 @@
 package com.example.suwmp_be.serviceImpl;
 
+import com.example.suwmp_be.constants.ComplaintStatus;
 import com.example.suwmp_be.constants.ErrorCode;
+import com.example.suwmp_be.constants.WasteReportPriority;
 import com.example.suwmp_be.constants.WasteReportStatus;
 import com.example.suwmp_be.dto.mapper.WasteReportMapper;
 import com.example.suwmp_be.dto.request.RatingRequest;
@@ -11,19 +13,19 @@ import com.example.suwmp_be.dto.response.RatingStatusResponse;
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
+import com.example.suwmp_be.dto.waste_report_complaint.WasteReportCreateForComplaintRequest;
+import com.example.suwmp_be.dto.waste_report_complaint.WasteReportDetailForComplaint;
 import com.example.suwmp_be.entity.Enterprise;
 import com.example.suwmp_be.entity.EnterpriseUser;
 import com.example.suwmp_be.entity.ReportRating;
 import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.exception.ApplicationException;
-import com.example.suwmp_be.repository.EnterpriseUserRepository;
-import com.example.suwmp_be.repository.WasteReportRepository;
-import com.example.suwmp_be.repository.EnterpriseRepository;
+import com.example.suwmp_be.exception.BadRequestException;
+import com.example.suwmp_be.repository.*;
 import com.example.suwmp_be.exception.NotFoundException;
-import com.example.suwmp_be.repository.CollectionAssignmentRepository;
-import com.example.suwmp_be.repository.ReportRatingRepository;
 import com.example.suwmp_be.service.IWasteReportService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +39,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WasteReportServiceImpl implements IWasteReportService {
@@ -46,6 +49,8 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final ReportRatingRepository reportRatingRepo;
     private final CollectionAssignmentRepository collectionAssignmentRepo;
     private final EnterpriseUserRepository enterpriseUserRepo;
+    private final ComplaintRepository complaintRepo;
+    private final EnterpriseCapacityRepository enterpriseCapacityRepo;
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -229,5 +234,44 @@ public class WasteReportServiceImpl implements IWasteReportService {
                 report.getPhotoUrl(),
                 report.getDescription()
         );
+    }
+
+    @Override
+    public WasteReportDetailForComplaint getWasteReportDetailForComplaint(long id) {
+        var wasteReport = wasteReportRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
+
+        log.info("Get waste report detail for complaint successful: {}", id);
+        return wasteReportMapper.toWasteReportDetailForComplaint(wasteReport);
+    }
+
+    @Transactional
+    @Override
+    public void createWasteReportForComplaint(long complaintId, WasteReportCreateForComplaintRequest request) {
+        var complaint = complaintRepo.findById(complaintId)
+                        .orElseThrow(() -> new NotFoundException(ErrorCode.COMPLAINT_NOT_FOUND));
+        if (complaint.getStatus() != ComplaintStatus.OPEN)
+            throw new BadRequestException(ErrorCode.COMPLAINT_NOT_OPEN);
+        complaint.setStatus(ComplaintStatus.IN_PROGRESS);
+        complaintRepo.save(complaint);
+
+        var wasteReport = wasteReportRepo.findById(complaint.getWasteReport().getId())
+                        .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
+        var editedWasteReport = wasteReportMapper.toWasteReportEntity(wasteReport);
+        editedWasteReport.setPriority(WasteReportPriority.URGENT.toString());
+        editedWasteReport.setStatus(WasteReportStatus.PENDING);
+        var enterprise = enterpriseRepo.findById(request.enterpriseId())
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ENTERPRISE_NOT_FOUND));
+        var enterpriseCapacity = enterpriseCapacityRepo.findByEnterpriseIdAndWasteTypeId(enterprise.getId(), wasteReport.getWasteType().getId())
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ENTERPRISE_CAPACITY_NOT_FOUND));
+        if (!enterpriseCapacity.isActive())
+            throw new BadRequestException(ErrorCode.ENTERPRISE_NOT_ACTIVE);
+        editedWasteReport.setEnterprise(enterprise);
+        wasteReportRepo.save(editedWasteReport);
+
+        complaint.setNewWasteReport(editedWasteReport);
+        complaintRepo.save(complaint);
+
+        log.info("Create waste report for complaint successfully");
     }
 }
