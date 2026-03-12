@@ -34,4 +34,6 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     long countByCitizen_Id(UUID citizenId);
 
     Optional<Complaint> findByWasteReport_Id(Long wasteReportId);
+
+    Optional<Complaint> findByNewWasteReport_Id(Long newWasteReportId);
 }

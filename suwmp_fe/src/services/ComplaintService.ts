@@ -1,5 +1,5 @@
 import authClient from "@/config/axios";
-import type { Complaint, ComplaintGetResponse, PaginatedComplaints } from "@/types/complaint";
+import type { Complaint, ComplaintGetResponse, ComplaintUpdateStatusWithReportIdRequest, PaginatedComplaints } from "@/types/complaint";
 
 export const ComplaintService = {
     getComplaints: async (page: number = 0, size: number = 5): Promise<{ data: PaginatedComplaints; message: string; success: boolean }> => {
@@ -46,6 +46,15 @@ export const ComplaintService = {
         try {
             const response = await authClient.get(`/complaints/${id}/with-waste-report`);
             return response.data?.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    },
+
+    updateComplaintStatusWithWasteReportId: async (newWasteTypeId: number, payload:ComplaintUpdateStatusWithReportIdRequest) => {
+        try {
+            await authClient.put(`/complaints/${newWasteTypeId}/update-status`, payload);
         } catch (error) {
             console.error(error);
             throw error;

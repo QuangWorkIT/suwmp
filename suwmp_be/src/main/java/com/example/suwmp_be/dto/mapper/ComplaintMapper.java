@@ -4,7 +4,9 @@ import com.example.suwmp_be.dto.complaint.ComplaintDTO;
 import com.example.suwmp_be.dto.complaint.ComplaintGetResponse;
 import com.example.suwmp_be.dto.response.ComplaintResponse;
 import com.example.suwmp_be.entity.Complaint;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.springframework.data.domain.Page;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
