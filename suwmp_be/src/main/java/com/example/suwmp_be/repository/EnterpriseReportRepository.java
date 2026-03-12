@@ -2,6 +2,8 @@ package com.example.suwmp_be.repository;
 
 import com.example.suwmp_be.dto.enterprise_report.WasteDistribution;
 import com.example.suwmp_be.entity.WasteReport;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -81,13 +83,22 @@ public interface EnterpriseReportRepository extends JpaRepository<WasteReport, L
 
         JOIN collection_assignments ca ON wr.id = ca.waste_report_id
         JOIN users u ON ca.collector_id = u.id
-        LEFT JOIN service_area sa ON u.service_area_id = sa.id 
+        LEFT JOIN service_area sa ON ca.enterprise_id = sa.enterprise_id 
         LEFT JOIN report_ratings rr ON rr.report_id = wr.id
 
         WHERE wr.status = 'COLLECTED' 
 
         GROUP BY u.id, u.full_name, sa.id
         ORDER BY collections DESC
-    """, nativeQuery = true)
-    List<Object[]> getCollectorPerformance();
+    """,
+            countQuery = """
+        SELECT COUNT(DISTINCT u.id)
+        FROM waste_reports wr
+        JOIN collection_assignments ca ON wr.id = ca.waste_report_id
+        JOIN users u ON ca.collector_id = u.id
+        LEFT JOIN service_area sa ON ca.enterprise_id = sa.enterprise_id 
+        WHERE wr.status = 'COLLECTED'
+    """,
+            nativeQuery = true)
+    Page<Object[]> getCollectorPerformance(Pageable pageable);
 }

@@ -4,14 +4,17 @@ import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.enterprise_report.CollectionTrendDTO;
 import com.example.suwmp_be.dto.enterprise_report.EnterpriseWidgetDTO;
 import com.example.suwmp_be.service.IEnterpriseReportService;
+import jakarta.validation.constraints.Min;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -56,8 +59,11 @@ public class EnterpriseReportController {
     }
 
     @GetMapping("/collector-performance")
-    public ResponseEntity<BaseResponse<?>> getCollectorPerformance() {
-        var performanceData = enterpriseReportService.getCollectorPerformance();
+    public ResponseEntity<BaseResponse<?>> getCollectorPerformance(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "5") @Min(1) int size
+    ) {
+        var performanceData = enterpriseReportService.getCollectorPerformance(Pageable.ofSize(size).withPage(page));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(
                 true,
                 "Get collector performance data successful",
