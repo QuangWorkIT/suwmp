@@ -466,7 +466,13 @@ export default function EnterpriseReports() {
 
             {/* Rows */}
             {collectors.map((c, i) => {
-              const efficiencyColor = c.efficiency >= 90 ? "emerald" : c.efficiency >= 70 ? "amber" : "red";
+              const efficiencyVariant = c.efficiency >= 90 ? "high" : c.efficiency >= 70 ? "medium" : "low";
+              const efficiencyClasses = {
+                high: "text-emerald-700 bg-emerald-100",
+                medium: "text-amber-700 bg-amber-100",
+                low: "text-red-700 bg-red-100",
+              };
+
               return (
                 <motion.div
                   key={c.collectorName + i}
@@ -492,7 +498,7 @@ export default function EnterpriseReports() {
                   {/* Efficiency badge */}
                   <div>
                     <span
-                      className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full text-${efficiencyColor}-700 bg-${efficiencyColor}-100`}
+                      className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full ${efficiencyClasses[efficiencyVariant]}`}
                     >
                       {c.efficiency.toFixed(1)}%
                     </span>
