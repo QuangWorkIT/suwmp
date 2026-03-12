@@ -91,7 +91,7 @@ public class ComplaintController {
         ));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('COLLECTOR')")
     @PutMapping("/{wasteReportId}/update-status")
     public ResponseEntity<BaseResponse<?>> updateComplaintStatusWithWasteReportId(@PathVariable("wasteReportId") long newWasteReportId, @Valid @RequestBody ComplaintUpdateStatusWithReportIdRequest request) {
         complaintService.updateComplaintStatusWithWasteReportId(newWasteReportId, request);
