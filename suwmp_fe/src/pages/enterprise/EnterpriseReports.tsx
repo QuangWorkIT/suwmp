@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -23,126 +23,47 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { EnterpriseReportService } from "@/services/EnterpriseReportService";
+import type { 
+  ReportWidgetData, 
+  CollectionTrend, 
+  WasteDistribution,
+  CollectorPerformance
+} from "@/types/enterprise-report";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Period = "Week" | "Month" | "Quarter";
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
-const trendData: Record<
-  Period,
-  { label: string; collections: number; volume: number }[]
-> = {
-  Week: [
-    { label: "Mon", collections: 172, volume: 1.6 },
-    { label: "Tue", collections: 195, volume: 1.9 },
-    { label: "Wed", collections: 163, volume: 1.5 },
-    { label: "Thu", collections: 210, volume: 2.1 },
-    { label: "Fri", collections: 231, volume: 2.3 },
-    { label: "Sat", collections: 148, volume: 1.4 },
-    { label: "Sun", collections: 128, volume: 1.6 },
-  ],
-  Month: [
-    { label: "Wk 1", collections: 1050, volume: 9.8 },
-    { label: "Wk 2", collections: 1120, volume: 10.4 },
-    { label: "Wk 3", collections: 980, volume: 9.1 },
-    { label: "Wk 4", collections: 1247, volume: 12.4 },
-  ],
-  Quarter: [
-    { label: "Jan", collections: 3800, volume: 36 },
-    { label: "Feb", collections: 4200, volume: 39 },
-    { label: "Mar", collections: 4800, volume: 44 },
-  ],
-};
-
-const statsData: Record<
-  Period,
-  { total: string; volume: string; response: string; satisfaction: string }
-> = {
-  Week: {
-    total: "1,247",
-    volume: "12.4 tons",
-    response: "4.2 hrs",
-    satisfaction: "94%",
-  },
-  Month: {
-    total: "4,982",
-    volume: "49.1 tons",
-    response: "3.9 hrs",
-    satisfaction: "96%",
-  },
-  Quarter: {
-    total: "12,800",
-    volume: "119 tons",
-    response: "4.1 hrs",
-    satisfaction: "95%",
-  },
-};
-
-const collectors = [
-  {
-    name: "Maria Santos",
-    zone: "Zone B",
-    collections: 78,
-    efficiency: 98,
-    rating: 4.9,
-    color: "green",
-  },
-  {
-    name: "Alex Chen",
-    zone: "Zone A",
-    collections: 65,
-    efficiency: 94,
-    rating: 4.8,
-    color: "amber",
-  },
-  {
-    name: "Olivia Brown",
-    zone: "Zone C",
-    collections: 62,
-    efficiency: 96,
-    rating: 4.9,
-    color: "green",
-  },
-  {
-    name: "John Davis",
-    zone: "Zone C",
-    collections: 54,
-    efficiency: 87,
-    rating: 4.5,
-    color: "amber",
-  },
-];
-
-const wasteTypes = [
-  {
+// ─── Waste Type Mapping ──────────────────────────────────────────────────────
+const wasteTypeConfig: Record<string, any> = {
+  RECYCLABLE: {
     label: "Recyclables",
-    pct: 45,
     icon: Recycle,
-    color: "white",
     bg: "bg-linear-to-br from-blue-500 to-blue-700",
   },
-  {
+  ORGANIC: {
     label: "Organic",
-    pct: 32,
     icon: Leaf,
-    color: "white",
     bg: "bg-linear-to-br from-green-500 to-green-700",
   },
-  {
+  E_WASTE: {
     label: "E-Waste",
-    pct: 15,
     icon: Monitor,
-    color: "white",
     bg: "bg-linear-to-br from-purple-500 to-purple-700",
   },
-  {
+  HAZARDOUS: {
     label: "Hazardous",
-    pct: 8,
     icon: AlertTriangle,
-    color: "white",
     bg: "bg-linear-to-br from-red-500 to-red-700",
   },
-];
+};
+
+const getDefaultWasteConfig = (type: string) => ({
+  label: type.charAt(0) + type.slice(1).toLowerCase(),
+  icon: AlertTriangle,
+  bg: "bg-linear-to-br from-gray-500 to-gray-700",
+});
 
 //Sub-components
 interface StatCardProps {
@@ -220,52 +141,91 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function EnterpriseReports() {
   const [period, setPeriod] = useState<Period>("Week");
+  const [widgetData, setWidgetData] = useState<ReportWidgetData | null>(null);
+  const [trends, setTrends] = useState<CollectionTrend[]>([]);
+  const [distribution, setDistribution] = useState<WasteDistribution[]>([]);
+  const [collectors, setCollectors] = useState<CollectorPerformance[]>([]);
+  const [collectorSize, setCollectorSize] = useState(5);
 
-  const stats = statsData[period];
-  const chartData = trendData[period];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [widgetRes, trendsRes, distRes, collectorsRes] = await Promise.all([
+          EnterpriseReportService.getReportWidget(),
+          EnterpriseReportService.getCollectionTrends(),
+          EnterpriseReportService.getWasteDistribution(),
+          EnterpriseReportService.getCollectorPerformance(0, collectorSize)
+        ]);
+
+        if (widgetRes.success) setWidgetData(widgetRes.data);
+        if (trendsRes.success) setTrends(trendsRes.data);
+        if (distRes.success) setDistribution(distRes.data);
+        if (collectorsRes.success) setCollectors(collectorsRes.data.content);
+      } catch (error) {
+        console.error("Error fetching enterprise report data:", error);
+      }
+    };
+
+    fetchData();
+  }, [period, collectorSize]);
 
   const statCards: StatCardProps[] = [
     {
       icon: CheckCircle2,
       iconBg: "bg-linear-to-br from-emerald-500 to-emerald-700",
       iconColor: "white",
-      delta: "+18%",
+      delta: "+0%",
       positive: true,
       label: "Total Collections",
-      value: stats.total,
+      value: widgetData?.totalCollections.toString() || "0",
       index: 0,
     },
     {
       icon: Recycle,
       iconBg: "bg-linear-to-br from-blue-500 to-blue-700",
       iconColor: "white",
-      delta: "+24%",
+      delta: "+0%",
       positive: true,
       label: "Volume Processed",
-      value: stats.volume,
+      value: `${widgetData?.volumeProcessed.toFixed(2) || "0.00"} tons`,
       index: 1,
     },
     {
       icon: Clock,
       iconBg: "bg-linear-to-br from-orange-400 to-orange-600",
       iconColor: "white",
-      delta: "-15%",
+      delta: "0%",
       positive: false,
       label: "Avg Response Time",
-      value: stats.response,
+      value: `${widgetData?.averageResponseTime.toFixed(1) || "0.0"} mins`,
       index: 2,
     },
     {
       icon: TrendingUp,
       iconBg: "bg-linear-to-br from-purple-500 to-purple-700",
       iconColor: "white",
-      delta: "+3%",
+      delta: "+0%",
       positive: true,
       label: "Citizen Satisfaction",
-      value: stats.satisfaction,
+      value: `${widgetData?.citizenSatisfactionScore.toFixed(0) || "0"}%`,
       index: 3,
     },
   ];
+
+  const chartData = trends.map(t => ({
+    label: t.date,
+    collections: t.totalCollections,
+    volume: 0 // Not provided in trends API
+  }));
+
+  const wasteTypes = distribution.map(d => {
+    const config = wasteTypeConfig[d.wasteType] || getDefaultWasteConfig(d.wasteType);
+    return {
+      ...config,
+      pct: Math.round(d.percentage),
+      color: "white"
+    };
+  });
 
   return (
     <div className="min-h-screen bg-[#f7f8fa] font-sans">
@@ -486,7 +446,10 @@ export default function EnterpriseReports() {
             <h2 className="font-bold text-gray-900 text-base">
               Collector Performance
             </h2>
-            <button className="text-xs font-semibold text-[#1a7a4a] hover:text-[#155f3a] transition-colors">
+            <button 
+              onClick={() => setCollectorSize(100)}
+              className="text-xs font-semibold text-[#1a7a4a] hover:text-[#155f3a] transition-colors"
+            >
               View All
             </button>
           </div>
@@ -502,44 +465,47 @@ export default function EnterpriseReports() {
             </div>
 
             {/* Rows */}
-            {collectors.map((c, i) => (
-              <motion.div
-                key={c.name}
-                custom={11 + i}
-                initial="hidden"
-                animate="visible"
-                whileHover={{ backgroundColor: "#f9fafb" }}
-                className="grid grid-cols-5 items-center py-4 border-b border-gray-50 last:border-0 rounded-lg px-1 -mx-1 transition-colors cursor-default"
-              >
-                {/* Name */}
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-gray-800">
-                    {c.name}
-                  </span>
-                </div>
+            {collectors.map((c, i) => {
+              const efficiencyColor = c.efficiency >= 90 ? "emerald" : c.efficiency >= 70 ? "amber" : "red";
+              return (
+                <motion.div
+                  key={c.collectorName + i}
+                  custom={11 + i}
+                  initial="hidden"
+                  animate="visible"
+                  whileHover={{ backgroundColor: "#f9fafb" }}
+                  className="grid grid-cols-5 items-center py-4 border-b border-gray-50 last:border-0 rounded-lg px-1 -mx-1 transition-colors cursor-default"
+                >
+                  {/* Name */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-gray-800">
+                      {c.collectorName}
+                    </span>
+                  </div>
 
-                {/* Zone */}
-                <span className="text-sm text-gray-500">{c.zone}</span>
+                  {/* Zone */}
+                  <span className="text-sm text-gray-500">{c.zone}</span>
 
-                {/* Collections */}
-                <span className="text-sm text-gray-800">{c.collections}</span>
+                  {/* Collections */}
+                  <span className="text-sm text-gray-800">{c.collections}</span>
 
-                {/* Efficiency badge */}
-                <div>
-                  <span
-                    className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full text-${c.color}-700 bg-${c.color}-100`}
-                  >
-                    {c.efficiency}%
-                  </span>
-                </div>
+                  {/* Efficiency badge */}
+                  <div>
+                    <span
+                      className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full text-${efficiencyColor}-700 bg-${efficiencyColor}-100`}
+                    >
+                      {c.efficiency.toFixed(1)}%
+                    </span>
+                  </div>
 
-                {/* Rating */}
-                <div className="flex items-center gap-1.5">
-                  <Star size={14} className="fill-amber-400 text-amber-400" />
-                  <span className="text-sm text-gray-800">{c.rating}</span>
-                </div>
-              </motion.div>
-            ))}
+                  {/* Rating */}
+                  <div className="flex items-center gap-1.5">
+                    <Star size={14} className="fill-amber-400 text-amber-400" />
+                    <span className="text-sm text-gray-800">{c.rating.toFixed(1)}</span>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
       </motion.div>
