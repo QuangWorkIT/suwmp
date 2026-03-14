@@ -274,4 +274,23 @@ public class WasteReportController {
         ComplaintDTO response = complaintService.getIssueReport(id, userId);
         return ResponseEntity.ok(new BaseResponse<>(true, "Get issue report successfully", response));
     }
+    @PreAuthorize("hasRole('CITIZEN')")
+    @PatchMapping("/{id}/cancel")
+    @Operation(
+            summary = "Cancel a waste report",
+            description = "Cancel a waste report that is still in PENDING status. Only the citizen who created the report can cancel it."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Waste report cancelled successfully"),
+            @ApiResponse(responseCode = "400", description = "Report is not in a cancellable state"),
+            @ApiResponse(responseCode = "404", description = "Waste report not found")
+    })
+    public ResponseEntity<BaseResponse<Void>> cancelCitizenWasteReport(
+            @PathVariable @Positive Long id,
+            Authentication authentication
+    ) {
+        UUID citizenId = (UUID) authentication.getPrincipal();
+        wasteService.cancelCitizenWasteReport(id, citizenId);
+        return ResponseEntity.ok(new BaseResponse<>(true, "Waste report cancelled successfully"));
+    }
 }

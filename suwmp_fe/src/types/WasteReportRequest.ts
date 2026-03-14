@@ -1,6 +1,7 @@
 export const WasteReportStatus = {
     PENDING: "PENDING",
     REJECTED: "REJECTED",
+    CANCELLED: "CANCELLED",
     ASSIGNED: "ASSIGNED",
     ON_THE_WAY: "ON_THE_WAY",
     COLLECTED: "COLLECTED",
@@ -70,7 +71,7 @@ export type CancelWasteReportRequest = {
 export type CitizenWasteReportStatus = {
     id: number;
     referenceCode: string;
-    status: "PENDING" | "ACCEPTED" | "ASSIGNED" | "COLLECTED";
+    status: "PENDING" | "ACCEPTED" | "ASSIGNED" | "COLLECTED" | "CANCELLED";
     createdAt: string;
     wasteTypeName: string | null;
     enterpriseName: string | null;

@@ -34,4 +34,6 @@ public interface IWasteReportService {
     RatingStatusResponse getRatingStatus(Long reportId, UUID citizenId);
 
     Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable);
+
+    void cancelCitizenWasteReport(Long reportId, UUID citizenId);
 }

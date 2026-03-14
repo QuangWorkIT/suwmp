@@ -16,6 +16,7 @@ import {
   Star,
   Info,
   Camera,
+  XCircle,
 } from "lucide-react";
 import { reverseGeocode } from "@/utilities/trackasiaGeocode";
 import {
@@ -66,6 +67,10 @@ function ReportStatusPage() {
   const [submittingIssue, setSubmittingIssue] = useState(false);
   const [existingIssue, setExistingIssue] = useState<ComplaintResponse | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+
+  // Cancel state
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -162,6 +167,24 @@ function ReportStatusPage() {
       toast.error(message);
     } finally {
       setSubmittingIssue(false);
+    }
+  };
+
+  const handleCancelReport = async () => {
+    if (!id) return;
+    setCancelling(true);
+    setShowCancelConfirm(false);
+    try {
+      await wasteReportService.cancelCitizenReport(Number(id));
+      toast.success("Report cancelled successfully");
+      const updatedReport = await wasteReportService.getReportStatus(Number(id));
+      setReport(updatedReport);
+    } catch (err: any) {
+      console.error(err);
+      const message = err.response?.data?.message || "Failed to cancel report";
+      toast.error(message);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -331,6 +354,7 @@ function ReportStatusPage() {
                 {report.status === "ACCEPTED" && "Accepted"}
                 {report.status === "ASSIGNED" && "Assigned"}
                 {report.status === "COLLECTED" && "Collected"}
+                {report.status === "CANCELLED" && "Cancelled"}
               </Badge>
               </div>
             </div>
@@ -351,6 +375,9 @@ function ReportStatusPage() {
               collectorName={report.collectorName} 
               onReportIssue={() => setShowIssueDialog(true)}
               hasIssue={!!existingIssue}
+              status={report.status}
+              onCancelReport={() => setShowCancelConfirm(true)}
+              cancelling={cancelling}
             />
           </div>
 
@@ -593,6 +620,26 @@ function ReportStatusPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to cancel this waste report? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Go back</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancelReport}
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                >
+                  Yes, cancel report
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
@@ -603,10 +650,16 @@ function CollectorAndHelpCards({
   collectorName,
   onReportIssue,
   hasIssue,
+  status,
+  onCancelReport,
+  cancelling,
 }: {
   collectorName: string | null;
   onReportIssue: () => void;
   hasIssue: boolean;
+  status: string;
+  onCancelReport: () => void;
+  cancelling: boolean;
 }) {
   return (
     <>
@@ -641,9 +694,17 @@ function CollectorAndHelpCards({
           <Info className="w-4 h-4" />
           {hasIssue ? "Issue Reported" : "Report an issue"}
         </Button>
-        <Button variant="ghost" className="w-full justify-start text-destructive">
-          Cancel this request
-        </Button>
+        {status === "PENDING" && (
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-destructive gap-2"
+            onClick={onCancelReport}
+            disabled={cancelling}
+          >
+            <XCircle className="w-4 h-4" />
+            {cancelling ? "Cancelling..." : "Cancel this request"}
+          </Button>
+        )}
       </Card>
     </>
   );

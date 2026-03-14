@@ -201,6 +201,20 @@ public class WasteReportServiceImpl implements IWasteReportService {
         return wasteReportRepo.findAssignedTasksByCollector_Id(collectorId, pageable);
     }
 
+    @Override
+    @Transactional
+    public void cancelCitizenWasteReport(Long reportId, UUID citizenId) {
+        WasteReport report = wasteReportRepo.findByIdAndCitizen_Id(reportId, citizenId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
+
+        if (report.getStatus() != WasteReportStatus.PENDING) {
+            throw new ApplicationException(ErrorCode.REPORT_NOT_CANCELLABLE);
+        }
+
+        report.setStatus(WasteReportStatus.CANCELLED);
+        wasteReportRepo.save(report);
+    }
+
     private CitizenWasteReportStatusResponse toCitizenStatusResponse(WasteReport report) {
         String collectorName = collectionAssignmentRepo.findByWasteReportId(report.getId())
                 .stream()
