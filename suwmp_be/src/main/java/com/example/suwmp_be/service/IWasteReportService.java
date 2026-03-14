@@ -5,6 +5,8 @@ import com.example.suwmp_be.dto.response.EnterpriseNearbyResponse;
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.response.CitizenWasteReportStatusResponse;
+import com.example.suwmp_be.dto.waste_report_complaint.WasteReportCreateForComplaintRequest;
+import com.example.suwmp_be.dto.waste_report_complaint.WasteReportDetailForComplaint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -36,4 +38,7 @@ public interface IWasteReportService {
     Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable);
 
     void cancelCitizenWasteReport(Long reportId, UUID citizenId);
+    WasteReportDetailForComplaint getWasteReportDetailForComplaint(long id);
+
+    void createWasteReportForComplaint(long complaintId, WasteReportCreateForComplaintRequest request);
 }

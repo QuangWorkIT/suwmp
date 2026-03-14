@@ -87,20 +87,45 @@ public class LeaderBoardService implements ILeaderBoardService {
                         .map(ld -> ld.getCitizen().getId())
                         .toList();
 
+        boolean isMeInPage = citizenIds.contains(me);
+        LeaderboardDaily myDaily = null;
+
+        if (!isMeInPage && me != null) {
+            Optional<LeaderboardDaily> myStatsOpt = leaderboardDailyRepository
+                    .findByCitizen_IdAndSnapshotDate(me, date);
+
+            if (myStatsOpt.isPresent()) {
+                myDaily = myStatsOpt.get();
+                citizenIds.add(me);
+            }
+        }
+
         Map<UUID, Integer> streakMap =
                 buildStreakMap(citizenIds, date);
 
-        return rows.stream()
+        List<RankingDto> result = new ArrayList<>(rows.stream()
                 .map(ld -> new RankingDto(
                         ld.getRank(),
                         ld.getCitizen().getId(),
                         ld.getCitizen().getFullName(),
                         ld.getTotalPoints(),
-                        streakMap.getOrDefault(
-                                ld.getCitizen().getId(), 0),
+                        streakMap.getOrDefault(ld.getCitizen().getId(), 0),
                         ld.getCitizen().getId().equals(me)
                 ))
-                .toList();
+                .toList());
+
+        if (myDaily != null) {
+            result.add(new RankingDto(
+                    myDaily.getRank(),
+                    myDaily.getCitizen().getId(),
+                    myDaily.getCitizen().getFullName(),
+                    myDaily.getTotalPoints(),
+                    streakMap.getOrDefault(me, 0),
+                    true
+            ));
+        }
+
+        return result;
     }
 
 

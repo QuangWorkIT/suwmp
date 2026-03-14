@@ -13,6 +13,8 @@ import com.example.suwmp_be.dto.response.RatingStatusResponse;
 import com.example.suwmp_be.dto.view.IAssignedTaskView;
 
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
+import com.example.suwmp_be.dto.waste_report_complaint.WasteReportCreateForComplaintRequest;
+import com.example.suwmp_be.dto.waste_report_complaint.WasteReportDetailForComplaint;
 import com.example.suwmp_be.service.IComplaintService;
 import com.example.suwmp_be.service.IWasteReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -292,5 +295,31 @@ public class WasteReportController {
         UUID citizenId = (UUID) authentication.getPrincipal();
         wasteService.cancelCitizenWasteReport(id, citizenId);
         return ResponseEntity.ok(new BaseResponse<>(true, "Waste report cancelled successfully"));
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}/complaints")
+    public ResponseEntity<BaseResponse<WasteReportDetailForComplaint>> getWasteReportDetailForComplaint(@PathVariable long id) {
+        var wasteReport = wasteService.getWasteReportDetailForComplaint(id);
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new BaseResponse<>(
+                        true,
+                        "Get waste report detail for complaint successfully",
+                        wasteReport
+                )
+        );
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/complaints")
+    public ResponseEntity<BaseResponse<?>> createWasteReportForComplaint(@PathVariable long id, @RequestBody @Valid WasteReportCreateForComplaintRequest request) {
+        wasteService.createWasteReportForComplaint(id, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new BaseResponse<>(
+                        true,
+                        "Create waste report for complaint successfully"
+                )
+        );
     }
 }

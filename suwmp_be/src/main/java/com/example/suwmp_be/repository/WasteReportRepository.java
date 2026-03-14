@@ -146,6 +146,8 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
     SELECT COALESCE(SUM(wr.volume),0)
     FROM WasteReport wr
     WHERE wr.citizen.id = :citizenId
-""")
+    """)
     Double sumVolumeByCitizenId(@Param("citizenId") UUID citizenId);
+
+    List<WasteReport> findAllByEnterprise_Id(Long enterpriseId);
 }

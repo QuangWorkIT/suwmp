@@ -92,3 +92,20 @@ export interface RatingStatusResponse {
     averageRating: number;
     totalRatings: number;
 }
+
+export interface WasteReportDetailForComplaint {
+    id: number;
+    citizenId: string;
+    citizenName: string;
+    wasteTypeId: number;
+    wasteTypeName: string;
+    enterpriseId: number;
+    previousEnterprise: string;
+    latitude: number;
+    longitude: number;
+    volume: number;
+}
+
+export interface WasteReportCreateForComplaintRequest {
+    enterpriseId: number;
+}

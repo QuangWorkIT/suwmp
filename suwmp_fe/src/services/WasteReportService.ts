@@ -2,6 +2,7 @@ import authClient from "@/config/axios";
 import type { AssignedTask } from "@/types/collectorTask";
 
 import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, RatingStatusResponse, UpdateWasteReportRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { WasteReportDetailForComplaint } from "@/types/WasteReportRequest";
 export interface ComplaintResponse {
     description: string;
     status: string;
@@ -146,6 +147,24 @@ const wasteReportService = {
     },
     cancelCitizenReport: async (reportId: number): Promise<void> => {
         await authClient.patch(`/waste-reports/${reportId}/cancel`);
+
+    getWasteReportDetailForComplaint: async (wasteReportId: number): Promise<WasteReportDetailForComplaint> => {
+        try {
+            const response = await authClient.get(`/waste-reports/${wasteReportId}/complaints`);
+            return response.data.data as WasteReportDetailForComplaint;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    },
+
+    createWasteReportForComplaint: async (wasteReportId: number, enterpriseId: number): Promise<void> => {
+        try {
+            await authClient.post(`/waste-reports/${wasteReportId}/complaints`, { enterpriseId });
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
     },
 }
 

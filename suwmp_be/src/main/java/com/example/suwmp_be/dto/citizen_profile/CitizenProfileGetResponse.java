@@ -6,7 +6,7 @@ import java.util.UUID;
 public record CitizenProfileGetResponse(
         UUID citizenId,
         String fullName,
-        String phoneNumber,
+        String phone,
         String email,
         Instant createdAt,
         int points,

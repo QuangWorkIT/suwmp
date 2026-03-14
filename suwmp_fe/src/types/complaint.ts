@@ -7,6 +7,17 @@ export interface Complaint {
     photoUrl?: string | null;
 }
 
+export interface ComplaintGetResponse {
+    id: number;
+    citizenId: string;
+    citizenName: string;
+    wasteReportId: number;
+    description: string;
+    photoUrl?: string | null;
+    status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
+    createdAt: string;
+}
+
 export interface PaginatedComplaints {
     content: Complaint[];
     empty: boolean;
@@ -17,4 +28,8 @@ export interface PaginatedComplaints {
     size: number;
     totalElements: number;
     totalPages: number;
+}
+
+export interface ComplaintUpdateStatusWithReportIdRequest {
+    status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
 }

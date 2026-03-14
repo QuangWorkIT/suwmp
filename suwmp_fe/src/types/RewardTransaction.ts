@@ -10,3 +10,10 @@ export interface RewardTransaction {
   volume: number | null;
   status: string;
 }
+
+export type CreateRewardTransactionRequest = {
+    citizenId: string;
+    wasteReportId: number;
+    points: number;
+    reason: string;
+}

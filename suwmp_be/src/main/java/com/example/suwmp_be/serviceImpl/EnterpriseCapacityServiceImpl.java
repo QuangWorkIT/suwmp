@@ -1,13 +1,16 @@
 package com.example.suwmp_be.serviceImpl;
 
 import com.example.suwmp_be.constants.ErrorCode;
+import com.example.suwmp_be.constants.WasteReportStatus;
 import com.example.suwmp_be.dto.enterprise_capacity.CreateEnterpriseCapacityRequest;
 import com.example.suwmp_be.dto.enterprise_capacity.GetCapacitiesResponse;
 import com.example.suwmp_be.dto.enterprise_capacity.UpdateEnterpriseCapacityRequest;
 import com.example.suwmp_be.dto.mapper.IEnterpriseCapacityMapper;
+import com.example.suwmp_be.entity.WasteReport;
 import com.example.suwmp_be.exception.BadRequestException;
 import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.EnterpriseCapacityRepository;
+import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.service.IEnterpriseCapacityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ import java.util.List;
 public class EnterpriseCapacityServiceImpl implements IEnterpriseCapacityService {
     private final EnterpriseCapacityRepository enterpriseCapacityRepository;
     private final IEnterpriseCapacityMapper enterpriseCapacityMapper;
+    private final WasteReportRepository wasteReportRepository;
 
     @Override
     @Transactional
@@ -48,6 +53,9 @@ public class EnterpriseCapacityServiceImpl implements IEnterpriseCapacityService
     @Override
     public List<GetCapacitiesResponse> getCapacities(long enterpriseId) {
         var capacities = enterpriseCapacityRepository.findByEnterpriseId(enterpriseId);
+
+        var wasteReports = wasteReportRepository.findAllByEnterprise_Id(enterpriseId);
+
         log.info("Get capacities successful.");
 
         return capacities.map(enterpriseCapacities -> enterpriseCapacities
@@ -55,6 +63,14 @@ public class EnterpriseCapacityServiceImpl implements IEnterpriseCapacityService
                 .map(c -> {
                             var getCapacitiesResponse = enterpriseCapacityMapper.toGetCapacitiesResponse(c);
                             getCapacitiesResponse.setWasteTypeName(c.getWasteType().getName());
+
+                            double totalVolume = 0;
+                            for (WasteReport wt: wasteReports)
+                                if (Objects.equals(wt.getWasteType().getId(), c.getWasteType().getId()) &&
+                                        WasteReportStatus.COLLECTED == wt.getStatus())
+                                    totalVolume += wt.getVolume();
+                            getCapacitiesResponse.setTotalVolume(totalVolume);
+
                             return getCapacitiesResponse;
                         }
                 ).toList()).orElseGet(ArrayList::new);
