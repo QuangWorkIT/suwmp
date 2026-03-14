@@ -204,15 +204,20 @@ public class WasteReportServiceImpl implements IWasteReportService {
     @Override
     @Transactional
     public void cancelCitizenWasteReport(Long reportId, UUID citizenId) {
-        WasteReport report = wasteReportRepo.findByIdAndCitizen_Id(reportId, citizenId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND));
+        int updatedRows = wasteReportRepo.updateStatusIfCurrentStatus(
+                reportId,
+                citizenId,
+                WasteReportStatus.PENDING,
+                WasteReportStatus.CANCELLED
+        );
 
-        if (report.getStatus() != WasteReportStatus.PENDING) {
+        if (updatedRows == 0) {
+            // Check if report exists to throw appropriate exception
+            if (!wasteReportRepo.findByIdAndCitizen_Id(reportId, citizenId).isPresent()) {
+                throw new NotFoundException(ErrorCode.WASTE_REPORT_NOT_FOUND);
+            }
             throw new ApplicationException(ErrorCode.REPORT_NOT_CANCELLABLE);
         }
-
-        report.setStatus(WasteReportStatus.CANCELLED);
-        wasteReportRepo.save(report);
     }
 
     private CitizenWasteReportStatusResponse toCitizenStatusResponse(WasteReport report) {

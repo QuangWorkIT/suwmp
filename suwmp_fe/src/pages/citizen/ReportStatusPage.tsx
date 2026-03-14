@@ -174,15 +174,26 @@ function ReportStatusPage() {
     if (!id) return;
     setCancelling(true);
     setShowCancelConfirm(false);
+    
+    // First operation: Cancellation
     try {
       await wasteReportService.cancelCitizenReport(Number(id));
       toast.success("Report cancelled successfully");
-      const updatedReport = await wasteReportService.getReportStatus(Number(id));
-      setReport(updatedReport);
     } catch (err: any) {
       console.error(err);
       const message = err.response?.data?.message || "Failed to cancel report";
       toast.error(message);
+      setCancelling(false);
+      return; // Stop if cancellation failed
+    }
+
+    // Second operation: Refreshing status
+    try {
+      const updatedReport = await wasteReportService.getReportStatus(Number(id));
+      setReport(updatedReport);
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Report cancelled but failed to refresh status");
     } finally {
       setCancelling(false);
     }
@@ -225,7 +236,7 @@ function ReportStatusPage() {
     {
       id: 2,
       label: "In Progress",
-      status: "ACCEPTED" as CitizenWasteReportStatus["status"],
+      status: "ON_THE_WAY" as CitizenWasteReportStatus["status"],
       description: null as string | null,
       timestamp: null as string | null,
     },
@@ -242,7 +253,9 @@ function ReportStatusPage() {
     const idx = timelineItems.findIndex(
       (item) => item.status === report.status,
     );
-    return idx === -1 ? 0 : idx;
+    if (idx !== -1) return idx;
+    if (report.status === "CANCELLED") return -1;
+    return 0;
   })();
 
   const createdAt = new Date(report.createdAt);
@@ -351,10 +364,11 @@ function ReportStatusPage() {
               <div className="w-full md:w-56 flex flex-col items-end gap-3">
                 <Badge variant="outline" className="self-start md:self-end">
                 {report.status === "PENDING" && "Pending"}
-                {report.status === "ACCEPTED" && "Accepted"}
+                {report.status === "ON_THE_WAY" && "In Progress"}
                 {report.status === "ASSIGNED" && "Assigned"}
                 {report.status === "COLLECTED" && "Collected"}
                 {report.status === "CANCELLED" && "Cancelled"}
+                {report.status === "REJECTED" && "Rejected"}
               </Badge>
               </div>
             </div>

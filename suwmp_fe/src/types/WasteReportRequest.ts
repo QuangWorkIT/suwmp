@@ -71,7 +71,7 @@ export type CancelWasteReportRequest = {
 export type CitizenWasteReportStatus = {
     id: number;
     referenceCode: string;
-    status: "PENDING" | "ACCEPTED" | "ASSIGNED" | "COLLECTED" | "CANCELLED";
+    status: "PENDING" | "REJECTED" | "CANCELLED" | "ASSIGNED" | "ON_THE_WAY" | "COLLECTED";
     createdAt: string;
     wasteTypeName: string | null;
     enterpriseName: string | null;

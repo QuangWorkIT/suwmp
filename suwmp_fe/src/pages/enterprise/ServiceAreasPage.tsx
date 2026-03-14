@@ -81,7 +81,7 @@ const ServiceAreasPage = () => {
       if (reportsResult.status === "fulfilled") {
         const data = reportsResult.value.data as WasteReportEnterprise[];
         const activeCount = data.filter((r: WasteReportEnterprise) =>
-          ["PENDING", "ACCEPTED", "ASSIGNED"].includes(r.currentStatus)
+          ["PENDING", "ON_THE_WAY", "ASSIGNED"].includes(r.currentStatus)
         ).length;
         setActiveRequestCount(activeCount);
       }
