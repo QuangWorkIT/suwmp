@@ -358,9 +358,28 @@ const ComplaintsPage = () => {
 
                 <div className="pt-4 border-t flex flex-col gap-2">
                   <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 mb-1">
-                    Update Status
+                    Actions
                   </span>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div
+                    className={`grid gap-3 ${
+                      selectedComplaint.status === "OPEN"
+                        ? "grid-cols-3"
+                        : "grid-cols-2"
+                    }`}
+                  >
+                    {selectedComplaint.status === "OPEN" && (
+                      <Button
+                        variant="outline"
+                        className="w-full bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1.5"
+                        onClick={() => {
+                          setIsDialogOpen(false);
+                          setIsAssignDialogOpen(true);
+                        }}
+                      >
+                        <UserCheck size={14} />
+                        Assign
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       className="w-full bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
@@ -383,93 +402,19 @@ const ComplaintsPage = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Assign Enterprise Dialog */}
+        {assignComplaint && (
+          <AssignEnterpriseDialog
+            open={isAssignDialogOpen}
+            onOpenChange={setIsAssignDialogOpen}
+            complaint={assignComplaint}
+            onAssigned={() => fetchComplaints(page)}
+          />
+        )}
       </div>
     </div>
   );
-                {/* Complaint Details Dialog */}
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl">Complaint Details</DialogTitle>
-                        </DialogHeader>
-                        {selectedComplaint && (
-                            <div className="space-y-5 pt-2">
-                                <div>
-                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">Citizen Name</span>
-                                    <p className="text-md font-medium mt-1">{selectedComplaint.citizenName}</p>
-                                </div>
-                                <div>
-                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">Description</span>
-                                    <p className="text-md mt-1">{selectedComplaint.description}</p>
-                                </div>
-                                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                                    <div>
-                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">Status</span>
-                                        <StatusBadge status={selectedComplaint.status} />
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">Created At</span>
-                                        <p className="text-sm font-medium">{selectedComplaint.createdAt ? formatDateTime(selectedComplaint.createdAt) : "N/A"}</p>
-                                    </div>
-                                </div>
-                                {selectedComplaint.photoUrl && (
-                                    <div>
-                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-2">Photo Evidence</span>
-                                        <img src={selectedComplaint.photoUrl} alt="Complaint" className="max-w-full h-auto rounded-lg shadow-sm border" />
-                                    </div>
-                                )}
-
-                                <div className="pt-4 border-t flex flex-col gap-2">
-                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 mb-1">Actions</span>
-                                    <div className={`grid gap-3 ${selectedComplaint.status === "OPEN" ? "grid-cols-3" : "grid-cols-2"}`}>
-                                        {selectedComplaint.status === "OPEN" && (
-                                            <Button
-                                                variant="outline"
-                                                className="w-full bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1.5"
-                                                onClick={() => {
-                                                    setIsDialogOpen(false);
-                                                    setIsAssignDialogOpen(true);
-                                                }}
-                                            >
-                                                <UserCheck size={14} />
-                                                Assign
-                                            </Button>
-                                        )}
-                                        <Button
-                                            variant="outline"
-                                            className="w-full bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-                                            onClick={() => handleUpdateStatus("IN_PROGRESS")}
-                                            disabled={selectedComplaint.status === "IN_PROGRESS"}
-                                        >
-                                            Investigate
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                                            onClick={() => handleUpdateStatus("RESOLVED")}
-                                            disabled={selectedComplaint.status === "RESOLVED"}
-                                        >
-                                            Resolve
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
-
-                {/* Assign Enterprise Dialog */}
-                {assignComplaint && (
-                    <AssignEnterpriseDialog
-                        open={isAssignDialogOpen}
-                        onOpenChange={setIsAssignDialogOpen}
-                        complaint={assignComplaint}
-                        onAssigned={() => fetchComplaints(page)}
-                    />
-                )}
-            </div>
-        </div>
-    );
 };
 
 export default ComplaintsPage;
