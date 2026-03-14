@@ -7,15 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ComplaintService } from "@/services/ComplaintService";
 import type { Complaint, ComplaintGetResponse, PaginatedComplaints } from "@/types/complaint";
 import { motion } from "framer-motion";
-import {
-    CheckCircle2,
-    Clock,
-    Filter,
-    Loader2,
-    MoreVertical, Search,
-    UserCheck,
-    XCircle
-} from "lucide-react";
+import { CheckCircle2, Clock, Filter, Loader2, MoreVertical, Search, UserCheck, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 // ─── Helper Components ───────────────────────────────────────────────────────
@@ -54,8 +46,15 @@ const StatusIcon = ({ status }: { status: Complaint["status"] }) => {
 
 const formatDateTime = (dateStr: string) => {
     const d = new Date(dateStr);
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    return d.toLocaleString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+    });
 };
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -74,7 +73,6 @@ const ComplaintsPage = () => {
     const [assignComplaint, setAssignComplaint] = useState<ComplaintGetResponse | null>(null);
     const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
     const [isAssignLoading, setIsAssignLoading] = useState<number | null>(null); // stores complaint.id being loaded
-
 
     const fetchComplaints = async (pageNumber: number) => {
         setLoading(true);
@@ -176,7 +174,9 @@ const ComplaintsPage = () => {
                                                 <h3 className="font-semibold text-lg">{complaint.description}</h3>
                                                 <p className="text-sm text-gray-500">
                                                     Reported by{" "}
-                                                    <span className="font-semibold text-black">{complaint.citizenName}</span>
+                                                    <span className="font-semibold text-black">
+                                                        {complaint.citizenName}
+                                                    </span>
                                                 </p>
                                             </div>
                                         </div>
@@ -184,7 +184,11 @@ const ComplaintsPage = () => {
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
                                                 <p className="text-xs text-gray-400">CMP-00{complaint.id}</p>
-                                                {complaint.createdAt && <p className="text-sm text-gray-500">{formatDateTime(complaint.createdAt)}</p>}
+                                                {complaint.createdAt && (
+                                                    <p className="text-sm text-gray-500">
+                                                        {formatDateTime(complaint.createdAt)}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             <StatusBadge status={complaint.status} />
@@ -249,33 +253,57 @@ const ComplaintsPage = () => {
                         {selectedComplaint && (
                             <div className="space-y-5 pt-2">
                                 <div>
-                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">Citizen Name</span>
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">
+                                        Citizen Name
+                                    </span>
                                     <p className="text-md font-medium mt-1">{selectedComplaint.citizenName}</p>
                                 </div>
                                 <div>
-                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">Description</span>
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">
+                                        Description
+                                    </span>
                                     <p className="text-md mt-1">{selectedComplaint.description}</p>
                                 </div>
                                 <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
                                     <div>
-                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">Status</span>
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">
+                                            Status
+                                        </span>
                                         <StatusBadge status={selectedComplaint.status} />
                                     </div>
                                     <div className="text-right">
-                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">Created At</span>
-                                        <p className="text-sm font-medium">{selectedComplaint.createdAt ? formatDateTime(selectedComplaint.createdAt) : "N/A"}</p>
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">
+                                            Created At
+                                        </span>
+                                        <p className="text-sm font-medium">
+                                            {selectedComplaint.createdAt
+                                                ? formatDateTime(selectedComplaint.createdAt)
+                                                : "N/A"}
+                                        </p>
                                     </div>
                                 </div>
                                 {selectedComplaint.photoUrl && (
                                     <div>
-                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-2">Photo Evidence</span>
-                                        <img src={selectedComplaint.photoUrl} alt="Complaint" className="max-w-full h-auto rounded-lg shadow-sm border" />
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-2">
+                                            Photo Evidence
+                                        </span>
+                                        <img
+                                            src={selectedComplaint.photoUrl}
+                                            alt="Complaint"
+                                            className="max-w-full h-auto rounded-lg shadow-sm border"
+                                        />
                                     </div>
                                 )}
 
                                 <div className="pt-4 border-t flex flex-col gap-2">
-                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 mb-1">Actions</span>
-                                    <div className={`grid gap-3 ${selectedComplaint.status === "OPEN" ? "grid-cols-3" : "grid-cols-2"}`}>
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 mb-1">
+                                        Actions
+                                    </span>
+                                    <div
+                                        className={`grid gap-3 ${
+                                            selectedComplaint.status === "OPEN" ? "grid-cols-3" : "grid-cols-2"
+                                        }`}
+                                    >
                                         {selectedComplaint.status === "OPEN" && (
                                             <Button
                                                 variant="outline"

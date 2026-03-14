@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { ReportHistoryService } from "@/services/ReportHistoryService";
 import type { ReportHistory, ReportStatus } from "@/types/reportHistory";
+import { reverseGeocode } from "@/utilities/geocoding";
 import {
     Calendar,
     ChevronRight,
@@ -53,6 +54,30 @@ const ReportHistoryPage = () => {
 
         loadReports();
     }, []);
+
+    const ReportLocation = ({ report }: any) => {
+        const [address, setAddress] = useState<string>("Loading location...");
+
+        useEffect(() => {
+            const fetchAddress = async () => {
+                try {
+                    const result = await reverseGeocode(
+                        report.longitude,
+                        report.latitude
+                    );
+                    setAddress(result);
+                } catch (error) {
+                    setAddress("Unknown location");
+                }
+            };
+
+            if (report.longitude && report.latitude) {
+                fetchAddress();
+            }
+        }, [report.longitude, report.latitude]);
+
+        return <div className="flex items-center gap-1">{address}</div>;
+    };
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -242,8 +267,9 @@ const ReportHistoryPage = () => {
                                             <div className="flex gap-4 text-sm text-gray-600">
                                                 <div className="flex items-center gap-1">
                                                     <MapPin className="w-4 h-4" />
-                                                    {report.latitude},{" "}
-                                                    {report.longitude}
+                                                    <ReportLocation
+                                                        report={report}
+                                                    />
                                                 </div>
 
                                                 <div className="flex items-center gap-1">
