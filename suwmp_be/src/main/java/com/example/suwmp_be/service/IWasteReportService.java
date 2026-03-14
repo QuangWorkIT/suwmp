@@ -37,6 +37,7 @@ public interface IWasteReportService {
 
     Page<IAssignedTaskView> getCollectorAssignedTasks(UUID collectorId, Pageable pageable);
 
+    void cancelCitizenWasteReport(Long reportId, UUID citizenId);
     WasteReportDetailForComplaint getWasteReportDetailForComplaint(long id);
 
     void createWasteReportForComplaint(long complaintId, WasteReportCreateForComplaintRequest request);

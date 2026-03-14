@@ -145,6 +145,8 @@ const wasteReportService = {
         const response = await authClient.get(`/waste-reports/${reportId}/issue`);
         return response.data.data as ComplaintResponse;
     },
+    cancelCitizenReport: async (reportId: number): Promise<void> => {
+        await authClient.patch(`/waste-reports/${reportId}/cancel`);
 
     getWasteReportDetailForComplaint: async (wasteReportId: number): Promise<WasteReportDetailForComplaint> => {
         try {

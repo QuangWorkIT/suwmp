@@ -16,6 +16,7 @@ import {
   Star,
   Info,
   Camera,
+  XCircle,
 } from "lucide-react";
 import { reverseGeocode } from "@/utilities/trackasiaGeocode";
 import {
@@ -66,6 +67,10 @@ function ReportStatusPage() {
   const [submittingIssue, setSubmittingIssue] = useState(false);
   const [existingIssue, setExistingIssue] = useState<ComplaintResponse | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+
+  // Cancel state
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -165,6 +170,35 @@ function ReportStatusPage() {
     }
   };
 
+  const handleCancelReport = async () => {
+    if (!id) return;
+    setCancelling(true);
+    setShowCancelConfirm(false);
+    
+    // First operation: Cancellation
+    try {
+      await wasteReportService.cancelCitizenReport(Number(id));
+      toast.success("Report cancelled successfully");
+    } catch (err: any) {
+      console.error(err);
+      const message = err.response?.data?.message || "Failed to cancel report";
+      toast.error(message);
+      setCancelling(false);
+      return; // Stop if cancellation failed
+    }
+
+    // Second operation: Refreshing status
+    try {
+      const updatedReport = await wasteReportService.getReportStatus(Number(id));
+      setReport(updatedReport);
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Report cancelled but failed to refresh status");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   if (loading) return <PageLoading />;
 
   if (error || !report) {
@@ -202,7 +236,7 @@ function ReportStatusPage() {
     {
       id: 2,
       label: "In Progress",
-      status: "ACCEPTED" as CitizenWasteReportStatus["status"],
+      status: "ON_THE_WAY" as CitizenWasteReportStatus["status"],
       description: null as string | null,
       timestamp: null as string | null,
     },
@@ -219,7 +253,9 @@ function ReportStatusPage() {
     const idx = timelineItems.findIndex(
       (item) => item.status === report.status,
     );
-    return idx === -1 ? 0 : idx;
+    if (idx !== -1) return idx;
+    if (report.status === "CANCELLED") return -1;
+    return 0;
   })();
 
   const createdAt = new Date(report.createdAt);
@@ -328,9 +364,11 @@ function ReportStatusPage() {
               <div className="w-full md:w-56 flex flex-col items-end gap-3">
                 <Badge variant="outline" className="self-start md:self-end">
                 {report.status === "PENDING" && "Pending"}
-                {report.status === "ACCEPTED" && "Accepted"}
+                {report.status === "ON_THE_WAY" && "In Progress"}
                 {report.status === "ASSIGNED" && "Assigned"}
                 {report.status === "COLLECTED" && "Collected"}
+                {report.status === "CANCELLED" && "Cancelled"}
+                {report.status === "REJECTED" && "Rejected"}
               </Badge>
               </div>
             </div>
@@ -351,6 +389,9 @@ function ReportStatusPage() {
               collectorName={report.collectorName} 
               onReportIssue={() => setShowIssueDialog(true)}
               hasIssue={!!existingIssue}
+              status={report.status}
+              onCancelReport={() => setShowCancelConfirm(true)}
+              cancelling={cancelling}
             />
           </div>
 
@@ -593,6 +634,26 @@ function ReportStatusPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to cancel this waste report? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Go back</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancelReport}
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                >
+                  Yes, cancel report
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
@@ -603,10 +664,16 @@ function CollectorAndHelpCards({
   collectorName,
   onReportIssue,
   hasIssue,
+  status,
+  onCancelReport,
+  cancelling,
 }: {
   collectorName: string | null;
   onReportIssue: () => void;
   hasIssue: boolean;
+  status: string;
+  onCancelReport: () => void;
+  cancelling: boolean;
 }) {
   return (
     <>
@@ -641,9 +708,17 @@ function CollectorAndHelpCards({
           <Info className="w-4 h-4" />
           {hasIssue ? "Issue Reported" : "Report an issue"}
         </Button>
-        <Button variant="ghost" className="w-full justify-start text-destructive">
-          Cancel this request
-        </Button>
+        {status === "PENDING" && (
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-destructive gap-2"
+            onClick={onCancelReport}
+            disabled={cancelling}
+          >
+            <XCircle className="w-4 h-4" />
+            {cancelling ? "Cancelling..." : "Cancel this request"}
+          </Button>
+        )}
       </Card>
     </>
   );

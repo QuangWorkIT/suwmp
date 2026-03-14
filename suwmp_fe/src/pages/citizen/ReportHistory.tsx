@@ -65,6 +65,8 @@ const ReportHistoryPage = () => {
                 return "bg-yellow-100 text-yellow-700";
             case "REJECTED":
                 return "bg-red-100 text-red-700";
+            case "CANCELLED":
+                return "bg-gray-100 text-gray-700";
             default:
                 return "bg-gray-100 text-gray-700";
         }
@@ -80,6 +82,8 @@ const ReportHistoryPage = () => {
             case "PENDING":
                 return <Clock className="w-3 h-3" />;
             case "REJECTED":
+                return <XCircle className="w-3 h-3" />;
+            case "CANCELLED":
                 return <XCircle className="w-3 h-3" />;
             default:
                 return null;

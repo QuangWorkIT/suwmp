@@ -38,6 +38,7 @@ public enum ErrorCode {
     CAPACITY_NOT_EXISTED("Bad Request", "Corresponding enterprise capacity is not existed"),
     ALREADY_RATED("Bad Request", "You have already rated this report"),
     INVALID_REPORT_STATUS("Bad Request", "Rating is only allowed for collected reports"),
+    REPORT_NOT_CANCELLABLE("Bad Request", "Report can only be cancelled while in PENDING status"),
     REPORT_NOT_OWNED("Forbidden", "You do not own this report"),
     ISSUE_ALREADY_SUBMITTED("Conflict", "An issue has already been submitted for this report"),
     INVALID_FILE_TYPE("Bad Request", "Invalid file type. Only .jpg, .png, and .pdf are allowed"),

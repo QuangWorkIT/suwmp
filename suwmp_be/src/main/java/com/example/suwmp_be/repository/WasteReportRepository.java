@@ -15,7 +15,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
+import com.example.suwmp_be.constants.WasteReportStatus;
+
 public interface WasteReportRepository extends JpaRepository<WasteReport, Long> {
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE WasteReport wr SET wr.status = :newStatus WHERE wr.id = :id AND wr.citizen.id = :citizenId AND wr.status = :oldStatus")
+    int updateStatusIfCurrentStatus(@Param("id") Long id, @Param("citizenId") UUID citizenId, @Param("oldStatus") WasteReportStatus oldStatus, @Param("newStatus") WasteReportStatus newStatus);
 
     @Query(value = """
             SELECT
