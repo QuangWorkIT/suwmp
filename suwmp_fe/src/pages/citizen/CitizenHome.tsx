@@ -284,7 +284,7 @@ const CitizenHome = () => {
                           {report.status === "COLLECTED" && (
                             <CircleCheck className="size-3.5" />
                           )}
-                          {(report.status === "ASSIGNED" || report.status === "ACCEPTED") && (
+                          {(report.status === "ASSIGNED" || report.status === "ON_THE_WAY") && (
                             <Truck className="size-3.5" />
                           )}
                           {report.status === "PENDING" && (

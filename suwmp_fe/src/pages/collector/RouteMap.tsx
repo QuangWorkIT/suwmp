@@ -13,8 +13,9 @@ import {
     Upload,
     CheckCircle2,
     Loader2,
+    Check,
 } from "lucide-react";
-import { useAppSelector } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { Link } from "react-router";
 import 'trackasia-gl/dist/trackasia-gl.css'
 import trackasiagl, { Marker } from 'trackasia-gl'
@@ -26,6 +27,10 @@ import s3Service from "@/services/S3Service";
 import { collectionLogService } from "@/services/CollectionLogService";
 import wasteReportService from "@/services/WasteReportService";
 import { ComplaintService } from "@/services/ComplaintService";
+import { WasteReportStatus } from "@/types/WasteReportRequest";
+import { updateTaskStatus } from "@/components/common/collector/TaskCard";
+import type { AssignedTask } from "@/types/collectorTask";
+import { setTaskStatus } from "@/redux/features/assignedTaskSlice";
 
 const apiKey = import.meta.env.VITE_MAPS_API_KEY
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -34,7 +39,9 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png"]
 export default function RouteMap() {
     const { currentTask, nextTask } = useAppSelector(state => state.assignedTask)
     const user = useAppSelector(state => state.user.user)
+    const dispatch = useAppDispatch()
 
+    const [isUpdatingTaskStatus, setIsUpdatingTaskStatus] = useState(false)
     const [isCompleted, setIsCompleted] = useState(false);
     const [isLoadingRoute, setIsLoadingRoute] = useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null)
@@ -240,8 +247,15 @@ export default function RouteMap() {
         }
     }, [imgPreview])
 
+    const handleUpdateStatus = async (task: AssignedTask) => {
+        setIsUpdatingTaskStatus(true)
+        await updateTaskStatus(task.requestId, WasteReportStatus.ON_THE_WAY)
+        dispatch(setTaskStatus({...task, currentStatus: WasteReportStatus.ON_THE_WAY}))
+        setIsUpdatingTaskStatus(false)
+    }
+
     const handleCompleteTask = async () => {
-        if (!file || !currentTask || !user) return
+        if (!file || !currentTask || !user || currentTask.currentStatus === WasteReportStatus.COLLECTED) return
 
         try {
             setIsSubmitting(true)
@@ -263,15 +277,17 @@ export default function RouteMap() {
             const statusUpdateResponse = await wasteReportService.updateWasteReportStatus(
                 {
                     wasteReportId: currentTask.requestId,
-                    status: "COLLECTED"
+                    status: WasteReportStatus.COLLECTED
                 }
             )
             if (!statusUpdateResponse.isSuccess)
                 throw new Error(statusUpdateResponse.message)
-            
-            await ComplaintService.updateComplaintStatusWithWasteReportId(currentTask.requestId, {
-                status: "RESOLVED"
-            })
+
+            if (currentTask.priority === "URGENT") {
+                await ComplaintService.updateComplaintStatusWithWasteReportId(currentTask.requestId, {
+                    status: "RESOLVED"
+                })
+            }
 
             toast.success("Upload proof successfully")
             setIsCompleted(true)
@@ -406,94 +422,119 @@ export default function RouteMap() {
                                         </a>
                                     </div>
 
-                                    <div className="pt-6 border-t border-border/50 space-y-4">
-                                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Proof of Collection</h4>
-
-                                        <div
-                                            className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer hover:bg-muted/30
-                                                ${imgPreview ? "border-blue-500 bg-blue-50/50" : "border-border hover:border-blue-500/50 "}`}
-                                            onClick={() => {
-                                                if (!isCompleted) {
-                                                    inputRef.current?.click()
-                                                }
-                                            }}
-                                        >
-                                            <input type="file" ref={inputRef} className="hidden" onChange={handleFileChange} />
-                                            {file && imgPreview ? (
-                                                <div className="space-y-2">
-                                                    <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mx-auto">
-                                                        <CheckCircle2 className="w-6 h-6 text-blue-600" />
-                                                    </div>
-                                                    <div className="p-4 w-full flex items-center justify-center overflow-hidden rounded-lg">
-                                                        <img
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setProofPreviewOpen(true);
-                                                            }}
-                                                            src={imgPreview}
-                                                            alt={file.name}
-                                                            className="w-full h-32 border border-blue-200 rounded-lg object-cover 
-                                                            cursor-zoom-in hover:scale-105 transition-transform duration-300" />
-                                                    </div>
-                                                    <p className="text-xs text-muted-foreground">{file.name}</p>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-3" >
-
-                                                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto">
-                                                        <Camera className="w-6 h-6 text-muted-foreground" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold">Upload Photo</p>
-                                                        <p className="text-xs text-muted-foreground">Required to complete task</p>
-                                                    </div>
-                                                    <Button variant="outline" size="sm" className="h-8 text-xs rounded-lg border-blue-200">
-                                                        <Upload className="w-3 h-3 mr-2 text-blue-600" />
-                                                        Take Photo
-                                                    </Button>
-                                                </div>
-                                            )}
+                                    {currentTask.currentStatus !== WasteReportStatus.ON_THE_WAY
+                                        && currentTask.currentStatus !== WasteReportStatus.COLLECTED ? (
+                                        <div className="w-full flex justify-center py-4">
+                                            <Button
+                                                onClick={() => handleUpdateStatus(currentTask)}
+                                                className="bg-blue-500 hover:bg-blue-600 transition-all">
+                                                {isUpdatingTaskStatus ? (
+                                                    "Starting..."
+                                                ) : (
+                                                    "Start collection"
+                                                )}
+                                            </Button>
                                         </div>
+                                    ) : (
+                                        <div className="pt-6 border-t border-border/50 space-y-4">
+                                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Proof of Collection</h4>
 
-                                        {file && imgPreview && (
+                                            <div
+                                                className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer hover:bg-muted/30
+                                                ${imgPreview || currentTask.currentStatus === "COLLECTED" ? "border-blue-500 bg-blue-50/50" : "border-border hover:border-blue-500/50 "}`}
+                                                onClick={() => {
+                                                    if (!isCompleted && currentTask.currentStatus !== "COLLECTED") {
+                                                        inputRef.current?.click()
+                                                    }
+                                                }}
+                                            >
+                                                <input type="file" ref={inputRef} className="hidden" onChange={handleFileChange} />
+                                                {file && imgPreview ? (
+                                                    <div className="space-y-2">
+                                                        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mx-auto">
+                                                            <CheckCircle2 className="w-6 h-6 text-blue-600" />
+                                                        </div>
+                                                        <div className="p-4 w-full flex items-center justify-center overflow-hidden rounded-lg">
+                                                            <img
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setProofPreviewOpen(true);
+                                                                }}
+                                                                src={imgPreview}
+                                                                alt={file.name}
+                                                                className="w-full h-32 border border-blue-200 rounded-lg object-cover 
+                                                            cursor-zoom-in hover:scale-105 transition-transform duration-300" />
+                                                        </div>
+                                                        <p className="text-xs text-muted-foreground">{file.name}</p>
+                                                    </div>
+                                                ) : currentTask.currentStatus === "COLLECTED" ? (
+                                                    <div className="space-y-3" >
+                                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+                                                            <Check className="w-6 h-6 text-primary" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-bold">Photo uploaded</p>
+                                                            <p className="text-xs text-muted-foreground">Task is completed</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3" >
+
+                                                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto">
+                                                            <Camera className="w-6 h-6 text-muted-foreground" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-bold">Upload Photo</p>
+                                                            <p className="text-xs text-muted-foreground">Required to complete task</p>
+                                                        </div>
+                                                        <Button variant="outline" size="sm" className="h-8 text-xs rounded-lg border-blue-200">
+                                                            <Upload className="w-3 h-3 mr-2 text-blue-600" />
+                                                            Take Photo
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {file && imgPreview && (
+                                                <ImageDetail
+                                                    imgUrl={imgPreview}
+                                                    file={file}
+                                                    open={isProofPreviewOpen}
+                                                    onClose={() => setProofPreviewOpen(false)}
+                                                />
+                                            )}
+
                                             <ImageDetail
-                                                imgUrl={imgPreview}
-                                                file={file}
-                                                open={isProofPreviewOpen}
-                                                onClose={() => setProofPreviewOpen(false)}
+                                                imgUrl={currentTask.photoUrl}
+                                                open={isTaskPreviewOpen}
+                                                onClose={() => setTaskPreviewOpen(false)}
                                             />
-                                        )}
 
-                                        <ImageDetail
-                                            imgUrl={currentTask.photoUrl}
-                                            open={isTaskPreviewOpen}
-                                            onClose={() => setTaskPreviewOpen(false)}
-                                        />
+                                            <Button
+                                                className="w-full h-12 rounded-xl shadow-lg bg-blue-600 hover:bg-blue-700 shadow-blue-500/20 text-white font-bold disabled:opacity-50"
+                                                disabled={!file || isCompleted || isSubmitting}
+                                                onClick={handleCompleteTask}
+                                            >
+                                                {(isCompleted || currentTask.currentStatus === "COLLECTED") && (
+                                                    <>
+                                                        <CheckCircle2 className="w-5 h-5 mr-2" />
+                                                        Collection Completed
+                                                    </>
+                                                )}
 
-                                        <Button
-                                            className="w-full h-12 rounded-xl shadow-lg bg-blue-600 hover:bg-blue-700 shadow-blue-500/20 text-white font-bold disabled:opacity-50"
-                                            disabled={!file || isCompleted || isSubmitting}
-                                            onClick={handleCompleteTask}
-                                        >
-                                            {isCompleted && (
-                                                <>
-                                                    <CheckCircle2 className="w-5 h-5 mr-2" />
-                                                    Collection Completed
-                                                </>
-                                            )}
+                                                {isSubmitting && (
+                                                    <>
+                                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                                        Submitting...
+                                                    </>
+                                                )}
 
-                                            {isSubmitting && (
-                                                <>
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                    Submitting...
-                                                </>
-                                            )}
-
-                                            {!isCompleted && !isSubmitting && (
-                                                <>Complete task</>
-                                            )}
-                                        </Button>
-                                    </div>
+                                                {!isCompleted && !isSubmitting && currentTask.currentStatus !== "COLLECTED" && (
+                                                    <>Complete task</>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </Card>
 

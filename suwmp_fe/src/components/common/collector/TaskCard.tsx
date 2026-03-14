@@ -3,10 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { AssignedTask } from "@/types/collectorTask";
 import { motion } from "framer-motion";
-import { MapPin, Clock, User, Phone, Play, Navigation } from "lucide-react";
-import { setCurrentTask, setNextTask } from "@/redux/features/assignedTaskSlice"
+import { MapPin, Clock, User, Phone, Play, Navigation, CheckCircle, Truck } from "lucide-react";
+import { setCurrentTask, setNextTask, setTaskStatus } from "@/redux/features/assignedTaskSlice"
 import { useAppDispatch } from "@/redux/hooks";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useState } from "react";
+import ConfirmStartCollection from "./ConfirmStartCollection";
+import { WasteReportStatus } from "@/types/WasteReportRequest";
+import wasteReportService from "@/services/WasteReportService";
+import { toast } from "sonner";
 
 interface TaskCardProps {
     task: AssignedTask;
@@ -14,9 +19,64 @@ interface TaskCardProps {
     index: number;
 }
 
+export const updateTaskStatus = async (taskId: number, status: WasteReportStatus) => {
+    try {
+        const response = await wasteReportService.updateWasteReportStatus({ wasteReportId: taskId, status })
+        if (!response.isSuccess) {
+            throw new Error(response.message)
+        }
+        return true
+    } catch (error) {
+        console.log(error)
+        toast.error("Failed to start collecting waste!")
+        return false
+    }
+}
+
 const TaskCard = ({ task, nextTask, index }: TaskCardProps) => {
     const dispatch = useAppDispatch()
     const isUrgent = task.priority === "URGENT";
+    const [openConfirmModal, setOpenConfirmModal] = useState(false)
+    const navigate = useNavigate()
+
+    const handleNavigateToRoute = () => {
+        dispatch(setCurrentTask(task))
+        dispatch(setNextTask(nextTask))
+    }
+
+    const renderPrimaryAction = () => {
+        switch (task.currentStatus) {
+            case WasteReportStatus.COLLECTED:
+                return (
+                    <Button disabled size="sm" className="flex-1 bg-green-600 cursor-default">
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Collected
+                    </Button>
+                );
+            case WasteReportStatus.ON_THE_WAY:
+                return (
+                    <Link to="/collector/route" onClick={handleNavigateToRoute} className="flex-1">
+                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer">
+                            <Truck className="h-3.5 w-3.5" />
+                            Continue collection
+                        </Button>
+                    </Link>
+                );
+            case WasteReportStatus.ASSIGNED:
+                return (
+                    <Button
+                        onClick={() => setOpenConfirmModal(true)}
+                        size="sm"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                    >
+                        <Play className="h-3.5 w-3.5" />
+                        Start
+                    </Button>
+                );
+            default:
+                return null;
+        }
+    };
 
     return (
         <motion.div
@@ -83,44 +143,26 @@ const TaskCard = ({ task, nextTask, index }: TaskCardProps) => {
                 </div>
 
                 {/* Actions */}
-                {task.currentStatus === "COLLECTED" ?
-                    <div className="border-border p-4 pt-3">
-                        <Button
-                            disabled
-                            size="sm"
-                            className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer">
-                            Collected
+                <div className="flex gap-2 border-t border-border p-4 pt-3">
+                    {renderPrimaryAction()}
+                    <Link to="/collector/route" onClick={handleNavigateToRoute} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full cursor-pointer">
+                            <Navigation className="h-3.5 w-3.5" />
+                            Map
                         </Button>
-                    </div>
-                    : (
-                        <div className="flex gap-2 border-t border-border p-4 pt-3">
-                            <Link to={"/collector/route"}
-                                onClick={() => {
-                                    dispatch(setCurrentTask(task))
-                                    dispatch(setNextTask(nextTask))
-                                }}
-                                className="flex-1"
-                            >
-                                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer">
-                                    <Play className="h-3.5 w-3.5" />
-                                    Start
-                                </Button>
-                            </Link>
-                            <Link to={"/collector/route"}
-                                onClick={() => {
-                                    dispatch(setCurrentTask(task))
-                                    dispatch(setNextTask(nextTask))
-                                }}
-                                className="flex-1"
-                            >
-                                <Button variant={"outline"} size="sm" className="w-full cursor-pointer">
-                                    <Navigation className="h-3.5 w-3.5" />
-                                    Map
-                                </Button>
-                            </Link>
-                        </div>
-                    )}
+                    </Link>
+                </div>
             </Card>
+            <ConfirmStartCollection
+                open={openConfirmModal}
+                onClose={() => setOpenConfirmModal(false)}
+                onClick={async () => {
+                    dispatch(setCurrentTask(task))
+                    dispatch(setNextTask(nextTask))
+                    await updateTaskStatus(task.requestId, WasteReportStatus.ON_THE_WAY)
+                    dispatch(setTaskStatus({...task, currentStatus: WasteReportStatus.ON_THE_WAY}))
+                    navigate("/collector/route", { replace: true })
+                }} />
         </motion.div>
     );
 };

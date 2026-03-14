@@ -16,6 +16,7 @@ import {
     UserPlus,
     Inbox,
     User,
+    CircleX
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,6 +38,7 @@ import type { PaginatedResponse } from "@/types/response";
 
 
 const statusConfig = {
+    REJECTED: { label: "Rejected", color: "bg-red-100 text-red-700 border-red-200", icon: CircleX  },
     PENDING: { label: "Pending", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Circle },
     ON_THE_WAY: { label: "Processing", color: "bg-blue-100 text-blue-700 border-blue-200", icon: Truck },
     COLLECTED: { label: "Completed", color: "bg-green-100 text-green-700 border-green-200", icon: CheckCircle2 },
@@ -116,15 +118,21 @@ function CollectionRequest() {
         });
     }, [fetchedRequests, searchQuery, statusFilter]);
 
+    const isSelectable = (status: string) => status === "PENDING" || status === "ASSIGNED";
+
+    const selectableRequests = useMemo(() => {
+        return filteredRequests.filter(req => isSelectable(req.currentStatus));
+    }, [filteredRequests]);
+
     const toggleSelect = (id: number) => {
         setSelectedRequests(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
     };
 
     const toggleSelectAll = () => {
-        if (selectedRequests.length === filteredRequests.length) {
+        if (selectedRequests.length === selectableRequests.length) {
             setSelectedRequests([]);
         } else {
-            setSelectedRequests(filteredRequests.map(r => r.requestId));
+            setSelectedRequests(selectableRequests.map(r => r.requestId));
         }
     };
 
@@ -186,25 +194,28 @@ function CollectionRequest() {
                                 </Button>
                             </div>
                             <AnimatePresence>
-                                {selectedRequests.length > 0 && (
-                                    <motion.div
-                                        key="assign-bar"
-                                        initial={{ opacity: 0, x: 10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="flex items-center gap-2"
-                                        onClick={() => setIsAssignFormOpen(true)}
-                                    >
-                                        <span className="text-sm text-muted-foreground">
-                                            {selectedRequests.length} selected
-                                        </span>
-                                        <Button size="sm">
-                                            <UserPlus className="w-4 h-4 mr-2" />
-                                            Assign Collector
-                                        </Button>
-                                    </motion.div>
-                                )}
+                                {selectedRequests.length > 0 && selectedRequests.every(id => {
+                                    const req = filteredRequests.find(r => r.requestId === id);
+                                    return req && isSelectable(req.currentStatus);
+                                }) && (
+                                        <motion.div
+                                            key="assign-bar"
+                                            initial={{ opacity: 0, x: 10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: 10 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="flex items-center gap-2"
+                                            onClick={() => setIsAssignFormOpen(true)}
+                                        >
+                                            <span className="text-sm text-muted-foreground">
+                                                {selectedRequests.length} selected
+                                            </span>
+                                            <Button size="sm">
+                                                <UserPlus className="w-4 h-4 mr-2" />
+                                                Assign Collector
+                                            </Button>
+                                        </motion.div>
+                                    )}
                             </AnimatePresence>
 
                         </div>
@@ -217,14 +228,15 @@ function CollectionRequest() {
                                     <tr className="border-b border-border bg-muted/30">
                                         <th className="text-left py-3 px-4">
                                             <Checkbox
-                                                checked={selectedRequests.length === filteredRequests.length && filteredRequests.length > 0}
+                                                checked={selectedRequests.length === selectableRequests.length && selectableRequests.length > 0}
                                                 onCheckedChange={toggleSelectAll}
+                                                disabled={selectableRequests.length === 0}
                                                 className="border-2 border-black/50"
                                             />
                                         </th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">ID</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Volume</th>
+                                        <th className="text-left py-3 px-3 text-sm font-medium text-muted-foreground">Volume (Kg)</th>
                                         <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Location</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Citizen</th>
                                         <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Collector</th>
@@ -262,6 +274,7 @@ function CollectionRequest() {
                                                     <Checkbox
                                                         checked={selectedRequests.includes(req.requestId)}
                                                         onCheckedChange={() => toggleSelect(req.requestId)}
+                                                        disabled={!isSelectable(req.currentStatus)}
                                                         className="border-2 border-black/50"
                                                     />
                                                 </td>
@@ -347,10 +360,12 @@ function CollectionRequest() {
                                                         <Button variant="ghost" size="icon" className="h-8 w-8">
                                                             <Eye className="w-4 h-4" />
                                                         </Button>
-                                                        <ActionDropdown
-                                                            selectedRejectRequestId={req.requestId}
-                                                            setSelectedRejectRequestId={setSelectedRejectRequestId}
-                                                            setIsRejectFormOpen={setIsRejectFormOpen} />
+                                                        {selectableRequests.includes(req) && (
+                                                            <ActionDropdown
+                                                                selectedRejectRequestId={req.requestId}
+                                                                setSelectedRejectRequestId={setSelectedRejectRequestId}
+                                                                setIsRejectFormOpen={setIsRejectFormOpen} />
+                                                        )}
                                                     </div>
                                                 </td>
                                             </motion.tr>

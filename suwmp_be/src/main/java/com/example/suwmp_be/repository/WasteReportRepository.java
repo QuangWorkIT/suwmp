@@ -113,6 +113,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             JOIN wr.citizen citizen
             JOIN ca.collector collector
             WHERE collector.id = :collectorId
+            AND wr.status IN ('ASSIGNED', 'ON_THE_WAY','COLLECTED')
             ORDER BY ca.startCollectAt ASC
             """)
     Page<IAssignedTaskView> findAssignedTasksByCollector_Id(UUID collectorId, Pageable pageable);

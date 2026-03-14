@@ -157,10 +157,10 @@ export default function EnterpriseReports() {
           EnterpriseReportService.getCollectorPerformance(0, collectorSize)
         ]);
 
-        if (widgetRes.success) setWidgetData(widgetRes.data);
-        if (trendsRes.success) setTrends(trendsRes.data);
-        if (distRes.success) setDistribution(distRes.data);
-        if (collectorsRes.success) setCollectors(collectorsRes.data.content);
+        if (widgetRes.isSuccess) setWidgetData(widgetRes.data);
+        if (trendsRes.isSuccess) setTrends(trendsRes.data);
+        if (distRes.isSuccess) setDistribution(distRes.data);
+        if (collectorsRes.isSuccess) setCollectors(collectorsRes.data.content);
       } catch (error) {
         console.error("Error fetching enterprise report data:", error);
       }

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-    Plus,
     MessageSquare,
     ChevronRight,
     CircleCheck,
@@ -94,10 +93,6 @@ const FeedbackPage = () => {
                             </p>
                         </div>
 
-                        <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer">
-                            <Plus size={16} />
-                            New Report
-                        </button>
                     </div>
 
                     <div className="space-y-4">
