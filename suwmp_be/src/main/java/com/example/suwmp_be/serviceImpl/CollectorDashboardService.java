@@ -74,14 +74,29 @@ public class CollectorDashboardService implements ICollectorDashboardService {
         List<Map<String, Object>> rawFeedbacks = collectorDashboardRepository.getRecentFeedbacks(collectorId);
 
         return rawFeedbacks.stream().map(row -> {
-            Timestamp createdAt = (Timestamp) row.get("created_at");
+            Object dateObj = row.get("created_at");
+            Instant createdAtInstant;
+
+            if (dateObj instanceof Instant) {
+                createdAtInstant = (Instant) dateObj;
+            } else if (dateObj instanceof java.sql.Timestamp) {
+                createdAtInstant = ((java.sql.Timestamp) dateObj).toInstant();
+            } else if (dateObj instanceof java.time.LocalDateTime) {
+                createdAtInstant = ((java.time.LocalDateTime) dateObj)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toInstant();
+            } else {
+                createdAtInstant = Instant.now();
+            }
+
+            String wasteType = (String) row.get("waste_type");
 
             return FeedbackDTO.builder()
                     .ratingId(((Number) row.get("rating_id")).longValue())
                     .citizenName((String) row.get("citizen_name"))
                     .rating(((Number) row.get("rating")).intValue())
-                    .timeAgo(calculateTimeAgo(createdAt.toInstant()))
-                    .comment("Great service!") // Placeholder until you add the column
+                    .timeAgo(calculateTimeAgo(createdAtInstant))
+                    .comment(wasteType)
                     .build();
         }).toList();
     }

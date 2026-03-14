@@ -1,25 +1,34 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import AssignEnterpriseDialog from "@/components/common/complaint/AssignEnterpriseDialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { Complaint, PaginatedComplaints } from "@/types/complaint";
+import { Input } from "@/components/ui/input";
 import { ComplaintService } from "@/services/ComplaintService";
+import type {
+  Complaint,
+  ComplaintGetResponse,
+  PaginatedComplaints,
+} from "@/types/complaint";
+import { motion } from "framer-motion";
 import {
+  CheckCircle2,
+  Clock,
+  Filter,
+  Loader2,
   MoreVertical,
   Search,
-  Filter,
+  UserCheck,
   XCircle,
-  Clock,
-  CheckCircle2,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+
+// ─── Helper Components ───────────────────────────────────────────────────────
 
 const StatusBadge = ({ status }: { status: Complaint["status"] }) => {
   if (status === "OPEN") {
@@ -32,7 +41,7 @@ const StatusBadge = ({ status }: { status: Complaint["status"] }) => {
   if (status === "IN_PROGRESS") {
     return (
       <Badge className="bg-blue-100 text-blue-600 hover:bg-blue-300 font-semibold">
-        Investigating
+        In Progress
       </Badge>
     );
   }
@@ -78,15 +87,25 @@ const formatDateTime = (dateStr: string) => {
   });
 };
 
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 const ComplaintsPage = () => {
   const [search, setSearch] = useState("");
   const [data, setData] = useState<PaginatedComplaints | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
+
+  // Detail dialog
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Assign dialog
+  const [assignComplaint, setAssignComplaint] =
+    useState<ComplaintGetResponse | null>(null);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [isAssignLoading, setIsAssignLoading] = useState<number | null>(null); // stores complaint.id being loaded
 
   const fetchComplaints = async (pageNumber: number) => {
     setLoading(true);
@@ -128,6 +147,24 @@ const ComplaintsPage = () => {
       fetchComplaints(page);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleOpenAssign = async (
+    e: React.MouseEvent,
+    complaint: Complaint
+  ) => {
+    e.stopPropagation(); // prevent opening detail dialog
+    setIsAssignLoading(complaint.id);
+    try {
+      const res = await ComplaintService.getComplaintWithWasteReportById(
+        complaint.id
+      );
+      setAssignComplaint(res);
+    } catch {
+    } finally {
+      setIsAssignLoading(null);
+      setIsAssignDialogOpen(true);
     }
   };
 
@@ -196,7 +233,7 @@ const ComplaintsPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-xs text-gray-400">
                           CMP-00{complaint.id}
@@ -209,6 +246,26 @@ const ComplaintsPage = () => {
                       </div>
 
                       <StatusBadge status={complaint.status} />
+                      <StatusBadge status={complaint.status} />
+
+                      {/* Assign button - only for OPEN */}
+                      {complaint.status === "OPEN" && (
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 px-3 gap-1.5"
+                          disabled={isAssignLoading !== null}
+                          onClick={(e) => handleOpenAssign(e, complaint)}
+                        >
+                          {isAssignLoading === complaint.id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <>
+                              <UserCheck size={14} />
+                              Assign
+                            </>
+                          )}
+                        </Button>
+                      )}
 
                       <MoreVertical className="text-gray-400" />
                     </div>
@@ -329,6 +386,90 @@ const ComplaintsPage = () => {
       </div>
     </div>
   );
+                {/* Complaint Details Dialog */}
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl">Complaint Details</DialogTitle>
+                        </DialogHeader>
+                        {selectedComplaint && (
+                            <div className="space-y-5 pt-2">
+                                <div>
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">Citizen Name</span>
+                                    <p className="text-md font-medium mt-1">{selectedComplaint.citizenName}</p>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500">Description</span>
+                                    <p className="text-md mt-1">{selectedComplaint.description}</p>
+                                </div>
+                                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                    <div>
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">Status</span>
+                                        <StatusBadge status={selectedComplaint.status} />
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-1">Created At</span>
+                                        <p className="text-sm font-medium">{selectedComplaint.createdAt ? formatDateTime(selectedComplaint.createdAt) : "N/A"}</p>
+                                    </div>
+                                </div>
+                                {selectedComplaint.photoUrl && (
+                                    <div>
+                                        <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 block mb-2">Photo Evidence</span>
+                                        <img src={selectedComplaint.photoUrl} alt="Complaint" className="max-w-full h-auto rounded-lg shadow-sm border" />
+                                    </div>
+                                )}
+
+                                <div className="pt-4 border-t flex flex-col gap-2">
+                                    <span className="font-semibold text-xs uppercase tracking-wider text-gray-500 mb-1">Actions</span>
+                                    <div className={`grid gap-3 ${selectedComplaint.status === "OPEN" ? "grid-cols-3" : "grid-cols-2"}`}>
+                                        {selectedComplaint.status === "OPEN" && (
+                                            <Button
+                                                variant="outline"
+                                                className="w-full bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1.5"
+                                                onClick={() => {
+                                                    setIsDialogOpen(false);
+                                                    setIsAssignDialogOpen(true);
+                                                }}
+                                            >
+                                                <UserCheck size={14} />
+                                                Assign
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="outline"
+                                            className="w-full bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                                            onClick={() => handleUpdateStatus("IN_PROGRESS")}
+                                            disabled={selectedComplaint.status === "IN_PROGRESS"}
+                                        >
+                                            Investigate
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                            onClick={() => handleUpdateStatus("RESOLVED")}
+                                            disabled={selectedComplaint.status === "RESOLVED"}
+                                        >
+                                            Resolve
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
+                {/* Assign Enterprise Dialog */}
+                {assignComplaint && (
+                    <AssignEnterpriseDialog
+                        open={isAssignDialogOpen}
+                        onOpenChange={setIsAssignDialogOpen}
+                        complaint={assignComplaint}
+                        onAssigned={() => fetchComplaints(page)}
+                    />
+                )}
+            </div>
+        </div>
+    );
 };
 
 export default ComplaintsPage;

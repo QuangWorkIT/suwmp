@@ -7,6 +7,8 @@ import com.example.suwmp_be.dto.enterprise_report.WasteDistribution;
 import com.example.suwmp_be.repository.EnterpriseReportRepository;
 import com.example.suwmp_be.service.IEnterpriseReportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -70,28 +72,27 @@ public class EnterpriseReportService implements IEnterpriseReportService {
     }
 
     @Override
-    public List<CollectorPerformance> getCollectorPerformance() {
-        List<Object[]> results = reportRepository.getCollectorPerformance();
+    public Page<CollectorPerformance> getCollectorPerformance(Pageable pageable) {
+        Page<Object[]> rawPage = reportRepository.getCollectorPerformance(pageable);
 
         // Target SLA in hours to calculate percentage efficiency (e.g., 24 hours)
         final double TARGET_SLA_HOURS = 24.0;
 
-        return results.stream()
-                .map(row -> {
-                    double avgHoursTaken = row[3] != null ? ((Number) row[3]).doubleValue() : 0.0;
+        // 2. Use Page.map() directly instead of stream().collect()
+        return rawPage.map(row -> {
+            double avgHoursTaken = row[3] != null ? ((Number) row[3]).doubleValue() : 0.0;
 
-                    // Convert hours to an efficiency percentage (Capped between 0 and 100)
-                    double rawEfficiency = ((TARGET_SLA_HOURS - avgHoursTaken) / TARGET_SLA_HOURS) * 100.0;
-                    double efficiencyPercent = Math.max(0.0, Math.min(100.0, rawEfficiency));
+            // Convert hours to an efficiency percentage (Capped between 0 and 100)
+            double rawEfficiency = ((TARGET_SLA_HOURS - avgHoursTaken) / TARGET_SLA_HOURS) * 100.0;
+            double efficiencyPercent = Math.max(0.0, Math.min(100.0, rawEfficiency));
 
-                    return new CollectorPerformance(
-                            (String) row[0],                                       // collectorName
-                            "Zone " + row[1],                                      // zone (prefixing with "Zone ")
-                            ((Number) row[2]).longValue(),                         // collections
-                            Math.round(efficiencyPercent * 10.0) / 10.0,           // efficiency (%)
-                            row[4] != null ? ((Number) row[4]).doubleValue() : 0.0 // rating
-                    );
-                })
-                .collect(Collectors.toList());
+            return new CollectorPerformance(
+                    (String) row[0],                                       // collectorName
+                    "Zone " + (row[1] != null ? row[1].toString() : "N/A"), // zone (handled null gracefully)
+                    ((Number) row[2]).longValue(),                         // collections
+                    Math.round(efficiencyPercent * 10.0) / 10.0,           // efficiency (%)
+                    row[4] != null ? ((Number) row[4]).doubleValue() : 0.0 // rating
+            );
+        });
     }
 }

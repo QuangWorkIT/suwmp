@@ -3,6 +3,8 @@ package com.example.suwmp_be.serviceImpl;
 import com.example.suwmp_be.constants.ComplaintStatus;
 import com.example.suwmp_be.constants.ErrorCode;
 import com.example.suwmp_be.dto.complaint.ComplaintDTO;
+import com.example.suwmp_be.dto.complaint.ComplaintGetResponse;
+import com.example.suwmp_be.dto.complaint.ComplaintUpdateStatusWithReportIdRequest;
 import com.example.suwmp_be.dto.complaint.UpdateComplaintStatus;
 import com.example.suwmp_be.dto.mapper.ComplaintMapper;
 import com.example.suwmp_be.dto.response.ComplaintResponse;
@@ -15,15 +17,18 @@ import com.example.suwmp_be.repository.WasteReportRepository;
 import com.example.suwmp_be.service.IComplaintService;
 import com.example.suwmp_be.service.IS3Service;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.UUID;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ComplaintService implements IComplaintService {
@@ -160,5 +165,26 @@ public class ComplaintService implements IComplaintService {
         if (!isValid) {
             throw new BadRequestException(ErrorCode.INVALID_FILE_TYPE);
         }
+    }
+
+    @Override
+    public ComplaintGetResponse getComplaintWithWasteReportById(long id) {
+        var complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.COMPLAINT_NOT_FOUND));
+        return complaintMapper.toComplaintGetResponse(complaint);
+    }
+
+    @Transactional
+    @Override
+    public void updateComplaintStatusWithWasteReportId(long newWasteReportId, ComplaintUpdateStatusWithReportIdRequest request) {
+        var complaint = complaintRepository.findByNewWasteReport_Id(newWasteReportId)
+                        .orElse(null);
+        if (complaint == null)
+            return;
+
+        complaint.setStatus(request.status());
+        complaintRepository.save(complaint);
+
+        log.info("Update complaint successful: {}", complaint.getId());
     }
 }

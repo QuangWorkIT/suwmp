@@ -18,14 +18,15 @@ public enum ErrorCode {
     USER_ID_INVALID("Bad Request", "Invalid user ID in token"),
     GOOGLE_ID_TOKEN_INVALID("Unauthenticated", "Invalid Google ID Token"),
 
-    EMAIL_EXISTED("Bad Request", "Email existed"),
-    PHONE_EXISTED("Bad Request", "Phone existed"),
+    EMAIL_EXISTED("Bad Request", "Email already exists"),
+    PHONE_EXISTED("Bad Request", "Phone already exists"),
 
     USER_NOT_FOUND("Not Found", "User not found"),
     USER_ALREADY_EXISTS("Bad Request", "User already exists"),
     USER_INACTIVE("Unauthenticated", "User is inactive"),
 
     ENTERPRISE_NOT_FOUND("Not Found", "Enterprise not found"),
+    ENTERPRISE_NOT_ACTIVE("Bad Request", "Enterprise not active"),
     WASTE_REPORT_NOT_FOUND("Not Found", "Waste report not found"),
     COLLECTOR_NOT_IN_ENTERPRISE("Bad Request", "Collector does not belong to this enterprise"),
     COLLECTOR_NOT_AVAILABLE("Bad Request", "Collector is not available for assignment"),
@@ -40,7 +41,13 @@ public enum ErrorCode {
     REPORT_NOT_OWNED("Forbidden", "You do not own this report"),
     ISSUE_ALREADY_SUBMITTED("Conflict", "An issue has already been submitted for this report"),
     INVALID_FILE_TYPE("Bad Request", "Invalid file type. Only .jpg, .png, and .pdf are allowed"),
-    FILE_SIZE_EXCEEDED("Bad Request", "File size exceeds the 5MB limit");
+    FILE_SIZE_EXCEEDED("Bad Request", "File size exceeds the 5MB limit"),
+
+    COMPLAINT_NOT_FOUND("Not Found", "Complaint not found"),
+    COMPLAINT_NOT_OPEN("Bad Request", "Complaint not open"),
+
+    ENTERPRISE_CAPACITY_NOT_FOUND("Not Found", "Enterprise capacity not found")
+    ;
 
     ErrorCode(String title, String message) {
         this.title = title;

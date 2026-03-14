@@ -110,25 +110,37 @@ const CitizenHome = () => {
   const [recentReports, setRecentReports] = useState<CitizenWasteReportStatus[]>([]);
   const [reportAddresses, setReportAddresses] = useState<Record<string, string>>({});
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
+  const [leaderboardError, setLeaderboardError] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        const [widgetsRes, progressRes, reportsData, leaderboardRes] = await Promise.all([
+        const [widgetsRes, progressRes, reportsData] = await Promise.all([
           CitizenService.getDashboardWidgets(),
           CitizenService.getMonthlyProgress(),
           wasteReportService.getMyReports(),
-          LeaderboardService.getRankings(new Date().toISOString().split('T')[0], 0, 5)
         ]);
+
+        // Fetch leaderboard separately to handle its errors independently
+        try {
+          const leaderboardRes = await LeaderboardService.getRankings(
+            new Date().toISOString().split("T")[0],
+            0,
+            5
+          );
+          setLeaderboardData(leaderboardRes || []);
+          setLeaderboardError(false);
+        } catch (err) {
+          console.error("Failed to fetch leaderboard", err);
+          setLeaderboardError(true);
+        }
         
         // Ensure success property exists or access data directly based on BaseResponse type
         if (widgetsRes?.data) {
-          // Some backend endpoints wrap in success, some just return the object directly based on how BaseResponse is typed
           setWidgets(widgetsRes.data);
         } else if (widgetsRes && !('data' in widgetsRes)) {
-            // If the response IS the data (e.g. some backend APIs are flattened)
             setWidgets(widgetsRes as unknown as DashboardWidgetsResponse);
         }
 
@@ -163,8 +175,6 @@ const CitizenHome = () => {
           }), {});
           setReportAddresses(addressMap);
         }
-
-        setLeaderboardData(leaderboardRes || []);
       } catch (error) {
         console.error("Error fetching homepage data", error);
       } finally {
@@ -175,7 +185,14 @@ const CitizenHome = () => {
   }, []);
 
   if (loading) {
-    return <div className="p-8 bg-gray-100 min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="p-8 bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 font-medium">Loading Dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -343,8 +360,16 @@ const CitizenHome = () => {
                 </span>
               </div>
             ))}
-            {leaderboardData.length === 0 && (
-               <p className="text-gray-500 py-4 text-center">Loading leaderboard...</p>
+            
+            {leaderboardError && (
+               <div className="text-center py-8">
+                 <p className="text-gray-400 text-sm italic">Leaderboard not updated</p>
+                 <p className="text-gray-300 text-xs mt-1">Please check back later</p>
+               </div>
+            )}
+
+            {!leaderboardError && leaderboardData.length === 0 && (
+               <p className="text-gray-500 py-4 text-center text-sm italic">Leaderboard not updated</p>
             )}
           </div>
 
