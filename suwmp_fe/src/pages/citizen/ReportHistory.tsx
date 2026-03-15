@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { ReportHistoryService } from "@/services/ReportHistoryService";
 import type { ReportHistory, ReportStatus } from "@/types/reportHistory";
+import { reverseGeocode } from "@/utilities/geocoding";
 import {
     Calendar,
     ChevronRight,
@@ -24,10 +25,7 @@ const ReportHistoryPage = () => {
     type FilterOption = "All" | "Pending" | "In Progress" | "Collected";
     const [activeFilter, setActiveFilter] = useState<FilterOption>("All");
 
-    const filterStatusMap: Record<
-        Exclude<FilterOption, "All">,
-        ReportStatus[]
-    > = {
+    const filterStatusMap: Record<Exclude<FilterOption, "All">, ReportStatus[]> = {
         Pending: ["PENDING"],
         "In Progress": ["ASSIGNED", "ON_THE_WAY"],
         Collected: ["COLLECTED"],
@@ -53,6 +51,31 @@ const ReportHistoryPage = () => {
 
         loadReports();
     }, []);
+
+    interface ReportProps {
+        report: ReportHistory;
+    }
+
+    const ReportLocation = ({ report }: ReportProps) => {
+        const [address, setAddress] = useState<string>("Loading location...");
+
+        useEffect(() => {
+            const fetchAddress = async () => {
+                try {
+                    const result = await reverseGeocode(report.longitude, report.latitude);
+                    setAddress(result);
+                } catch (error) {
+                    setAddress("Unknown location");
+                }
+            };
+
+            if (report.longitude && report.latitude) {
+                fetchAddress();
+            }
+        }, [report.longitude, report.latitude]);
+
+        return <div className="flex items-center gap-1">{address}</div>;
+    };
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -99,23 +122,15 @@ const ReportHistoryPage = () => {
     };
 
     const filteredReports =
-        activeFilter === "All"
-            ? reports
-            : reports.filter((r) =>
-                  filterStatusMap[activeFilter].includes(r.status)
-              );
+        activeFilter === "All" ? reports : reports.filter((r) => filterStatusMap[activeFilter].includes(r.status));
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        My Reports
-                    </h1>
-                    <p className="text-gray-600 mt-1">
-                        View and track all your waste reports
-                    </p>
+                    <h1 className="text-3xl font-bold text-gray-900">My Reports</h1>
+                    <p className="text-gray-600 mt-1">View and track all your waste reports</p>
                 </div>
 
                 {/* Filters */}
@@ -136,14 +151,7 @@ const ReportHistoryPage = () => {
 
                         <div className="flex gap-2">
                             <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                                {(
-                                    [
-                                        "All",
-                                        "Pending",
-                                        "In Progress",
-                                        "Collected",
-                                    ] as const
-                                ).map((filter) => (
+                                {(["All", "Pending", "In Progress", "Collected"] as const).map((filter) => (
                                     <button
                                         key={filter}
                                         onClick={() => setActiveFilter(filter)}
@@ -186,14 +194,8 @@ const ReportHistoryPage = () => {
                     </div>
                 </div>
 
-                {loading && (
-                    <div className="text-center py-12">Loading reports...</div>
-                )}
-                {error && (
-                    <div className="text-center py-12 text-red-500">
-                        {error}
-                    </div>
-                )}
+                {loading && <div className="text-center py-12">Loading reports...</div>}
+                {error && <div className="text-center py-12 text-red-500">{error}</div>}
 
                 {/* Reports List */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -207,9 +209,7 @@ const ReportHistoryPage = () => {
                         {filteredReports.map((report) => (
                             <div
                                 key={report.id}
-                                onClick={() =>
-                                    navigate(`/citizen/reports/${report.id}`)
-                                }
+                                onClick={() => navigate(`/citizen/reports/${report.id}`)}
                                 className={`p-6 hover:bg-gray-50 cursor-pointer group ${
                                     viewMode === "grid"
                                         ? "rounded-lg border border-gray-200 hover:shadow-sm"
@@ -224,37 +224,27 @@ const ReportHistoryPage = () => {
 
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
-                                                <h3 className="text-lg font-semibold">
-                                                    {report.wasteTypeName}
-                                                </h3>
+                                                <h3 className="text-lg font-semibold">{report.wasteTypeName}</h3>
 
                                                 <span
                                                     className={`px-3 py-1 rounded-full text-xs flex items-center gap-1 ${getStatusColor(
                                                         report.status
                                                     )}`}
                                                 >
-                                                    {getStatusIcon(
-                                                        report.status
-                                                    )}
-                                                    {report.status ===
-                                                    "ON_THE_WAY"
-                                                        ? "In Progress"
-                                                        : report.status}
+                                                    {getStatusIcon(report.status)}
+                                                    {report.status === "ON_THE_WAY" ? "In Progress" : report.status}
                                                 </span>
                                             </div>
 
                                             <div className="flex gap-4 text-sm text-gray-600">
                                                 <div className="flex items-center gap-1">
                                                     <MapPin className="w-4 h-4" />
-                                                    {report.latitude},{" "}
-                                                    {report.longitude}
+                                                    <ReportLocation report={report} />
                                                 </div>
 
                                                 <div className="flex items-center gap-1">
                                                     <Calendar className="w-4 h-4" />
-                                                    {formatDate(
-                                                        report.createdAt
-                                                    )}
+                                                    {formatDate(report.createdAt)}
                                                 </div>
 
                                                 <div className="flex items-center gap-1">
@@ -278,9 +268,7 @@ const ReportHistoryPage = () => {
                     </div>
                 </div>
 
-                <div className="mt-6 text-gray-600">
-                    Showing {filteredReports.length} reports
-                </div>
+                <div className="mt-6 text-gray-600">Showing {filteredReports.length} reports</div>
             </div>
         </div>
     );
