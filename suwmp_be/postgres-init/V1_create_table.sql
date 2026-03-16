@@ -136,7 +136,7 @@ CREATE TABLE waste_reports
     volume               DOUBLE PRECISION,
     priority             VARCHAR(20) CHECK (priority IN ('URGENT', 'NORMAL')),
     status               VARCHAR(20) CHECK (
-        status IN ('PENDING', 'REJECTED', 'ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
+        status IN ('PENDING', 'CANCELLED', 'REJECTED', 'ASSIGNED', 'ON_THE_WAY', 'COLLECTED')
         ),
     ai_suggested_type_id BIGINT REFERENCES waste_types (id),
     enterprise_note      VARCHAR(500),
