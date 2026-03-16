@@ -23,10 +23,10 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { EnterpriseReportService } from "@/services/EnterpriseReportService";
-import type { 
-  ReportWidgetData, 
-  CollectionTrend, 
+import { EnterpriseReportService } from "@/services/enterprises/EnterpriseReportService";
+import type {
+  ReportWidgetData,
+  CollectionTrend,
   WasteDistribution,
   CollectorPerformance
 } from "@/types/enterprise-report";
@@ -103,9 +103,8 @@ function StatCard({
           <Icon size={20} style={{ color: iconColor }} />
         </div>
         <span
-          className={`flex items-center gap-1 text-xs font-semibold ${
-            positive ? "text-emerald-500" : "text-red-400"
-          }`}
+          className={`flex items-center gap-1 text-xs font-semibold ${positive ? "text-emerald-500" : "text-red-400"
+            }`}
         >
           {positive ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
           {delta}
@@ -256,11 +255,10 @@ export default function EnterpriseReports() {
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`relative px-4 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                  period === p
+                className={`relative px-4 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 ${period === p
                     ? "text-gray-900"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 {period === p && (
                   <motion.span
@@ -446,7 +444,7 @@ export default function EnterpriseReports() {
             <h2 className="font-bold text-gray-900 text-base">
               Collector Performance
             </h2>
-            <button 
+            <button
               onClick={() => setCollectorSize(100)}
               className="text-xs font-semibold text-[#1a7a4a] hover:text-[#155f3a] transition-colors"
             >

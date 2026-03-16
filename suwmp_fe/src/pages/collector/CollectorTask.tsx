@@ -2,7 +2,7 @@ import TaskCard from "@/components/common/collector/TaskCard";
 import Pagination from "@/components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import wasteReportService from "@/services/WasteReportService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import type { AssignedTask } from "@/types/collectorTask";
 import type { PaginatedResponse } from "@/types/response";
 import { AnimatePresence, motion } from "framer-motion";

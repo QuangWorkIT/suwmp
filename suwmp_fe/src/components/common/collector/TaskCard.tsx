@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router";
 import { useState } from "react";
 import ConfirmStartCollection from "./ConfirmStartCollection";
 import { WasteReportStatus } from "@/types/WasteReportRequest";
-import wasteReportService from "@/services/WasteReportService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import { toast } from "sonner";
 
 interface TaskCardProps {
@@ -160,7 +160,7 @@ const TaskCard = ({ task, nextTask, index }: TaskCardProps) => {
                     dispatch(setCurrentTask(task))
                     dispatch(setNextTask(nextTask))
                     await updateTaskStatus(task.requestId, WasteReportStatus.ON_THE_WAY)
-                    dispatch(setTaskStatus({...task, currentStatus: WasteReportStatus.ON_THE_WAY}))
+                    dispatch(setTaskStatus({ ...task, currentStatus: WasteReportStatus.ON_THE_WAY }))
                     navigate("/collector/route", { replace: true })
                 }} />
         </motion.div>

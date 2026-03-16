@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Users, UserCheck, AlertCircle, ShieldCheck } from "lucide-react";
-import { AdminDashboardService } from "../../services/AdminDashboardService";
-import type { DashboardStats, DashboardUser, DashboardComplaint } from "../../services/AdminDashboardService";
-import StatCard from "../../components/StatCard";
-import UserManagementSection from "../../components/UserManagementSection";
-import OpenComplaintsSidebar from "../../components/OpenComplaintsSidebar";
+import { AdminDashboardService } from "../../services/admins/AdminDashboardService";
+import type { DashboardStats, DashboardUser, DashboardComplaint } from "../../services/admins/AdminDashboardService";
+import StatCard from "../../components/common/StatCard";
+import UserManagementSection from "../../components/common/UserManagementSection";
+import OpenComplaintsSidebar from "../../components/common/OpenComplaintsSidebar";
 
 
 const AdminDashboardPage: React.FC = () => {
@@ -34,12 +34,12 @@ const AdminDashboardPage: React.FC = () => {
 
             // Using separate promises but initiating them at the same time
             // Individual catch/finally to prevent one failure from stopping the others
-            
+
             // Stats
             AdminDashboardService.getStats()
-                .then(res => res.success ? setStats(res.data) : setErrors(p => ({...p, stats: res.message})))
-                .catch(err => setErrors(p => ({...p, stats: err.message})))
-                .finally(() => setLoading(p => ({...p, stats: false})));
+                .then(res => res.success ? setStats(res.data) : setErrors(p => ({ ...p, stats: res.message })))
+                .catch(err => setErrors(p => ({ ...p, stats: err.message })))
+                .finally(() => setLoading(p => ({ ...p, stats: false })));
 
             // Users
             AdminDashboardService.getUsers(0, 4)
@@ -47,16 +47,16 @@ const AdminDashboardPage: React.FC = () => {
                     if (res.success) {
                         setUsers(res.data.content);
                         setTotalUsers(res.data.totalElements);
-                    } else setErrors(p => ({...p, users: res.message}));
+                    } else setErrors(p => ({ ...p, users: res.message }));
                 })
-                .catch(err => setErrors(p => ({...p, users: err.message})))
-                .finally(() => setLoading(p => ({...p, users: false})));
+                .catch(err => setErrors(p => ({ ...p, users: err.message })))
+                .finally(() => setLoading(p => ({ ...p, users: false })));
 
             // Complaints
             AdminDashboardService.getOpenComplaints(3)
-                .then(res => res.success ? setComplaints(res.data) : setErrors(p => ({...p, complaints: res.message})))
-                .catch(err => setErrors(p => ({...p, complaints: err.message})))
-                .finally(() => setLoading(p => ({...p, complaints: false})));
+                .then(res => res.success ? setComplaints(res.data) : setErrors(p => ({ ...p, complaints: res.message })))
+                .catch(err => setErrors(p => ({ ...p, complaints: err.message })))
+                .finally(() => setLoading(p => ({ ...p, complaints: false })));
 
 
         };
@@ -68,7 +68,7 @@ const AdminDashboardPage: React.FC = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Stat Cards Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard
+                <StatCard
                     title="Total Users"
                     value={stats?.totalUsers ?? "—"}
                     delta={stats?.userGrowth ?? undefined}
@@ -122,7 +122,7 @@ const AdminDashboardPage: React.FC = () => {
                         loading={loading.users}
                         error={errors.users}
                     />
-                    
+
                     {/* Analytics Chart Placeholder */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 h-[400px] flex flex-col items-center justify-center text-center">
                         <div className="mb-4 p-4 rounded-2xl bg-gray-50 text-gray-400">

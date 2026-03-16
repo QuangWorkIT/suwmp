@@ -1,10 +1,10 @@
-import authClient from "../config/axios";
+import authClient from "@/config/axios";
 import type {
   DashboardSummary,
   DashboardTask,
   DashboardFeedback,
   DashboardResponse,
-} from "../types/collector-dashboard";
+} from "@/types/collector-dashboard";
 
 export const CollectorDashboardService = {
   getSummary: async () => {

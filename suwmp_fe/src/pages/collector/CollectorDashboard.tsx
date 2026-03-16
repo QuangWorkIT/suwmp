@@ -18,13 +18,13 @@ import {
   User,
   Loader2,
 } from "lucide-react";
-import { CollectorDashboardService } from "@/services/CollectorDashboardService";
+import { CollectorDashboardService } from "@/services/collectors/CollectorDashboardService";
 import type { DashboardSummary, DashboardTask, DashboardFeedback } from "@/types/collector-dashboard";
 
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setCurrentTask, setNextTask } from "@/redux/features/assignedTaskSlice";
-import wasteReportService from "@/services/WasteReportService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import { toast } from "sonner";
 
 type TaskStatus = "In Progress" | "Assigned" | "Completed" | "COLLECTED" | string;
@@ -36,8 +36,8 @@ const StarRating = ({ rating }: { rating: number }) => {
         <Star
           key={s}
           className={`w-3.5 h-3.5 ${s <= rating
-              ? "text-amber-400 fill-amber-400"
-              : "text-gray-200 fill-gray-200"
+            ? "text-amber-400 fill-amber-400"
+            : "text-gray-200 fill-gray-200"
             }`}
         />
       ))}
@@ -338,8 +338,8 @@ const CollectorDashboard = () => {
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`relative px-4 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 ${activeTab === tab
-                            ? "text-gray-900"
-                            : "text-gray-400 hover:text-gray-600"
+                          ? "text-gray-900"
+                          : "text-gray-400 hover:text-gray-600"
                           }`}
                       >
                         {activeTab === tab && (

@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState, useRef } from "react";
 import { ImagePlus, X, Eye, EyeOff, Loader2 } from "lucide-react";
-import s3Service from "@/services/S3Service";
+import s3Service from "@/services/waste-reports/S3Service";
 import { toast } from "sonner";
-import { EnterpriseUserService } from "@/services/EnterpriseUserService";
+import { EnterpriseUserService } from "@/services/enterprises/EnterpriseUserService";
 import type { Enterprise } from "@/types/enterprise";
 
 const userSchema = z.object({

@@ -18,7 +18,7 @@ import {
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { CollectionLogHistory } from "@/types/collectionLog";
-import { collectionLogService } from "@/services/CollectionLogService";
+import { collectionLogService } from "@/services/collectors/CollectionLogService";
 import ImageDetail from "@/components/common/ImageDetail";
 
 

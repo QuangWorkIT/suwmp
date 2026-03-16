@@ -17,20 +17,20 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { UserDialog } from "@/components/users/UserDialog";
-import { type UserFormValues } from "@/components/users/UserForm";
+import { UserDialog } from "@/components/common/users/UserDialog";
+import { type UserFormValues } from "@/components/common/users/UserForm";
 import { toast } from "sonner"; // Assuming sonner is used for toasts based on package.json
 import { useOutletContext } from 'react-router';
-import { UserService, type UserResponse } from "@/services/UserService";
+import { UserService, type UserResponse } from "@/services/citizens/UserService";
 
 interface User {
     id: string;
@@ -68,7 +68,7 @@ export default function UserManagementPage() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
-    
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -80,8 +80,8 @@ export default function UserManagementPage() {
             email: u.email,
             phone: u.phone ?? '',
             roleId: '',
-            role: u.role && typeof u.role === 'string' 
-                ? u.role.charAt(0).toUpperCase() + u.role.slice(1).toLowerCase() as any 
+            role: u.role && typeof u.role === 'string'
+                ? u.role.charAt(0).toUpperCase() + u.role.slice(1).toLowerCase() as any
                 : u.role,
             status: u.status && typeof u.status === 'string'
                 ? u.status.charAt(0).toUpperCase() + u.status.slice(1).toLowerCase() as any
@@ -103,7 +103,7 @@ export default function UserManagementPage() {
                 response = await UserService.getUsers(page, pagination.pageSize);
             }
             const { content, totalPages, totalElements, number, first, last } = response.data;
-            
+
             const mappedUsers = mapUsers(content);
 
             setUsers(mappedUsers);
@@ -172,7 +172,7 @@ export default function UserManagementPage() {
         // Filter all users by role AND search query
         const filtered = allUsers.filter(user => {
             const matchesRole = user.role.toLowerCase() === roleFilter.toLowerCase();
-            const matchesSearch = !searchQuery.trim() || 
+            const matchesSearch = !searchQuery.trim() ||
                 user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.email.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesRole && matchesSearch;
@@ -189,7 +189,7 @@ export default function UserManagementPage() {
         }
         return allUsers.filter(user => {
             const matchesRole = user.role.toLowerCase() === roleFilter.toLowerCase();
-            const matchesSearch = !searchQuery.trim() || 
+            const matchesSearch = !searchQuery.trim() ||
                 user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.email.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesRole && matchesSearch;
@@ -276,7 +276,7 @@ export default function UserManagementPage() {
 
         return () => {
             if (setOnAddClick) {
-                setOnAddClick(() => () => {}); // Reset to no-op or null
+                setOnAddClick(() => () => { }); // Reset to no-op or null
             }
         }
     }, [setOnAddClick]);
@@ -288,7 +288,7 @@ export default function UserManagementPage() {
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
-    
+
     const [updateConfirmOpen, setUpdateConfirmOpen] = useState(false);
     const [pendingUpdateData, setPendingUpdateData] = useState<UserFormValues | null>(null);
 
@@ -342,16 +342,16 @@ export default function UserManagementPage() {
         if (!selectedUser || !pendingUpdateData) return;
         try {
             await UserService.updateUser(selectedUser.id, pendingUpdateData);
-            
+
             // Update local list
-            const updatedUsers = users.map(user => 
-                user.id === selectedUser.id 
-                    ? { 
-                        ...user, 
-                        ...pendingUpdateData, 
+            const updatedUsers = users.map(user =>
+                user.id === selectedUser.id
+                    ? {
+                        ...user,
+                        ...pendingUpdateData,
                         role: pendingUpdateData.roleId === "1" ? "Citizen" : pendingUpdateData.roleId === "2" ? "Enterprise" : "Collector" as any,
                         status: pendingUpdateData.status as any
-                    } 
+                    }
                     : user
             );
             setUsers(updatedUsers);
@@ -479,7 +479,7 @@ export default function UserManagementPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
                                                     <DropdownMenuItem onClick={() => handleEditUser(user)}>Edit Details</DropdownMenuItem>
-                                                    <DropdownMenuItem 
+                                                    <DropdownMenuItem
                                                         className="text-red-600 focus:text-red-700"
                                                         onClick={() => handleDeleteUser(user.id)}
                                                     >
@@ -505,18 +505,18 @@ export default function UserManagementPage() {
                 <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white">
                     <p className="text-sm text-gray-500">Showing {displayUsers.length} of {getFilteredTotal()} users</p>
                     <div className="flex gap-2">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             className="h-8 text-xs border-gray-200 text-gray-600"
                             onClick={() => handlePageChange(pagination.pageNumber - 1)}
                             disabled={isFirstPage()}
                         >
                             Previous
                         </Button>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             className="h-8 text-xs border-gray-200 text-gray-600"
                             onClick={() => handlePageChange(pagination.pageNumber + 1)}
                             disabled={isLastPage()}
@@ -527,7 +527,7 @@ export default function UserManagementPage() {
                 </div>
             </div>
 
-            <UserDialog 
+            <UserDialog
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
                 user={selectedUser}

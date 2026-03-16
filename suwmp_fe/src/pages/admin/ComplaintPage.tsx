@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ComplaintService } from "@/services/ComplaintService";
+import { ComplaintService } from "@/services/admins/ComplaintService";
 import type { Complaint, ComplaintGetResponse, PaginatedComplaints } from "@/types/complaint";
 import { motion } from "framer-motion";
 import { CheckCircle2, Clock, Filter, Loader2, MoreVertical, Search, UserCheck, XCircle } from "lucide-react";
@@ -300,9 +300,8 @@ const ComplaintsPage = () => {
                                         Actions
                                     </span>
                                     <div
-                                        className={`grid gap-3 ${
-                                            selectedComplaint.status === "OPEN" ? "grid-cols-3" : "grid-cols-2"
-                                        }`}
+                                        className={`grid gap-3 ${selectedComplaint.status === "OPEN" ? "grid-cols-3" : "grid-cols-2"
+                                            }`}
                                     >
                                         {selectedComplaint.status === "OPEN" && (
                                             <Button

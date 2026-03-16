@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { toast } from "sonner";
-import WasteCategoryService from "@/services/WasteCategoryService";
+import WasteCategoryService from "@/services/waste-reports/WasteCategoryService";
 import type { WasteCategory } from "@/types/WasteCategory";
 
 type Props = {

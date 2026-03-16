@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CitizenWasteReportStatus } from "@/types/WasteReportRequest";
-import wasteReportService from "@/services/WasteReportService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import PageLoading from "@/components/common/PageLoading";
 import {
   ArrowLeft,
@@ -41,7 +41,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import type { RatingStatusResponse } from "@/types/WasteReportRequest";
-import type { ComplaintResponse } from "@/services/WasteReportService";
+import type { ComplaintResponse } from "@/services/waste-reports/WasteReportService";
 import { toast } from "sonner";
 
 function ReportStatusPage() {
@@ -174,7 +174,7 @@ function ReportStatusPage() {
     if (!id) return;
     setCancelling(true);
     setShowCancelConfirm(false);
-    
+
     // First operation: Cancellation
     try {
       await wasteReportService.cancelCitizenReport(Number(id));
@@ -281,9 +281,9 @@ function ReportStatusPage() {
           <Card className="p-0 overflow-hidden">
             <div className="h-48 sm:h-56 md:h-64 bg-muted flex items-center justify-center relative">
               {report.photoUrl && !imgError ? (
-                <img 
-                  src={report.photoUrl} 
-                  alt="Waste Report" 
+                <img
+                  src={report.photoUrl}
+                  alt="Waste Report"
                   className="w-full h-full object-cover"
                   onError={() => setImgError(true)}
                 />
@@ -296,80 +296,80 @@ function ReportStatusPage() {
             </div>
             <div className="p-6 md:p-7 flex flex-col md:flex-row gap-6 border-t border-border/60">
               <div className="flex-1 space-y-4">
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className="text-xs">
-                  {report.referenceCode}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {displayWasteType}
-                </Badge>
-              </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant="outline" className="text-xs">
+                    {report.referenceCode}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {displayWasteType}
+                  </Badge>
+                </div>
 
                 <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
                   {displayWasteType}
                 </h2>
 
-              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1 min-w-0">
-                  <MapPin className="w-4 h-4 shrink-0" />
-                  <span className="truncate">
-                    {address ?? `${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}`}
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1 min-w-0">
+                    <MapPin className="w-4 h-4 shrink-0" />
+                    <span className="truncate">
+                      {address ?? `${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}`}
+                    </span>
                   </span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {createdAtLabel}
-                </span>
-              </div>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {createdAtLabel}
+                  </span>
+                </div>
 
-              {/* Stats row as 2x2 grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase">
-                    Reported on
-                  </p>
-                  <p className="font-medium">{createdAtLabel}</p>
+                {/* Stats row as 2x2 grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase">
+                      Reported on
+                    </p>
+                    <p className="font-medium">{createdAtLabel}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase">
+                      Estimated weight
+                    </p>
+                    <p className="font-medium">
+                      {report.volume != null ? `${report.volume} kg` : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase">
+                      Reward points
+                    </p>
+                    <p className="font-medium text-emerald-600">
+                      {report.rewardPoints != null
+                        ? `${report.rewardPoints} points`
+                        : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase">
+                      Classification confidence
+                    </p>
+                    <p className="font-medium">
+                      {report.classificationConfidence != null
+                        ? `${report.classificationConfidence}% Accuracy`
+                        : "—"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase">
-                    Estimated weight
-                  </p>
-                  <p className="font-medium">
-                    {report.volume != null ? `${report.volume} kg` : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase">
-                    Reward points
-                  </p>
-                  <p className="font-medium text-emerald-600">
-                    {report.rewardPoints != null
-                      ? `${report.rewardPoints} points`
-                      : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase">
-                    Classification confidence
-                  </p>
-                  <p className="font-medium">
-                    {report.classificationConfidence != null
-                      ? `${report.classificationConfidence}% Accuracy`
-                      : "—"}
-                  </p>
-                </div>
-              </div>
               </div>
 
               <div className="w-full md:w-56 flex flex-col items-end gap-3">
                 <Badge variant="outline" className="self-start md:self-end">
-                {report.status === "PENDING" && "Pending"}
-                {report.status === "ON_THE_WAY" && "In Progress"}
-                {report.status === "ASSIGNED" && "Assigned"}
-                {report.status === "COLLECTED" && "Collected"}
-                {report.status === "CANCELLED" && "Cancelled"}
-                {report.status === "REJECTED" && "Rejected"}
-              </Badge>
+                  {report.status === "PENDING" && "Pending"}
+                  {report.status === "ON_THE_WAY" && "In Progress"}
+                  {report.status === "ASSIGNED" && "Assigned"}
+                  {report.status === "COLLECTED" && "Collected"}
+                  {report.status === "CANCELLED" && "Cancelled"}
+                  {report.status === "REJECTED" && "Rejected"}
+                </Badge>
               </div>
             </div>
           </Card>
@@ -385,8 +385,8 @@ function ReportStatusPage() {
 
           {/* Collector Assigned + Need Help row directly under card (image 2) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CollectorAndHelpCards 
-              collectorName={report.collectorName} 
+            <CollectorAndHelpCards
+              collectorName={report.collectorName}
               onReportIssue={() => setShowIssueDialog(true)}
               hasIssue={!!existingIssue}
               status={report.status}
@@ -416,9 +416,9 @@ function ReportStatusPage() {
                   <div>
                     <p className="text-sm font-medium text-orange-900 mb-2">Attachment</p>
                     <div className="relative group max-w-sm rounded-xl overflow-hidden border border-orange-200 shadow-sm bg-white">
-                      <img 
-                        src={existingIssue.photoUrl} 
-                        alt="Issue Attachment" 
+                      <img
+                        src={existingIssue.photoUrl}
+                        alt="Issue Attachment"
                         className="w-full h-auto object-cover max-h-64 transition-transform group-hover:scale-105"
                       />
                     </div>
@@ -441,11 +441,10 @@ function ReportStatusPage() {
                 return (
                   <div key={item.id} className="relative pl-14 min-h-[40px] flex flex-col justify-center">
                     <div
-                      className={`absolute left-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border-2 z-10 ${
-                        isDone || isActive
+                      className={`absolute left-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border-2 z-10 ${isDone || isActive
                           ? "bg-emerald-500 text-white border-emerald-500"
                           : "bg-background text-muted-foreground border-border"
-                      }`}
+                        }`}
                     >
                       {index === 0 && <CheckCircle2 className="w-5 h-5" />}
                       {index === 1 && <UserRound className="w-5 h-5" />}
@@ -454,11 +453,10 @@ function ReportStatusPage() {
                     </div>
                     <div className="flex flex-col gap-1">
                       <p
-                        className={`text-sm font-medium ${
-                          isDone || isActive
+                        className={`text-sm font-medium ${isDone || isActive
                             ? "text-foreground"
                             : "text-muted-foreground"
-                        }`}
+                          }`}
                       >
                         {item.label}
                       </p>
@@ -497,29 +495,27 @@ function ReportStatusPage() {
                   </span>
                 ) : null}
               </div>
-              
+
               <div className="flex gap-3">
                 {Array.from({ length: 5 }).map((_, idx) => (
                   <button
                     key={idx}
                     type="button"
                     disabled={ratingStatus?.alreadyRated || submittingRating}
-                    className={`w-10 h-10 rounded-xl border border-border flex items-center justify-center transition-colors ${
-                      ratingStatus?.alreadyRated 
-                        ? "cursor-default opacity-80" 
+                    className={`w-10 h-10 rounded-xl border border-border flex items-center justify-center transition-colors ${ratingStatus?.alreadyRated
+                        ? "cursor-default opacity-80"
                         : "hover:bg-muted cursor-pointer"
-                    }`}
+                      }`}
                     aria-label={`Rate ${idx + 1} star${idx === 0 ? "" : "s"}`}
                     onClick={() => setRating(idx + 1)}
                     onMouseEnter={() => !ratingStatus?.alreadyRated && setHoverRating(idx + 1)}
                     onMouseLeave={() => !ratingStatus?.alreadyRated && setHoverRating(null)}
                   >
                     <Star
-                      className={`w-4 h-4 ${
-                        (hoverRating ?? rating ?? 0) > idx
+                      className={`w-4 h-4 ${(hoverRating ?? rating ?? 0) > idx
                           ? "text-emerald-500 fill-emerald-500"
                           : "text-muted-foreground"
-                      }`}
+                        }`}
                     />
                   </button>
                 ))}
@@ -540,11 +536,10 @@ function ReportStatusPage() {
                   <p>Thanks for your feedback! Ratings are final and cannot be edited to ensure transparency.</p>
                 </div>
               )}
-              
+
               {ratingMessage && (
-                <p className={`text-xs mt-1 ${
-                  ratingMessage.includes("Failed") ? "text-destructive" : "text-muted-foreground"
-                }`}>
+                <p className={`text-xs mt-1 ${ratingMessage.includes("Failed") ? "text-destructive" : "text-muted-foreground"
+                  }`}>
                   {ratingMessage}
                 </p>
               )}
@@ -556,7 +551,7 @@ function ReportStatusPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Submit your rating?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  You are about to give this collection experience a <strong>{rating}-star</strong> rating. 
+                  You are about to give this collection experience a <strong>{rating}-star</strong> rating.
                   Ratings are final and cannot be modified after submission.
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -699,8 +694,8 @@ function CollectorAndHelpCards({
 
       <Card className="p-5 space-y-3">
         <h3 className="text-sm font-medium">Need Help?</h3>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="w-full justify-start gap-2"
           onClick={onReportIssue}
           disabled={hasIssue}

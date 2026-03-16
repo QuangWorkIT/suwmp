@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card"
 import { ArrowLeft, Check, MapPin, Star, ExternalLink, Plus, Loader2, Building2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
-import wasteReportService from "@/services/WasteReportService"
+import wasteReportService from "@/services/waste-reports/WasteReportService"
 import type { NearbyEnterpriseResponse } from "@/types/WasteReportRequest"
 
 /* Animation config using CSS variables from index.css */

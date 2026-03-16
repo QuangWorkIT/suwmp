@@ -7,7 +7,7 @@ import {
     XCircle,
 } from "lucide-react";
 import Pagination from "@/components/common/Pagination";
-import { ComplaintService } from "@/services/ComplaintService";
+import { ComplaintService } from "@/services/admins/ComplaintService";
 import type { Complaint, PaginatedComplaints } from "@/types/complaint";
 
 const getStatusStyles = (status: Complaint["status"]) => {
@@ -147,7 +147,7 @@ const FeedbackPage = () => {
 
                     {/* Pagination Controls */}
                     {data && data.totalPages > 1 && (
-                        <Pagination 
+                        <Pagination
                             currentPage={data.number}
                             totalPages={data.totalPages}
                             hasPrev={!data.first}

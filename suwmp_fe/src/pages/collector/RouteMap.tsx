@@ -23,10 +23,10 @@ import { getCoordinates, getUserLocation } from "@/utilities/geocoding";
 import type { Feature, LineString } from "geojson"
 import { toast } from "sonner";
 import ImageDetail from "@/components/common/ImageDetail";
-import s3Service from "@/services/S3Service";
-import { collectionLogService } from "@/services/CollectionLogService";
-import wasteReportService from "@/services/WasteReportService";
-import { ComplaintService } from "@/services/ComplaintService";
+import s3Service from "@/services/waste-reports/S3Service";
+import { collectionLogService } from "@/services/collectors/CollectionLogService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
+import { ComplaintService } from "@/services/admins/ComplaintService";
 import { WasteReportStatus } from "@/types/WasteReportRequest";
 import { updateTaskStatus } from "@/components/common/collector/TaskCard";
 import type { AssignedTask } from "@/types/collectorTask";
@@ -250,7 +250,7 @@ export default function RouteMap() {
     const handleUpdateStatus = async (task: AssignedTask) => {
         setIsUpdatingTaskStatus(true)
         await updateTaskStatus(task.requestId, WasteReportStatus.ON_THE_WAY)
-        dispatch(setTaskStatus({...task, currentStatus: WasteReportStatus.ON_THE_WAY}))
+        dispatch(setTaskStatus({ ...task, currentStatus: WasteReportStatus.ON_THE_WAY }))
         setIsUpdatingTaskStatus(false)
     }
 
