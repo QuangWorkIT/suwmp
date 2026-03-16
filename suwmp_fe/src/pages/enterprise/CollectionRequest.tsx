@@ -38,7 +38,7 @@ import type { PaginatedResponse } from "@/types/response";
 
 
 const statusConfig = {
-    REJECTED: { label: "Rejected", color: "bg-red-100 text-red-700 border-red-200", icon: CircleX  },
+    REJECTED: { label: "Rejected", color: "bg-red-100 text-red-700 border-red-200", icon: CircleX },
     PENDING: { label: "Pending", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Circle },
     ON_THE_WAY: { label: "Processing", color: "bg-blue-100 text-blue-700 border-blue-200", icon: Truck },
     COLLECTED: { label: "Completed", color: "bg-green-100 text-green-700 border-green-200", icon: CheckCircle2 },
@@ -327,16 +327,18 @@ function CollectionRequest() {
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <Button variant="outline" size="sm" className="h-7 text-xs"
-                                                            disabled={selectedRequests.length > 0}
-                                                            onClick={() => {
-                                                                if (selectedRequests.length > 0) return
-                                                                setSelectedRequests([req.requestId])
-                                                                setIsAssignFormOpen(true)
-                                                            }}>
-                                                            <UserPlus className="w-3 h-3 mr-1" />
-                                                            Assign
-                                                        </Button>
+                                                        isSelectable(req.currentStatus) ? (
+                                                            <Button variant="outline" size="sm" className="h-7 text-xs"
+                                                                disabled={selectedRequests.length > 0}
+                                                                onClick={() => {
+                                                                    if (selectedRequests.length > 0) return
+                                                                    setSelectedRequests([req.requestId])
+                                                                    setIsAssignFormOpen(true)
+                                                                }}>
+                                                                <UserPlus className="w-3 h-3 mr-1" />
+                                                                Assign
+                                                            </Button>
+                                                        ) : (<div className="text-center font-medium italic">N/A</div>)
                                                     )}
                                                 </td>
                                                 <td className="py-3 px-4">
