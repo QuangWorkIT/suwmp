@@ -2,6 +2,7 @@ package com.example.suwmp_be.controller;
 
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.enterprise_capacity.GetEnterpriseUserByUserIdResponse;
+import com.example.suwmp_be.entity.Enterprise;
 import com.example.suwmp_be.serviceImpl.EnterpriseUserServiceImpl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,17 @@ public class EnterpriseUserController {
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(
                 true,
                 "Get enterprise user successful",
+                responseBody)
+        );
+    }
+
+    @GetMapping("/enterprises/{userId}")
+    public ResponseEntity<BaseResponse<Enterprise>> getEnterpriseByUserId(
+            @PathVariable UUID userId) {
+        Enterprise responseBody = enterpriseUserService.getEnterpriseByUserId(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(
+                true,
+                "Get enterprise by user id successful",
                 responseBody)
         );
     }

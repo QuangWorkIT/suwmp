@@ -35,17 +35,21 @@ const getRoleId = (role: string) => {
 export function UserDialog({ open, onOpenChange, user, onSubmit, onCancel }: UserDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{user ? 'Edit User' : 'Add New User'}</DialogTitle>
                 </DialogHeader>
                 <UserForm 
                     initialData={user ? {
+                        id: user.id,
                         fullName: user.fullName,
                         email: user.email,
                         phone: user.phone || '',
                         roleId: getRoleId(user.role) as "1" | "2" | "3",
-                        status: (user.status.toUpperCase()) as "ACTIVE" | "SUSPENDED"
+                        status: (user.status.toUpperCase()) as "ACTIVE" | "SUSPENDED",
+                        password: "",
+                        enterpriseName: "",
+
                     } : undefined}
                     onSubmit={onSubmit}
                     onCancel={onCancel}

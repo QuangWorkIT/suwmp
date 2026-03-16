@@ -5,6 +5,10 @@ export interface CreateUserRequest {
     email: string;
     phone: string;
     roleId: string;
+    password: string;
+    enterpriseName: string;
+    enterpriseDescription: string;
+    enterprisePhoto: string;
 }
 
 export interface UserResponse {
@@ -16,6 +20,7 @@ export interface UserResponse {
     status: string;
     activityStatus: string | null;
     createdAt: string;
+    image_url: string;
 }
 
 export interface PaginatedResponse<T> {

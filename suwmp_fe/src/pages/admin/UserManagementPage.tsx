@@ -42,7 +42,7 @@ interface User {
     status: 'active' | 'suspended';
     activity: string;
     joined: string;
-    avatar: string;
+    image_url: string;
 }
 
 
@@ -88,7 +88,7 @@ export default function UserManagementPage() {
                 : u.status,
             activity: u.activityStatus || 'No activity',
             joined: new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            avatar: u.fullName.charAt(0).toUpperCase()
+            image_url: u.image_url || u.fullName.charAt(0).toUpperCase()
         }));
     };
 
@@ -320,11 +320,14 @@ export default function UserManagementPage() {
             // Create user directly
             try {
                 await UserService.createUser({
-                    ...data,
                     fullName: data.fullName,
                     email: data.email,
                     phone: data.phone,
-                    roleId: data.roleId
+                    roleId: data.roleId,
+                    password: data.password,
+                    enterpriseName: data.enterpriseName,
+                    enterpriseDescription: data.enterpriseDescription || "",
+                    enterprisePhoto: data.enterprisePhoto || ""
                 });
                 toast.success("User added successfully");
                 fetchUsers(pagination.pageNumber);
@@ -443,7 +446,7 @@ export default function UserManagementPage() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-10 h-10 rounded-full ${getAvatarColor(index)} flex items-center justify-center text-white font-medium shadow-sm`}>
-                                                    {user.avatar}
+                                                    {user.image_url}
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-medium text-gray-900 group-hover:text-green-700 transition-colors">{user.fullName}</div>

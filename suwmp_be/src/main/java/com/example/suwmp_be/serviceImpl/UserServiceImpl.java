@@ -1,11 +1,16 @@
 package com.example.suwmp_be.serviceImpl;
 
+import com.example.suwmp_be.constants.RoleEnum;
 import com.example.suwmp_be.dto.mapper.UserMapper;
 import com.example.suwmp_be.dto.request.CreateUserRequest;
 import com.example.suwmp_be.dto.request.UpdateUserRequest;
 import com.example.suwmp_be.dto.response.UserResponse;
+import com.example.suwmp_be.entity.Enterprise;
+import com.example.suwmp_be.entity.EnterpriseUser;
 import com.example.suwmp_be.entity.Role;
 import com.example.suwmp_be.entity.User;
+import com.example.suwmp_be.repository.EnterpriseRepository;
+import com.example.suwmp_be.repository.EnterpriseUserRepository;
 import com.example.suwmp_be.repository.RoleRepository;
 import com.example.suwmp_be.repository.UserRepository;
 import com.example.suwmp_be.service.IUserService;
@@ -18,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -29,6 +35,8 @@ public class UserServiceImpl implements IUserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final EnterpriseRepository enterpriseRepository;
+    private final EnterpriseUserRepository enterpriseUserRepository;
 
     @Override
     public Page<UserResponse> getAllUsers(Pageable pageable) {
@@ -44,7 +52,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
-        if(userRepository.existsByPhone(request.getPhone())) {
+        if (userRepository.existsByPhone(request.getPhone())) {
             throw new RuntimeException("Phone number already exists: " + request.getPhone());
         }
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -53,14 +61,36 @@ public class UserServiceImpl implements IUserService {
         Role role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new RuntimeException("Role not found with id: " + request.getRoleId()));
 
-        User user = userMapper.toEntity(request);
-        user.setRole(role);
+        User user = userRepository.save(User.builder()
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .role(role)
+                .status("ACTIVE")
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .createdAt(Instant.now())
+                .build());
 
-        user.setStatus("ACTIVE");
-        user.setPasswordHash(passwordEncoder.encode(generateTempPassword()));
-        user.setCreatedAt(Instant.now());
+        if (RoleEnum.ENTERPRISE == RoleEnum.fromId(role.getId())) {
+            Enterprise enterprise = Enterprise.builder()
+                    .name(request.getEnterpriseName())
+                    .photoUrl(request.getEnterprisePhoto())
+                    .description(request.getEnterpriseDescription())
+                    .rating(4.0f)
+                    .createdAt(LocalDateTime.now())
+                    .build();
 
-        user = userRepository.save(user);
+            long enterpriseId = enterpriseRepository.save(enterprise).getId();
+
+            enterpriseUserRepository.save(
+                    EnterpriseUser.builder()
+                            .enterpriseId(enterpriseId)
+                            .userId(user.getId())
+                            .createAt(LocalDateTime.now())
+                            .build()
+            );
+        }
+
         return userMapper.toResponse(user);
     }
 
@@ -68,7 +98,7 @@ public class UserServiceImpl implements IUserService {
     public UserResponse updateUser(UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        if(userRepository.existsByPhoneAndIdNot(request.getPhone(), userId)) {
+        if (userRepository.existsByPhoneAndIdNot(request.getPhone(), userId)) {
             throw new RuntimeException("Phone number already exists: " + request.getPhone());
         }
         if (userRepository.existsByEmailAndIdNot(request.getEmail(), userId)) {

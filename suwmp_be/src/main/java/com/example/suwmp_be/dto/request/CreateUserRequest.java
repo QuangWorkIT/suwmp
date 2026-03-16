@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @AllArgsConstructor
@@ -23,4 +24,13 @@ public class CreateUserRequest {
 
     @NotNull
     private int roleId;
+
+    @NotNull(message = "Password is required")
+    private String password;
+
+    // Enterprise fields
+    @NotNull(message = "Enterprise name is required when role is enterprise")
+    private String enterpriseName;
+    private String enterpriseDescription;
+    private String enterprisePhoto;
 }
