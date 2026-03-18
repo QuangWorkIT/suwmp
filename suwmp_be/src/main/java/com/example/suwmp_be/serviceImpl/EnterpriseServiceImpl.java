@@ -39,7 +39,7 @@ public class EnterpriseServiceImpl {
     }
 
     public void updateEnterpriseProfile(long enterpriseId, UUID enterpriseUserId, EnterpriseUpdateProfileRequest request) {
-        if (enterpriseUserRepo.existsByEnterpriseIdAndUserId(enterpriseId, enterpriseUserId))
+        if (!enterpriseUserRepo.existsByEnterpriseIdAndUserId(enterpriseId, enterpriseUserId))
             throw new ForbiddenException(ErrorCode.USER_NOT_ENTERPRISE_OWNER);
 
         var enterprise = enterpriseRepo.findById(enterpriseId)
