@@ -24,7 +24,7 @@ import {
     InputGroupText,
     InputGroupTextarea,
 } from "@/components/ui/input-group"
-import wasteReportService from "@/services/WasteReportService"
+import wasteReportService from "@/services/waste-reports/WasteReportService"
 import type { CancelWasteReportRequest } from "@/types/WasteReportRequest"
 import { toast } from "sonner"
 

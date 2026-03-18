@@ -18,13 +18,13 @@ import {
   User,
   Loader2,
 } from "lucide-react";
-import { CollectorDashboardService } from "@/services/CollectorDashboardService";
+import { CollectorDashboardService } from "@/services/collectors/CollectorDashboardService";
 import type { DashboardSummary, DashboardTask, DashboardFeedback } from "@/types/collector-dashboard";
 
 import { useNavigate } from "react-router";
-import { useAppDispatch } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setCurrentTask, setNextTask } from "@/redux/features/assignedTaskSlice";
-import wasteReportService from "@/services/WasteReportService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import { toast } from "sonner";
 
 type TaskStatus = "In Progress" | "Assigned" | "Completed" | "COLLECTED" | string;
@@ -35,11 +35,10 @@ const StarRating = ({ rating }: { rating: number }) => {
       {[1, 2, 3, 4, 5].map((s) => (
         <Star
           key={s}
-          className={`w-3.5 h-3.5 ${
-            s <= rating
-              ? "text-amber-400 fill-amber-400"
-              : "text-gray-200 fill-gray-200"
-          }`}
+          className={`w-3.5 h-3.5 ${s <= rating
+            ? "text-amber-400 fill-amber-400"
+            : "text-gray-200 fill-gray-200"
+            }`}
         />
       ))}
     </div>
@@ -101,6 +100,7 @@ const getWasteTypeInfo = (wasteType: string) => {
 };
 
 const CollectorDashboard = () => {
+  const user = useAppSelector(state => state.user.user)
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<"Today" | "Upcoming">("Today");
@@ -230,7 +230,7 @@ const CollectorDashboard = () => {
         transition={{ duration: 0.5 }}
       >
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-          Good Morning! 🚛
+          Good morning <span className="italic text-blue-500">{user?.fullName}</span>
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">
           You have {summary?.remainingTasksToday || 0} tasks remaining today
@@ -337,11 +337,10 @@ const CollectorDashboard = () => {
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`relative px-4 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                          activeTab === tab
-                            ? "text-gray-900"
-                            : "text-gray-400 hover:text-gray-600"
-                        }`}
+                        className={`relative px-4 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 ${activeTab === tab
+                          ? "text-gray-900"
+                          : "text-gray-400 hover:text-gray-600"
+                          }`}
                       >
                         {activeTab === tab && (
                           <motion.div
@@ -368,7 +367,7 @@ const CollectorDashboard = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.25 }}
-                    className="flex flex-col gap-3"
+                    className="flex flex-col gap-3 max-h-[400px] overflow-y-auto thin-scrollbar"
                   >
                     {displayedTasks.length > 0 ? (
                       displayedTasks.map((task, i) => {

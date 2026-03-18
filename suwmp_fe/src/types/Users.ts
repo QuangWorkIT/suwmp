@@ -6,5 +6,6 @@ export interface UserInterface {
     email: string,
     role: UserRole,
     status: string,
-    enterpriseId: number
+    enterpriseId: number,
+    deletedAt: string
 }

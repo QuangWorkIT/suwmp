@@ -9,5 +9,14 @@ export const EnterpriseUserService = {
             console.error(error);
             throw error;
         }
+    },
+    getEnterpriseByUserId: async (id: string) => {
+        try {
+            const response = await authClient.get("/enterprise-users/enterprises/" + id)
+            return response.data
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
     }
 }

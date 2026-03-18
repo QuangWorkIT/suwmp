@@ -1,26 +1,65 @@
-import ProtectedRoute from "./ProtectedRoute";
+import { lazy, Suspense } from "react";
 import { Navigate } from "react-router";
-import CollectorMain from "@/components/layout/collector/CollectorMain";
-import CollectorDashboard from "@/pages/collector/CollectorDashboard";
-import CollectorTask from "@/pages/collector/CollectorTask";
-import RouteMap from "@/pages/collector/RouteMap";
-import CollectionHistory from "@/pages/collector/CollectionHistory";
+import ProtectedRoute from "./ProtectedRoute";
+import PageLoading from "@/components/common/PageLoading";
+
+// lazy imports
+const CollectorMain = lazy(() => import("@/components/layout/collector/CollectorMain"));
+const CollectorDashboard = lazy(() => import("@/pages/collector/CollectorDashboard"));
+const CollectorTask = lazy(() => import("@/pages/collector/CollectorTask"));
+const RouteMap = lazy(() => import("@/pages/collector/RouteMap"));
+const CollectionHistory = lazy(() => import("@/pages/collector/CollectionHistory"));
+
+const Loader = () => <PageLoading />;
 
 export const collectorRoutes = [
-    {
-        element: <ProtectedRoute allowedRoles={["COLLECTOR"]} />,
+  {
+    element: <ProtectedRoute allowedRoles={["COLLECTOR"]} />,
+    children: [
+      {
+        path: "/collector",
+        element: (
+          <Suspense fallback={<Loader />}>
+            <CollectorMain />
+          </Suspense>
+        ),
         children: [
-            {
-                path: "/collector",
-                element: <CollectorMain />,
-                children: [
-                    { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: "dashboard", element: <CollectorDashboard /> },
-                    { path: "tasks", element: <CollectorTask /> },
-                    { path: "route", element: <RouteMap /> },
-                    { path: "history", element: <CollectionHistory /> }
-                ]
-            }
+          { index: true, element: <Navigate to="dashboard" replace /> },
+
+          {
+            path: "dashboard",
+            element: (
+              <Suspense fallback={<Loader />}>
+                <CollectorDashboard />
+              </Suspense>
+            ),
+          },
+          {
+            path: "tasks",
+            element: (
+              <Suspense fallback={<Loader />}>
+                <CollectorTask />
+              </Suspense>
+            ),
+          },
+          {
+            path: "route",
+            element: (
+              <Suspense fallback={<Loader />}>
+                <RouteMap />
+              </Suspense>
+            ),
+          },
+          {
+            path: "history",
+            element: (
+              <Suspense fallback={<Loader />}>
+                <CollectionHistory />
+              </Suspense>
+            ),
+          },
         ],
-    }
-]
+      },
+    ],
+  },
+];

@@ -8,9 +8,9 @@ import EnterpriseCapacityDialog from "@/components/common/capacity/EnterpriseCap
 import EnterpriseCapacityEmpty from "@/components/common/capacity/EnterpriseCapacityEmpty";
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/redux/hooks";
-import { CapacityService } from "@/services/CapacityService";
-import { EnterpriseUserService } from "@/services/EnterpriseUserService";
-import { WasteTypeService } from "@/services/WasteTypeService";
+import { CapacityService } from "@/services/enterprises/CapacityService";
+import { EnterpriseUserService } from "@/services/enterprises/EnterpriseUserService";
+import { WasteTypeService } from "@/services/waste-reports/WasteTypeService";
 import type { CreateEnterpriseCapacityRequest, EnterpriseCapacity, UpdateEnterpriseCapacityRequest } from "@/types/enterpriseCapacity";
 import type { WasteTypeEnterpriseCapacity } from "@/types/wasteType";
 import { formatWasteTypeName } from "@/utilities/capacityUtils";
@@ -52,24 +52,24 @@ export default function CapacityManagementPage() {
   };
 
   const fetchWasteTypes = async (capacityItems: EnterpriseCapacity[]) => {
-      try {
-        const allWasteTypes = await WasteTypeService.getAll();
-        const usedWasteTypeIds = capacityItems.map(item => item.wasteTypeId);
+    try {
+      const allWasteTypes = await WasteTypeService.getAll();
+      const usedWasteTypeIds = capacityItems.map(item => item.wasteTypeId);
 
-        const availableWasteTypes = allWasteTypes.filter(wt => !usedWasteTypeIds.includes(wt.id));
-        setWasteTypes(availableWasteTypes);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+      const availableWasteTypes = allWasteTypes.filter(wt => !usedWasteTypeIds.includes(wt.id));
+      setWasteTypes(availableWasteTypes);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const fetchAll = async () => {
     const capacityItems = await fetchCapacities();
     await fetchWasteTypes(capacityItems);
   };
-  
+
   // Fetch data
-  useEffect(() => { 
+  useEffect(() => {
     fetchAll();
   }, [user?.id]);
 
@@ -88,7 +88,7 @@ export default function CapacityManagementPage() {
   }>({
     title: "",
     description: "",
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const handleAdd = () => {
@@ -135,7 +135,7 @@ export default function CapacityManagementPage() {
           .catch((error) => {
             console.error(error)
             toast.error("Failed to update capacity");
-          } );
+          });
       },
       variant: "default",
     });
@@ -146,15 +146,15 @@ export default function CapacityManagementPage() {
     payload: CreateEnterpriseCapacityRequest,
   ) => {
     CapacityService.createCapacity(payload)
-    .then(() => {
-      setDialogOpen(false);
-      fetchAll();
-      toast.success("Capacity created successfully");
-    })
-    .catch((error) => {
-      console.error(error);
-      toast.error("Failed to create capacity");
-    });
+      .then(() => {
+        setDialogOpen(false);
+        fetchAll();
+        toast.success("Capacity created successfully");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error("Failed to create capacity");
+      });
   };
 
   return (
@@ -175,9 +175,9 @@ export default function CapacityManagementPage() {
         </div>
         {isLoading ? (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-             {Array.from({ length: 4 }).map((_, i) => (
-                <EnterpriseCapacityCardSkeleton key={i} />
-             ))}
+            {Array.from({ length: 4 }).map((_, i) => (
+              <EnterpriseCapacityCardSkeleton key={i} />
+            ))}
           </div>
         ) : items.length === 0 ? (
           <EnterpriseCapacityEmpty handleAdd={handleAdd} wasteTypes={wasteTypes} />
@@ -186,14 +186,14 @@ export default function CapacityManagementPage() {
             {[...items]
               .sort((a, b) => a.wasteTypeName.localeCompare(b.wasteTypeName))
               .map((item) => (
-              <EnterpriseCapacityCard
-                key={item.id}
-                item={item}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-                usedKg={item.totalVolume}
-              />
-            ))}
+                <EnterpriseCapacityCard
+                  key={item.id}
+                  item={item}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
+                  usedKg={item.totalVolume}
+                />
+              ))}
           </div>
         )}
 

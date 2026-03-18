@@ -21,6 +21,7 @@ interface UserDialogProps {
     user: User | null;
     onSubmit: (data: UserFormValues) => void;
     onCancel: () => void;
+    isSubmitting?: boolean;
 }
 
 const getRoleId = (role: string) => {
@@ -32,23 +33,34 @@ const getRoleId = (role: string) => {
     }
 };
 
-export function UserDialog({ open, onOpenChange, user, onSubmit, onCancel }: UserDialogProps) {
+import { useMemo } from "react";
+
+export function UserDialog({ open, onOpenChange, user, onSubmit, onCancel, isSubmitting }: UserDialogProps) {
+    const initialData = useMemo(() => {
+        return user ? {
+            id: user.id,
+            fullName: user.fullName,
+            email: user.email,
+            phone: user.phone || '',
+            roleId: getRoleId(user.role) as "1" | "2" | "3",
+            status: (user.status.toUpperCase()) as "ACTIVE" | "SUSPENDED",
+            password: "",
+            enterpriseName: "",
+            enterprisePhoto: null
+        } : undefined;
+    }, [user]);
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{user ? 'Edit User' : 'Add New User'}</DialogTitle>
                 </DialogHeader>
                 <UserForm 
-                    initialData={user ? {
-                        fullName: user.fullName,
-                        email: user.email,
-                        phone: user.phone || '',
-                        roleId: getRoleId(user.role) as "1" | "2" | "3",
-                        status: (user.status.toUpperCase()) as "ACTIVE" | "SUSPENDED"
-                    } : undefined}
+                    initialData={initialData}
                     onSubmit={onSubmit}
                     onCancel={onCancel}
+                    isSubmitting={isSubmitting}
                 />
             </DialogContent>
         </Dialog>

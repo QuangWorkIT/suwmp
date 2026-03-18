@@ -6,3 +6,9 @@ export interface EnterpriseProfileGetResponse {
     photoUrl: string;
     createdAt: string;
 }
+
+export type Enterprise = {
+    name: string,
+    photoUrl: string,
+    description: string,
+}

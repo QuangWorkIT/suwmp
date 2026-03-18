@@ -15,6 +15,36 @@ services:
     networks:
       waste-collect-net:
 
+  swd-service:
+    build:
+      context: ./suwmp_be
+      dockerfile: Dockerfile
+    container_name: swd-service
+    ports:
+      - "8080:8080"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_REGION: ${AWS_REGION}
+      BUCKET_NAME: ${BUCKET_NAME}
+    depends_on:
+      - redis
+    networks:
+      waste-collect-net:
+
   redis:
     image: redis:8.4
     container_name: redis

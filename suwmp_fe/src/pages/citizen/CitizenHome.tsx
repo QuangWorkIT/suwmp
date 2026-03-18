@@ -14,10 +14,10 @@ import {
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { CitizenService } from "../../services/CitizenService";
-import type { DashboardWidgetsResponse, MonthlyProgressResponse } from "../../services/CitizenService";
-import wasteReportService from "../../services/WasteReportService";
-import { LeaderboardService } from "../../services/LeaderboardService";
+import { CitizenService } from "../../services/citizens/CitizenService";
+import type { DashboardWidgetsResponse, MonthlyProgressResponse } from "../../services/citizens/CitizenService";
+import wasteReportService from "../../services/waste-reports/WasteReportService";
+import { LeaderboardService } from "../../services/rewards/LeaderboardService";
 import type { CitizenWasteReportStatus } from "../../types/WasteReportRequest";
 import type { LeaderboardUser } from "../../types/leaderboard";
 import { reverseGeocode } from "../../utilities/geocoding";
@@ -136,12 +136,12 @@ const CitizenHome = () => {
           console.error("Failed to fetch leaderboard", err);
           setLeaderboardError(true);
         }
-        
+
         // Ensure success property exists or access data directly based on BaseResponse type
         if (widgetsRes?.data) {
           setWidgets(widgetsRes.data);
         } else if (widgetsRes && !('data' in widgetsRes)) {
-            setWidgets(widgetsRes as unknown as DashboardWidgetsResponse);
+          setWidgets(widgetsRes as unknown as DashboardWidgetsResponse);
         }
 
         if (progressRes?.data) {
@@ -151,7 +151,7 @@ const CitizenHome = () => {
         }
 
         setRecentReports(reportsData || []);
-        
+
         // Resolve addresses for the first few reports
         if (reportsData && reportsData.length > 0) {
           const topReports = reportsData.slice(0, 3);
@@ -167,7 +167,7 @@ const CitizenHome = () => {
             }
             return { id: report.id, address: "Location saved" };
           });
-          
+
           const resolvedAddresses = await Promise.all(addressPromises);
           const addressMap = resolvedAddresses.reduce((acc, curr) => ({
             ...acc,
@@ -277,14 +277,13 @@ const CitizenHome = () => {
                         <p className="font-semibold">{report.wasteTypeName || "Waste Report"}</p>
 
                         <span
-                          className={`flex gap-1.5 items-center px-2 py-1 text-xs rounded-full ${
-                            getStatusStyle(report.status)
-                          }`}
+                          className={`flex gap-1.5 items-center px-2 py-1 text-xs rounded-full ${getStatusStyle(report.status)
+                            }`}
                         >
                           {report.status === "COLLECTED" && (
                             <CircleCheck className="size-3.5" />
                           )}
-                          {(report.status === "ASSIGNED" || report.status === "ACCEPTED") && (
+                          {(report.status === "ASSIGNED" || report.status === "ON_THE_WAY") && (
                             <Truck className="size-3.5" />
                           )}
                           {report.status === "PENDING" && (
@@ -337,9 +336,8 @@ const CitizenHome = () => {
             {leaderboardData.slice(0, 5).map((user) => (
               <div
                 key={user.rank}
-                className={`flex items-center justify-between p-3 rounded-lg ${
-                  user.isCurrentUser ? "bg-green-100 border border-green-200" : ""
-                }`}
+                className={`flex items-center justify-between p-3 rounded-lg ${user.isCurrentUser ? "bg-green-100 border border-green-200" : ""
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-gray-500 w-4">{user.rank}</span>
@@ -360,16 +358,16 @@ const CitizenHome = () => {
                 </span>
               </div>
             ))}
-            
+
             {leaderboardError && (
-               <div className="text-center py-8">
-                 <p className="text-gray-400 text-sm italic">Leaderboard not updated</p>
-                 <p className="text-gray-300 text-xs mt-1">Please check back later</p>
-               </div>
+              <div className="text-center py-8">
+                <p className="text-gray-400 text-sm italic">Leaderboard not updated</p>
+                <p className="text-gray-300 text-xs mt-1">Please check back later</p>
+              </div>
             )}
 
             {!leaderboardError && leaderboardData.length === 0 && (
-               <p className="text-gray-500 py-4 text-center text-sm italic">Leaderboard not updated</p>
+              <p className="text-gray-500 py-4 text-center text-sm italic">Leaderboard not updated</p>
             )}
           </div>
 
