@@ -7,7 +7,7 @@ function EnterpriseProfileHeader() {
     return (
         <header className="bg-white border-b h-16 flex items-center px-6 sticky top-0 z-10">
             <button
-                onClick={() => navigate("/enterprise/dashboard")}
+                onClick={() => navigate("/enterprise")}
                 className="flex items-center text-gray-500 hover:text-gray-900 transition-colors"
             >
                 <ArrowLeft className="w-4 h-4 mr-2" />

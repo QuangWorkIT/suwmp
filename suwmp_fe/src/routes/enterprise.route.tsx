@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import { Navigate } from "react-router";
 import ProtectedRoute from "./ProtectedRoute";
 import PageLoading from "@/components/common/PageLoading";
+import EnterpriseProfileMain from "@/components/layout/enterprise/profile/EnterpriseProfileMain";
+import EnterpriseProfileDetail from "@/components/common/enterprise/EnterpriseProfileDetail";
 
 // lazy imports
 const EnterpriseMain = lazy(() => import("@/components/layout/enterprise/EnterpriseMain"));
@@ -73,4 +75,32 @@ export const enterpriseRoutes = [
       },
     ],
   },
+
+  {
+    element: <ProtectedRoute allowedRoles={["ENTERPRISE"]} />,
+    children: [
+      {
+        path: "/enterprise/profile",
+        element: (
+          <Suspense fallback={<Loader />}>
+            <EnterpriseProfileMain />
+          </Suspense>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="details" replace />,
+          },
+          {
+            path: "details",
+            element: (
+              <Suspense fallback={<Loader />}>
+                <EnterpriseProfileDetail />
+              </Suspense>
+            ),
+          },
+        ],
+      },
+    ],
+  }
 ];

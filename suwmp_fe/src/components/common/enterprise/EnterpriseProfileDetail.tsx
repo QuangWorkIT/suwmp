@@ -1,7 +1,7 @@
 import { EnterpriseService } from "@/services/EnterpriseService";
 import type { EnterpriseProfileGetResponse } from "@/types/enterprise";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Camera, Edit2, FileText, Leaf, Loader2, Save, Star, X } from "lucide-react";
+import { Building2, Camera, Edit2, FileText, Leaf, Loader2, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -85,6 +85,7 @@ const EnterpriseProfileDetail = () => {
       setIsLoading(true);
       try {
         //await EnterpriseService.updateEnterpriseProfile(profile.id, data);
+        console.log(data)
         setIsEditing(false);
         toast.success("Profile updated successfully");
       } catch (error: any) {
