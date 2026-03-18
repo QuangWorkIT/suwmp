@@ -1,15 +1,15 @@
-import ProfileSidebar from "./ProfileSidebar";
-import ProfileHeader from "./ProfileHeader";
 import { Outlet } from "react-router";
+import EnterpriseProfileHeader from "./EnterpriseProfileHeader";
+import EnterpriseProfileSidebar from "./EnterpriseProfileSidebar";
 
-function CitizenProfileMain() {
+function EnterpriseProfileMain() {
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
-            <ProfileHeader />
+            <EnterpriseProfileHeader />
 
             <main className="max-w-7xl mx-auto px-6 py-8">
                 <div className="flex flex-col lg:flex-row gap-8">
-                    <ProfileSidebar />
+                    <EnterpriseProfileSidebar />
 
                     <div className="flex-1">
                         <Outlet />
@@ -20,4 +20,4 @@ function CitizenProfileMain() {
     );
 }
 
-export default CitizenProfileMain;
+export default EnterpriseProfileMain;

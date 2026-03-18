@@ -1,26 +1,20 @@
-import { User, Bell, Shield, Settings, LogOut } from "lucide-react";
-import { Link, useLocation } from "react-router";
-import { useAppDispatch } from "@/redux/hooks";
 import { logoutAction } from "@/redux/features/userSlice";
+import { useAppDispatch } from "@/redux/hooks";
 import { AuthService } from "@/services/AuthService";
+import { Building2, LogOut, Settings, Shield } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
-import { useNavigate } from "react-router";
 
-function ProfileSidebar() {
+function EnterpriseProfileSidebar() {
     const location = useLocation();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     const sidebarItems = [
         {
-            icon: <User size={18} />,
+            icon: <Building2 size={18} />,
             label: "Profile Details",
-            path: "/citizen/profile/details",
-        },
-        {
-            icon: <Bell size={18} />,
-            label: "Notifications",
-            path: "",
+            path: "/enterprise/profile/details",
         },
         {
             icon: <Shield size={18} />,
@@ -87,4 +81,4 @@ function ProfileSidebar() {
     );
 }
 
-export default ProfileSidebar;
+export default EnterpriseProfileSidebar;
