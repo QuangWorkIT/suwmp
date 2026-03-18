@@ -29,17 +29,6 @@ export const citizenRoutes = [
                     { path: "feedback", element: <FeedBack /> },
                 ],
             },
-        ],
-    },
-    {
-        element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
-        children: [
-            { path: "/citizen/new-report", element: <WasteReportProcess /> },
-        ],
-    },
-    {
-        element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
-        children: [
             {
                 path: "/citizen/profile",
                 element: <CitizenProfileMain />,
@@ -51,6 +40,12 @@ export const citizenRoutes = [
                     { path: "details", element: <ProfileDetail /> },
                 ]
             }
+        ],
+    },
+    {
+        element: <ProtectedRoute allowedRoles={["CITIZEN"]} />,
+        children: [
+            { path: "/citizen/new-report", element: <WasteReportProcess /> },
         ],
     },
 ];
