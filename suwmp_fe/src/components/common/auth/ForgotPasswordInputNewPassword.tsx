@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "../../ui/button";
@@ -36,6 +36,7 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 const ForgotPasswordInputNewPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const [searchParams] = useSearchParams();
   const resetToken = searchParams.get("resetToken");
@@ -66,6 +67,7 @@ const ForgotPasswordInputNewPassword = () => {
       console.log("Password reset successfully.");
 
       toast.success("Your password has been successfully changed.");
+      navigate("/signin");
     } catch (error) {
       toast.error("Failed to reset password.");
     } finally {

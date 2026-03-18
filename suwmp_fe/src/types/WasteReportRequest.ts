@@ -1,3 +1,20 @@
+export const WasteReportStatus = {
+    PENDING: "PENDING",
+    REJECTED: "REJECTED",
+    CANCELLED: "CANCELLED",
+    ASSIGNED: "ASSIGNED",
+    ON_THE_WAY: "ON_THE_WAY",
+    COLLECTED: "COLLECTED",
+} as const;
+
+export type WasteReportStatus = (typeof WasteReportStatus)[keyof typeof WasteReportStatus];
+
+
+export type UpdateWasteReportRequest = {
+    wasteReportId: number,
+    status: WasteReportStatus
+}
+
 export type WasteReportRequest = {
     photoUrl: string | null;
     longitude: number;
@@ -7,7 +24,8 @@ export type WasteReportRequest = {
     citizenId: string;
     wasteTypeId: number;
     aiSuggestedTypeId: number;
-    status: string;
+    status: WasteReportStatus;
+    volume: number
 };
 
 export type WasteReportEnterprise = {
@@ -53,7 +71,7 @@ export type CancelWasteReportRequest = {
 export type CitizenWasteReportStatus = {
     id: number;
     referenceCode: string;
-    status: "PENDING" | "ACCEPTED" | "ASSIGNED" | "COLLECTED";
+    status: "PENDING" | "REJECTED" | "CANCELLED" | "ASSIGNED" | "ON_THE_WAY" | "COLLECTED";
     createdAt: string;
     wasteTypeName: string | null;
     enterpriseName: string | null;
@@ -66,3 +84,28 @@ export type CitizenWasteReportStatus = {
     rewardPoints?: number | null;
     classificationConfidence?: number | null;
 };
+
+export interface RatingStatusResponse {
+    canRate: boolean;
+    alreadyRated: boolean;
+    userRating: number | null;
+    averageRating: number;
+    totalRatings: number;
+}
+
+export interface WasteReportDetailForComplaint {
+    id: number;
+    citizenId: string;
+    citizenName: string;
+    wasteTypeId: number;
+    wasteTypeName: string;
+    enterpriseId: number;
+    previousEnterprise: string;
+    latitude: number;
+    longitude: number;
+    volume: number;
+}
+
+export interface WasteReportCreateForComplaintRequest {
+    enterpriseId: number;
+}

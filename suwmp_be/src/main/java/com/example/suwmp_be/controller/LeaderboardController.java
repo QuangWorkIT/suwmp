@@ -5,6 +5,7 @@ import com.example.suwmp_be.dto.leaderboard.MyLeaderBoardDto;
 import com.example.suwmp_be.dto.leaderboard.PodiumDto;
 import com.example.suwmp_be.dto.leaderboard.RankingDto;
 import com.example.suwmp_be.service.ILeaderBoardService;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -39,12 +40,13 @@ public class LeaderboardController {
     @GetMapping
     public ResponseEntity<BaseResponse<List<RankingDto>>> rankings(
             @RequestParam(defaultValue = "#{T(java.time.LocalDate).now()}") LocalDate date,
-            Pageable pageable,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "5") @Min(1) int size,
             @AuthenticationPrincipal UUID userId
     ) {
         List<RankingDto> ranks = leaderboardService.getRankings(
                 date,
-                pageable,
+                Pageable.ofSize(size).withPage(page),
                 userId
         );
 

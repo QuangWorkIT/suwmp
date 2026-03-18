@@ -1,24 +1,28 @@
 import EnterpriseList from "@/components/common/citizen/EnterpriseList";
 import LocationDetail from "@/components/common/citizen/LocationDetail";
 import ReportReview from "@/components/common/citizen/ReportReview";
-import WasteClassification, { type WasteType } from "@/components/common/citizen/WasteClassification";
+import WasteClassification from "@/components/common/citizen/WasteClassification";
 import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload"
 import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep"
 import ReportHeader from "@/components/layout/citizen/ReportHeader"
 import { useAppSelector } from "@/redux/hooks";
-import s3Service from "@/services/S3Service";
-import wasteReportService from "@/services/WasteReportService";
+import s3Service from "@/services/waste-reports/S3Service";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
+import type { WasteCategory } from "@/types/WasteCategory";
 import { useState } from "react";
 import { toast } from "sonner";
+import { WasteReportStatus, type NearbyEnterpriseResponse } from "@/types/WasteReportRequest"
+import { RewardTransactionService } from "@/services/rewards/RewardTransactionService";
 
 function WasteReportProcess() {
     const user = useAppSelector(state => state.user)
     const [currentStep, setCurrentStep] = useState(0);
     const [imageUploaded, setImageUploaded] = useState<File | null>(null);
-    const [selectedType, setSelectedType] = useState<WasteType | null>(null);
+    const [volume, setVolume] = useState<number | null>(null);
+    const [selectedType, setSelectedType] = useState<WasteCategory | null>(null);
     const [location, setLocation] = useState<number[]>([]); // [longitude, latitude]
     const [notes, setNotes] = useState<string>("");
-    const [selectedEnterprise, setSelectedEnterprise] = useState<number | null>(null);
+    const [selectedEnterprise, setSelectedEnterprise] = useState<NearbyEnterpriseResponse | null>(null);
     const [isSubmitting, setSubmitting] = useState(false)
 
     const steps: Step[] = [
@@ -42,17 +46,18 @@ function WasteReportProcess() {
     }
 
     const getWasteReportPayload = (photoUrl: string) => {
-        if (!selectedType || !user.user || !selectedEnterprise) return null
+        if (!selectedType || !user.user || !selectedEnterprise || !volume) return null
         return {
             photoUrl: photoUrl,
             longitude: location[0],
             latitude: location[1],
             description: notes,
-            enterprisesId: selectedEnterprise,
+            enterprisesId: selectedEnterprise.id,
             citizenId: user.user?.id,
-            wasteTypeId: Number(selectedType.id),
-            aiSuggestedTypeId: Number(selectedType.id),
-            status: "PENDING"
+            wasteTypeId: selectedType.id,
+            aiSuggestedTypeId: selectedType.id,
+            status: WasteReportStatus.PENDING,
+            volume: volume
         }
     }
 
@@ -78,7 +83,21 @@ function WasteReportProcess() {
                 throw new Error("Missing waste report data")
             }
 
-            await wasteReportService.createWasteReport(payload)
+            const wastedReportResponse = await wasteReportService.createWasteReport(payload)
+            if (!wastedReportResponse) {
+                throw new Error("Fail to create waste report")
+            }
+
+            const rewardTransactionResponse = await RewardTransactionService.createRewardTransaction({
+                citizenId: user.user.id,
+                wasteReportId: wastedReportResponse.data,
+                points: selectedEnterprise.rewardPoints,
+                reason: "Waste report submission success"
+            })
+
+            if (!rewardTransactionResponse.isSuccess) {
+                throw new Error(rewardTransactionResponse.message)
+            }
 
             toast.success("Report submitted successfully", {
                 position: "top-right"
@@ -124,6 +143,8 @@ function WasteReportProcess() {
                 <div className="min-w-3xl">
                     {currentStep === 0 && (
                         <WastePhotoUpload
+                            volume={volume}
+                            setVolume={setVolume}
                             imageUploaded={imageUploaded}
                             setImageUploaded={setImageUploaded}
                             handleNextStep={handleNextStep}
@@ -167,7 +188,7 @@ function WasteReportProcess() {
                             <EnterpriseList
                                 longitude={location[0]}
                                 latitude={location[1]}
-                                wasteTypeId={Number(selectedType?.id) || 1}
+                                wasteTypeId={selectedType?.id || 1}
                                 handleSubmit={handleSubmit}
                                 handlePreviousStep={handlePreviousStep}
                                 selectedEnterprise={selectedEnterprise}

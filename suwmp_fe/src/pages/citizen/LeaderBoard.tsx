@@ -3,7 +3,7 @@ import { MapPin, Building2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LeaderboardTopThree from '@/components/common/LeaderboardTopThree';
 import LeaderboardTable from '@/components/common/LeaderboardTable';
-import { LeaderboardService } from '@/services/LeaderboardService';
+import { LeaderboardService } from '@/services/rewards/LeaderboardService';
 import type { LeaderboardUser } from '@/types/leaderboard';
 import { Link } from 'react-router';
 
@@ -13,7 +13,7 @@ type ScopeFilter = 'neighborhood' | 'city';
 function LeaderBoard() {
     const [timeFilter, setTimeFilter] = useState<TimeFilter>('week');
     const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('neighborhood');
-    
+
     // Data states
     const [podium, setPodium] = useState<LeaderboardUser[]>([]);
     const [rankings, setRankings] = useState<LeaderboardUser[]>([]);
@@ -25,15 +25,19 @@ function LeaderBoard() {
             setLoading(true);
             try {
                 // Fetch all data in parallel
-                const [podiumData, rankingsData, myRankData] = await Promise.all([
+                const [podiumData, rankingsData] = await Promise.all([
                     LeaderboardService.getPodium(),
-                    LeaderboardService.getRankings(),
-                    LeaderboardService.getMyRank()
+                    LeaderboardService.getRankings(new Date().toISOString().split('T')[0], 0, 50)
                 ]);
 
                 setPodium(podiumData);
                 setRankings(rankingsData);
-                setMyRank(myRankData.rank);
+
+                // Extract current user rank from rankings
+                const currentUser = rankingsData.find(r => r.isCurrentUser);
+                if (currentUser) {
+                    setMyRank(currentUser.rank);
+                }
             } catch (error) {
                 console.error("Failed to fetch leaderboard data", error);
             } finally {
@@ -48,11 +52,11 @@ function LeaderBoard() {
 
     const getPointsToNextRank = () => {
         if (!myRank || myRank === 1) return 0;
-        
+
         // Find current user stats
         const currentUser = rankings.find(r => r.rank === myRank);
         if (!currentUser) return 0;
-        
+
         // Find user above
         const userAbove = rankings.find(r => r.rank === myRank - 1);
         return userAbove ? userAbove.points - currentUser.points : 0;
@@ -76,31 +80,28 @@ function LeaderBoard() {
                 <div className="flex bg-gray-100 rounded-lg p-1">
                     <button
                         onClick={() => setTimeFilter('week')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                            timeFilter === 'week'
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${timeFilter === 'week'
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
-                        }`}
+                            }`}
                     >
                         This Week
                     </button>
                     <button
                         onClick={() => setTimeFilter('month')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                            timeFilter === 'month'
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${timeFilter === 'month'
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
-                        }`}
+                            }`}
                     >
                         This Month
                     </button>
                     <button
                         onClick={() => setTimeFilter('all')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                            timeFilter === 'all'
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${timeFilter === 'all'
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
-                        }`}
+                            }`}
                     >
                         All Time
                     </button>
@@ -110,22 +111,20 @@ function LeaderBoard() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setScopeFilter('neighborhood')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            scopeFilter === 'neighborhood'
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${scopeFilter === 'neighborhood'
                                 ? 'bg-gray-100 text-gray-900'
                                 : 'text-gray-500 hover:bg-gray-50'
-                        }`}
+                            }`}
                     >
                         <MapPin size={16} />
                         Neighborhood
                     </button>
                     <button
                         onClick={() => setScopeFilter('city')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            scopeFilter === 'city'
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${scopeFilter === 'city'
                                 ? 'bg-gray-100 text-gray-900'
                                 : 'text-gray-500 hover:bg-gray-50'
-                        }`}
+                            }`}
                     >
                         <Building2 size={16} />
                         City
@@ -146,7 +145,7 @@ function LeaderBoard() {
                 <div>
                     <p className="font-semibold text-gray-900">Your Position: #{myRank}</p>
                     <p className="text-sm text-gray-500">
-                        {pointsToNext > 0 
+                        {pointsToNext > 0
                             ? `You need ${pointsToNext.toLocaleString()} more points to reach #${myRank ? myRank - 1 : ''}!`
                             : "You are currently at the top!"}
                     </p>

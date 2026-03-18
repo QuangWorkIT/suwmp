@@ -1,4 +1,4 @@
-import { CircleUser, LayoutDashboard, Users, Recycle, Settings, MapPinned, AlertCircle, BarChart3 } from 'lucide-react';
+import { CircleUser, LayoutDashboard, Users, Recycle, AlertCircle } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
 function AdminSideBar() {
@@ -8,12 +8,7 @@ function AdminSideBar() {
         { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/admin/dashboard" },
         { icon: <Users size={18} />, label: "User Management", path: "/admin/users" },
         { icon: <Recycle size={18} />, label: "Waste Categories", path: "/admin/waste-categories" },
-        { icon: <MapPinned size={18} />, label: "Regions & Zones", path: "/admin/regions" },
-        { icon: <Settings size={18} />, label: "Policies", path: "/admin/policies" },
         { icon: <AlertCircle size={18} />, label: "Complaints", path: "/admin/complaints" },
-        { icon: <BarChart3 size={18} />, label: "Audit Logs", path: "/admin/audit-logs" },
-        { icon: <BarChart3 size={18} />, label: "Analytics", path: "/admin/analytics" },
-        { icon: <Settings size={18} />, label: "Access Control", path: "/admin/access-control" },
     ]
 
     return (

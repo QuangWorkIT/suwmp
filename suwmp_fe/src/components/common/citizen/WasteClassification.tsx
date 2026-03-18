@@ -2,33 +2,45 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import wasteCategoryService from '@/services/waste-reports/WasteCategoryService';
+import type { WasteCategory } from '@/types/WasteCategory';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, Leaf, Monitor, Package, Recycle, Sparkles } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 export interface WasteType {
-    id: string,
-    name: string,
-    icon: React.ComponentType<any>,
-    color: string
+    id: number;
+    name: string;
+    icon: ReactNode;
+    color: string;
 }
 
 interface WasteClassificationProps {
     handleNextStep: () => void,
     handlePreviousStep: () => void,
-    selectedType: WasteType | null,
-    setSelectedType: (type: WasteType | null) => void,
+    selectedType: WasteCategory | null,
+    setSelectedType: (type: WasteCategory | null) => void,
 }
+
+export const wasteTypeConfig: WasteType[] = [
+    { id: 1, name: "ORGANIC", icon: <Leaf className="w-6 h-6 text-white" />, color: "from-green-500 to-emerald-600" },
+    { id: 2, name: "RECYCLABLE", icon: <Recycle className="w-6 h-6 text-white" />, color: "from-blue-500 to-cyan-600" },
+    { id: 3, name: "HAZARDOUS", icon: <AlertTriangle className="w-6 h-6 text-white" />, color: "from-red-500 to-rose-600" },
+    { id: 4, name: "E-WASTE", icon: <Monitor className="w-6 h-6 text-white" />, color: "from-violet-500 to-purple-600" },
+    { id: 5, name: "GENERAL", icon: <Package className="w-6 h-6 text-white" />, color: "from-gray-500 to-slate-600" },
+];
 
 function WasteClassification({ selectedType, setSelectedType, handleNextStep, handlePreviousStep }: WasteClassificationProps) {
     const aiSuggestion = "recyclable";
+    const [wasteTypeFetched, setWasteTypeFetched] = useState<WasteCategory[]>([]);
 
-    const wasteTypes = [
-        { id: "1", name: "Organic", icon: Leaf, color: "from-green-500 to-emerald-600" },
-        { id: "2", name: "Recyclable", icon: Recycle, color: "from-blue-500 to-cyan-600" },
-        { id: "3", name: "E-Waste", icon: Monitor, color: "from-violet-500 to-purple-600" },
-        { id: "4", name: "Hazardous", icon: AlertTriangle, color: "from-red-500 to-rose-600" },
-        { id: "5", name: "General", icon: Package, color: "from-gray-500 to-slate-600" },
-    ];
+    useEffect(() => {
+        const fetchWasteTypes = async () => {
+            const response = await wasteCategoryService.getAll();
+            setWasteTypeFetched(response);
+        }
+        fetchWasteTypes();
+    }, []);
 
     return (
         <motion.div
@@ -78,8 +90,12 @@ function WasteClassification({ selectedType, setSelectedType, handleNextStep, ha
                     )}
                 </AnimatePresence>
 
-                <RadioGroup value={selectedType?.id} onValueChange={e => setSelectedType(wasteTypes.find(t => t.id === e) || null)} className="grid sm:grid-cols-2 gap-4">
-                    {wasteTypes.map((type, index) => (
+                <RadioGroup
+                    value={selectedType?.id.toString() || null}
+                    onValueChange={e => setSelectedType(wasteTypeFetched.find(t => t.id.toString() === e) || null)}
+                    className="grid sm:grid-cols-2 gap-4"
+                >
+                    {wasteTypeFetched.map((type, index) => (
                         <motion.div
                             key={type.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -87,7 +103,7 @@ function WasteClassification({ selectedType, setSelectedType, handleNextStep, ha
                             transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
                         >
                             <Label
-                                htmlFor={type.id}
+                                htmlFor={type.id.toString()}
                                 className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all 
                                     ${selectedType?.id === type.id
                                         ? "border-primary bg-primary/5"
@@ -95,13 +111,13 @@ function WasteClassification({ selectedType, setSelectedType, handleNextStep, ha
                                     }`}
                                 data-testid={`radio-${type.id}`}
                             >
-                                <RadioGroupItem value={type.id} id={type.id} className="sr-only" />
+                                <RadioGroupItem value={type.id.toString()} id={type.id.toString()} className="sr-only" />
                                 <motion.div
                                     whileHover={{ scale: 1.1, rotate: 5 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${type.color} flex items-center justify-center shadow-md`}
+                                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${wasteTypeConfig.find(t => t.id === type.id)?.color} flex items-center justify-center shadow-md`}
                                 >
-                                    <type.icon className="w-6 h-6 text-white" />
+                                    {wasteTypeConfig.find(t => t.id === type.id)?.icon}
                                 </motion.div>
                                 <span className="font-medium">{type.name}</span>
                                 <AnimatePresence>

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Recycle, User, LogIn, UserPlus } from "lucide-react"
+import { Menu, X, Recycle, User, LogIn, UserPlus, LogOut } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
@@ -11,11 +11,15 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { useAppSelector } from "@/redux/hooks"
+import { useAppSelector, useAppDispatch } from "@/redux/hooks"
+import { logoutAction } from "@/redux/features/userSlice"
+import { AuthService } from "@/services/AuthService"
 import { roleNavigation } from "@/pages/authentication/LoginPage"
+import { toast } from "sonner"
 
 function Header() {
     const { user } = useAppSelector(state => state.user)
+    const dispatch = useAppDispatch()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const location = useLocation()
 
@@ -24,6 +28,18 @@ function Header() {
         { name: "Waste Guide", path: "/wasteguide" },
         { name: "About", path: "/about" },
     ]
+
+    const handleLogout = async () => {
+        await AuthService.logout()
+        .then(() => {
+            toast.success("Logout successful");
+        })
+        .catch((error) => {
+            console.log(error);
+            toast.error("Logout failed")
+        });
+        dispatch(logoutAction());
+    }
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -135,6 +151,35 @@ function Header() {
                                     </div>
                                 </Link>
                             </DropdownMenuItem>
+
+                            {/* Sign Out */}
+                            {user && (
+                                <DropdownMenuItem className="p-0 focus:bg-transparent hover:bg-transparent">
+                                    <Link
+                                        to="/"
+                                        onClick={handleLogout}
+                                        className="flex items-center gap-3 w-full p-3 rounded-md
+                                        text-red-500 hover:bg-red-500 hover:text-white
+                                        transition-colors duration-200 group"
+                                    >
+                                        <div
+                                            className="flex h-9 w-9 items-center justify-center rounded-full
+                                            bg-red-100 group-hover:bg-white/20 transition-colors"
+                                        >
+                                            <LogOut className="h-4.5 w-4.5 text-red-500 group-hover:text-white" />
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold">
+                                                Sign Out
+                                            </span>
+                                            <span className="text-xs text-red-400 group-hover:text-white/80">
+                                                Sign out of your account
+                                            </span>
+                                        </div>
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

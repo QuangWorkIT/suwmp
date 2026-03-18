@@ -63,6 +63,34 @@ public class GlobalExceptionHandling {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
+    @ExceptionHandler(value = ConflictException.class)
+    ResponseEntity<ErrorResponse> handlingConflictException(ConflictException exception) {
+        ErrorCode errorCode = exception.getErrorCode();
+
+        log.warn(errorCode.getTitle(), exception);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .title(errorCode.getTitle())
+                .message(errorCode.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    @ExceptionHandler(value = ForbiddenException.class)
+    ResponseEntity<ErrorResponse> handlingForbiddenException(ForbiddenException exception) {
+        ErrorCode errorCode = exception.getErrorCode();
+
+        log.warn(errorCode.getTitle(), exception);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .title(errorCode.getTitle())
+                .message(errorCode.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
     @ExceptionHandler(value = AuthenticationException.class)
     ResponseEntity<ErrorResponse> handlingAuthenticationException(AuthenticationException exception) {
         ErrorCode errorCode = exception.getErrorCode();

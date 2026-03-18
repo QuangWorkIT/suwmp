@@ -16,14 +16,15 @@ import {
     UserPlus,
     Inbox,
     User,
+    CircleX
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
-import wasteReportService from "@/services/WasteReportService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { dateTimeFormat } from "@/utilities/format";
+import { dateFormat } from "@/utilities/format";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -33,9 +34,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import RejectRequestForm from "@/components/common/enterprise/RejectRequestForm";
 import AssignCollectorForm from "@/components/common/enterprise/AssignCollectorForm";
+import type { PaginatedResponse } from "@/types/response";
 
 
 const statusConfig = {
+    REJECTED: { label: "Rejected", color: "bg-red-100 text-red-700 border-red-200", icon: CircleX },
     PENDING: { label: "Pending", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Circle },
     ON_THE_WAY: { label: "Processing", color: "bg-blue-100 text-blue-700 border-blue-200", icon: Truck },
     COLLECTED: { label: "Completed", color: "bg-green-100 text-green-700 border-green-200", icon: CheckCircle2 },
@@ -43,10 +46,8 @@ const statusConfig = {
 };
 
 const priorityConfig = {
-    urgent: { label: "Urgent", color: "bg-red-100 text-red-700 border-red-200" },
-    high: { label: "High", color: "bg-orange-100 text-orange-700 border-orange-200" },
-    normal: { label: "Normal", color: "bg-gray-100 text-gray-700 border-gray-200" },
-    low: { label: "Low", color: "bg-slate-100 text-slate-600 border-slate-200" },
+    URGENT: { label: "Urgent", color: "bg-red-100 text-red-700 border-red-200" },
+    NORMAL: { label: "Normal", color: "bg-gray-100 text-gray-700 border-gray-200" },
 };
 
 function CollectionRequest() {
@@ -62,15 +63,22 @@ function CollectionRequest() {
     const [selectedRejectRequestId, setSelectedRejectRequestId] = useState<number | null>(null);
     const [isFetchingRequests, setIsFetchingRequests] = useState(false)
 
-    const fetchRequests = useCallback(async () => {
+    // pagination state
+    const [currentPage, setCurrentPage] = useState(0);
+    const [hasPrev, setHasPrev] = useState(false);
+    const [hasNext, setHasNext] = useState(false);
+    const [totalItems, settotalItems] = useState(0)
+
+    const fetchRequests = useCallback(async (page: number, size: number = 4) => {
         if (!user.user) return
 
         try {
             setIsFetchingRequests(true)
             // get waste reports by enterprise id
-            const response = await wasteReportService.getWasteReportsByEnterprise(user.user.enterpriseId)
+            const response = await wasteReportService.getWasteReportsByEnterprise(page, size)
 
-            setFetchRequests(response);
+            setFetchRequests(response.data);
+            handlePagination(response)
             setIsFetchingRequests(false)
             setSelectedRequests([])
         } catch (error) {
@@ -80,24 +88,51 @@ function CollectionRequest() {
     }, [user.user, dispatch])
 
     useEffect(() => {
-        fetchRequests()
+        fetchRequests(0)
     }, [fetchRequests])
 
-    const filteredRequests = fetchedRequests.filter((req) => {
-        if (statusFilter !== "all" && req.currentStatus !== statusFilter) return false;
-        if (searchQuery && !req.requestId.toString().includes(searchQuery.toLowerCase()) && !req.address.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-        return true;
-    });
+    const handlePagination = (pagedData: PaginatedResponse<WasteReportEnterprise>) => {
+        setCurrentPage(pagedData.currentPage)
+        settotalItems(pagedData.totalItems)
+        setHasPrev(pagedData.hasPrevious)
+        setHasNext(pagedData.hasNext)
+    }
+
+    const filteredRequests = useMemo(() => {
+        return fetchedRequests.filter((req) => {
+            if (statusFilter !== "all" && req.currentStatus !== statusFilter) return false;
+
+            const keyword = searchQuery.trim().toLowerCase();
+            if (keyword === "") return true;
+
+            const searchString = (
+                req.requestId.toString() + " " +
+                (req.address || "") + " " +
+                (req.collectorName || "") + " " +
+                (req.citizenName || "") + " " +
+                (req.wasteTypeName || "") + " " +
+                (req.priority || "")
+            ).toLowerCase();
+
+            return searchString.includes(keyword);
+        });
+    }, [fetchedRequests, searchQuery, statusFilter]);
+
+    const isSelectable = (status: string) => status === "PENDING" || status === "ASSIGNED";
+
+    const selectableRequests = useMemo(() => {
+        return filteredRequests.filter(req => isSelectable(req.currentStatus));
+    }, [filteredRequests]);
 
     const toggleSelect = (id: number) => {
         setSelectedRequests(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
     };
 
     const toggleSelectAll = () => {
-        if (selectedRequests.length === filteredRequests.length) {
+        if (selectedRequests.length === selectableRequests.length) {
             setSelectedRequests([]);
         } else {
-            setSelectedRequests(filteredRequests.map(r => r.requestId));
+            setSelectedRequests(selectableRequests.map(r => r.requestId));
         }
     };
 
@@ -107,7 +142,7 @@ function CollectionRequest() {
             animate={{ opacity: 1 }}
             className="min-h-screen bg-background"
         >
-            <div>
+            <div className="pb-15">
                 <header className="fixed top-0 left-0 z-50 w-full lg:left-[250px] lg:w-[calc(100%-250px)]
                  bg-white/50 px-6 py-5 border-b border-foreground/20 flex 
                  justify-between items-center backdrop-blur-xl backdrop-saturate-200">
@@ -159,25 +194,28 @@ function CollectionRequest() {
                                 </Button>
                             </div>
                             <AnimatePresence>
-                                {selectedRequests.length > 0 && (
-                                    <motion.div
-                                        key="assign-bar"
-                                        initial={{ opacity: 0, x: 10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="flex items-center gap-2"
-                                        onClick={() => setIsAssignFormOpen(true)}
-                                    >
-                                        <span className="text-sm text-muted-foreground">
-                                            {selectedRequests.length} selected
-                                        </span>
-                                        <Button size="sm">
-                                            <UserPlus className="w-4 h-4 mr-2" />
-                                            Assign Collector
-                                        </Button>
-                                    </motion.div>
-                                )}
+                                {selectedRequests.length > 0 && selectedRequests.every(id => {
+                                    const req = filteredRequests.find(r => r.requestId === id);
+                                    return req && isSelectable(req.currentStatus);
+                                }) && (
+                                        <motion.div
+                                            key="assign-bar"
+                                            initial={{ opacity: 0, x: 10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: 10 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="flex items-center gap-2"
+                                            onClick={() => setIsAssignFormOpen(true)}
+                                        >
+                                            <span className="text-sm text-muted-foreground">
+                                                {selectedRequests.length} selected
+                                            </span>
+                                            <Button size="sm">
+                                                <UserPlus className="w-4 h-4 mr-2" />
+                                                Assign Collector
+                                            </Button>
+                                        </motion.div>
+                                    )}
                             </AnimatePresence>
 
                         </div>
@@ -190,20 +228,21 @@ function CollectionRequest() {
                                     <tr className="border-b border-border bg-muted/30">
                                         <th className="text-left py-3 px-4">
                                             <Checkbox
-                                                checked={selectedRequests.length === filteredRequests.length && filteredRequests.length > 0}
+                                                checked={selectedRequests.length === selectableRequests.length && selectableRequests.length > 0}
                                                 onCheckedChange={toggleSelectAll}
+                                                disabled={selectableRequests.length === 0}
                                                 className="border-2 border-black/50"
                                             />
                                         </th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">ID</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Volume</th>
+                                        <th className="text-left py-3 px-3 text-sm font-medium text-muted-foreground">Volume (Kg)</th>
                                         <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Location</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Citizen</th>
                                         <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Collector</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Priority</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
+                                        <th className="text-left py-3 px-3 text-sm font-medium text-muted-foreground">Requested Date</th>
                                         <th className="text-right py-3 pr-6 text-sm font-medium text-muted-foreground">Actions</th>
                                     </tr>
                                 </thead>
@@ -235,6 +274,7 @@ function CollectionRequest() {
                                                     <Checkbox
                                                         checked={selectedRequests.includes(req.requestId)}
                                                         onCheckedChange={() => toggleSelect(req.requestId)}
+                                                        disabled={!isSelectable(req.currentStatus)}
                                                         className="border-2 border-black/50"
                                                     />
                                                 </td>
@@ -287,16 +327,18 @@ function CollectionRequest() {
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <Button variant="outline" size="sm" className="h-7 text-xs"
-                                                            disabled={selectedRequests.length > 0}
-                                                            onClick={() => {
-                                                                if (selectedRequests.length > 0) return
-                                                                setSelectedRequests([req.requestId])
-                                                                setIsAssignFormOpen(true)
-                                                            }}>
-                                                            <UserPlus className="w-3 h-3 mr-1" />
-                                                            Assign
-                                                        </Button>
+                                                        isSelectable(req.currentStatus) ? (
+                                                            <Button variant="outline" size="sm" className="h-7 text-xs"
+                                                                disabled={selectedRequests.length > 0}
+                                                                onClick={() => {
+                                                                    if (selectedRequests.length > 0) return
+                                                                    setSelectedRequests([req.requestId])
+                                                                    setIsAssignFormOpen(true)
+                                                                }}>
+                                                                <UserPlus className="w-3 h-3 mr-1" />
+                                                                Assign
+                                                            </Button>
+                                                        ) : (<div className="text-center font-medium italic">N/A</div>)
                                                     )}
                                                 </td>
                                                 <td className="py-3 px-4">
@@ -312,7 +354,7 @@ function CollectionRequest() {
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     <Badge variant="outline" className={`text-xs`}>
-                                                        {dateTimeFormat(req.createdAt)}
+                                                        {dateFormat(req.createdAt)}
                                                     </Badge>
                                                 </td>
                                                 <td className="py-3 pr-6">
@@ -320,10 +362,12 @@ function CollectionRequest() {
                                                         <Button variant="ghost" size="icon" className="h-8 w-8">
                                                             <Eye className="w-4 h-4" />
                                                         </Button>
-                                                        <ActionDropdown
-                                                            selectedRejectRequestId={req.requestId}
-                                                            setSelectedRejectRequestId={setSelectedRejectRequestId}
-                                                            setIsRejectFormOpen={setIsRejectFormOpen} />
+                                                        {selectableRequests.includes(req) && (
+                                                            <ActionDropdown
+                                                                selectedRejectRequestId={req.requestId}
+                                                                setSelectedRejectRequestId={setSelectedRejectRequestId}
+                                                                setIsRejectFormOpen={setIsRejectFormOpen} />
+                                                        )}
                                                     </div>
                                                 </td>
                                             </motion.tr>
@@ -370,10 +414,10 @@ function CollectionRequest() {
                         </div>
 
                         <div className="flex items-center justify-between p-4 border-t border-border">
-                            <p className="text-sm text-muted-foreground">Showing {filteredRequests.length} of {fetchedRequests.length} requests</p>
+                            <p className="text-sm text-muted-foreground">Showing {filteredRequests.length} of {totalItems} requests</p>
                             <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" disabled>Previous</Button>
-                                <Button variant="outline" size="sm">Next</Button>
+                                <Button variant="outline" size="sm" disabled={!hasPrev} onClick={() => fetchRequests(currentPage - 1)}>Previous</Button>
+                                <Button variant="outline" size="sm" disabled={!hasNext} onClick={() => fetchRequests(currentPage + 1)}>Next</Button>
                             </div>
                         </div>
                     </Card>
@@ -395,7 +439,7 @@ function CollectionRequest() {
                                     <RejectRequestForm
                                         wasteReportId={selectedRejectRequestId}
                                         setIsRejectFormOpen={setIsRejectFormOpen}
-                                        onSuccess={fetchRequests} />
+                                        onSuccess={() => fetchRequests(currentPage)} />
                                 </motion.div>
                             </motion.div>
                         )}
@@ -418,7 +462,7 @@ function CollectionRequest() {
                                     <AssignCollectorForm
                                         selectedRequests={selectedRequests}
                                         setIsAssignFormOpen={setIsAssignFormOpen}
-                                        onSuccess={fetchRequests} />
+                                        onSuccess={() => fetchRequests(currentPage)} />
                                 </motion.div>
                             </motion.div>
                         )}

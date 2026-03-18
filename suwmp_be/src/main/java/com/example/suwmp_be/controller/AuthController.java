@@ -3,10 +3,12 @@ package com.example.suwmp_be.controller;
 import com.example.suwmp_be.dto.BaseResponse;
 import com.example.suwmp_be.dto.forgot_password.ResetPasswordRequest;
 import com.example.suwmp_be.dto.forgot_password.VerifyEmailRequest;
+import com.example.suwmp_be.dto.google_auth.*;
 import com.example.suwmp_be.dto.request.LoginRequest;
 import com.example.suwmp_be.dto.request.RegisterRequest;
 import com.example.suwmp_be.dto.response.TokenResponse;
 import com.example.suwmp_be.serviceImpl.AuthService;
+import com.example.suwmp_be.serviceImpl.GoogleAuthServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,6 +29,8 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authentication", description = "User authentication and authorization endpoints")
 public class AuthController {
     private final AuthService authService;
+
+    private final GoogleAuthServiceImpl googleAuthService;
 
     @PostMapping("/register")
     @Operation(
@@ -166,5 +170,32 @@ public class AuthController {
                 .path("/")
                 .sameSite("None")
                 .build();
+    }
+
+    @PostMapping("/google/login")
+    public ResponseEntity<BaseResponse<TokenGoogleResponse>> loginByGoogle(@Valid @RequestBody GoogleLoginRequest request) {
+        GoogleLoginResponse googleLoginResponse = googleAuthService.loginByGoogle(request);
+        ResponseCookie cookie = setCookieToken(googleLoginResponse.refreshToken());
+        TokenGoogleResponse response = new TokenGoogleResponse(googleLoginResponse.accessToken());
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Set-cookie", cookie.toString())
+                .body(new BaseResponse<>(
+                        true,
+                        "Login by Google successfully",
+                        response)
+                );
+    }
+
+    @PostMapping("/google/register")
+    public ResponseEntity<BaseResponse<?>> registerByGoogle(@Valid @RequestBody GoogleRegisterRequest request) {
+        googleAuthService.registerByGoogle(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new BaseResponse<>(
+                        true,
+                        "Register by Google successfully")
+                );
     }
 }

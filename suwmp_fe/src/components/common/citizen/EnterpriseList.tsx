@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card"
 import { ArrowLeft, Check, MapPin, Star, ExternalLink, Plus, Loader2, Building2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
-import wasteReportService from "@/services/WasteReportService"
+import wasteReportService from "@/services/waste-reports/WasteReportService"
 import type { NearbyEnterpriseResponse } from "@/types/WasteReportRequest"
 
 /* Animation config using CSS variables from index.css */
@@ -35,8 +35,8 @@ interface EnterpriseListProps {
     wasteTypeId: number,
     handleSubmit: () => void,
     handlePreviousStep: () => void,
-    selectedEnterprise: number | null,
-    setSelectedEnterprise: (enterprise: number) => void
+    selectedEnterprise: NearbyEnterpriseResponse | null,
+    setSelectedEnterprise: (enterprise: NearbyEnterpriseResponse) => void
 }
 
 function EnterpriseList({
@@ -54,7 +54,7 @@ function EnterpriseList({
         const fetchEnterprises = async () => {
             try {
                 setIsFinding(true)
-                const res = await wasteReportService.getEnterprisesNearbyCitizen(
+                const res = await wasteReportService.getEnterprisesNearby(
                     {
                         longitude,
                         latitude,
@@ -93,7 +93,7 @@ function EnterpriseList({
                 </motion.div>
 
                 <motion.div
-                    className="grid gap-4 mb-8"
+                    className="grid gap-4 p-3 mb-8 overflow-y-auto overflow-x-hidden thin-scrollbar max-h-[400px]"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -113,7 +113,7 @@ function EnterpriseList({
                             </p>
                         </div>
                     ) : enterprises.map((enterprise) => {
-                        const isSelected = selectedEnterprise === enterprise.id
+                        const isSelected = selectedEnterprise?.id === enterprise.id
                         return (
                             <motion.div
                                 key={enterprise.id}
@@ -121,7 +121,7 @@ function EnterpriseList({
                                 transition={{ duration: motionDuration, ease: motionEase }}
                                 className={`p-4 rounded-2xl border-2 cursor-pointer hover:border-primary/50 group ${isSelected ? "border-primary bg-primary/5" : "border-border"
                                     }`}
-                                onClick={() => setSelectedEnterprise(enterprise.id)}
+                                onClick={() => setSelectedEnterprise(enterprise)}
                                 data-testid={`enterprise-${enterprise.id}`}
                                 initial={false}
                                 animate={{
@@ -134,7 +134,7 @@ function EnterpriseList({
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-border">
-                                        <img src={enterprise?.photoUrl || "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80"} alt={enterprise.name} className="w-full h-full object-cover" />
+                                        <img src={enterprise.photoUrl ? enterprise.photoUrl : "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80"} alt={enterprise.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-1">
@@ -148,8 +148,8 @@ function EnterpriseList({
                                             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {Number(enterprise.distance).toPrecision(2)} Km</span>
                                         </div>
 
-                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                                            <span className="flex items-center gap-1"><Plus className="w-3 h-3" /> {enterprise.rewardPoints}</span>
+                                        <div className="flex items-center gap-3 text-xs text-primary mb-2 font-semibold">
+                                            <span className="flex items-center gap-1"><Plus className="w-3 h-3" /> {enterprise.rewardPoints} pts</span>
                                         </div>
                                     </div>
                                     <motion.div

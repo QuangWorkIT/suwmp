@@ -65,6 +65,17 @@ export const AuthService = {
     }
   },
 
+  logout: async () => {
+    try {
+      await api.delete("/auth/logout", {
+        withCredentials: true,
+      });
+    } catch (error: any) {
+      console.log(error);
+      throw error;
+    }
+  },
+
   verifyEmail: async (email: string) => {
     try {
       await api.post(
@@ -85,6 +96,34 @@ export const AuthService = {
       });
     } catch (error) {
       console.error(error);
+      throw error;
+    }
+  },
+
+  loginByGoogle: async (idToken: string) => {
+    try {
+      const response = await api.post("/auth/google/login", { idToken });
+
+      return response.data;
+    } catch (error: any) {
+      console.error({
+        title: error.response?.data?.title,
+        message: error.response?.data?.message,
+        status: error.response?.status
+      });
+      throw error;
+    }
+  },
+
+  registerByGoogle: async (idToken: string) => {
+    try {
+      await api.post("/auth/google/register", { idToken });
+    } catch (error: any) {
+      console.error({
+        title: error.response?.data?.title,
+        message: error.response?.data?.message,
+        status: error.response?.status
+      });
       throw error;
     }
   },

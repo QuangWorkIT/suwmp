@@ -7,7 +7,8 @@ interface AuthJwtPayload extends JwtPayload {
     role: UserRole;
     email: string;
     fullName: string;
-    exp: number
+    exp: number;
+    deletedAt: string
 }
 
 export const decodePayLoad = (token: string): UserInterface => {
@@ -18,6 +19,7 @@ export const decodePayLoad = (token: string): UserInterface => {
         email: payload.email,
         role: payload.role,
         status: payload.status,
+        deletedAt: payload.deletedAt,
         enterpriseId: -1
     }
 }

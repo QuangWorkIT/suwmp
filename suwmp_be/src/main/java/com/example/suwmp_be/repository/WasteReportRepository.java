@@ -1,8 +1,12 @@
 package com.example.suwmp_be.repository;
 
+import com.example.suwmp_be.dto.view.IAssignedTaskView;
 import com.example.suwmp_be.dto.view.ICollectionRequestView;
 import com.example.suwmp_be.dto.view.IEnterpriseDistanceView;
+import com.example.suwmp_be.dto.view.IReportHistoryView;
 import com.example.suwmp_be.entity.WasteReport;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +15,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
+import com.example.suwmp_be.constants.WasteReportStatus;
+
 public interface WasteReportRepository extends JpaRepository<WasteReport, Long> {
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE WasteReport wr SET wr.status = :newStatus WHERE wr.id = :id AND wr.citizen.id = :citizenId AND wr.status = :oldStatus")
+    int updateStatusIfCurrentStatus(@Param("id") Long id, @Param("citizenId") UUID citizenId, @Param("oldStatus") WasteReportStatus oldStatus, @Param("newStatus") WasteReportStatus newStatus);
 
     @Query(value = """
             SELECT
@@ -21,6 +34,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
                 wr.longitude              AS requestLongitude,
                 wr.latitude               AS requestLatitude,
                 wr.volume                 AS volume,
+                wr.priority               AS priority,
                 wr.status                 AS currentStatus,
                 u1.full_name              AS citizenName,
                 u1.phone                  AS citizenPhone,
@@ -39,18 +53,18 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
               AND wr.enterprise_id = :enterpriseId
             ORDER BY wr.created_at DESC
             """, nativeQuery = true)
-    List<ICollectionRequestView> getRequestsByEnterprise(Long enterpriseId);
+    Page<ICollectionRequestView> getRequestsByEnterprise(Long enterpriseId, Pageable pageable);
 
     @Query(value = """
                 SELECT
                     e.id,e.name,e.description,e.rating,e.photo_url AS photoUrl,e.created_at AS createdAt,
-
+            
                     rr.base_points AS basePoint,
                     rr.quality_multiplier AS qualityMultiplier,
             
                     ST_Distance(
                         ST_MakePoint(sa.longitude, sa.latitude)::geography,
-                        ST_MakePoint(:citizenLong, :citizenLat)::geography
+                        ST_MakePoint(:wasteReportLong, :wasteReportLat)::geography
                     ) / 1000 AS distance
             
                 FROM enterprises e
@@ -62,18 +76,79 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, Long> 
             
                 WHERE ST_DWithin(
                     ST_MakePoint(sa.longitude, sa.latitude)::geography,
-                    ST_MakePoint(:citizenLong, :citizenLat)::geography,
+                    ST_MakePoint(:wasteReportLong, :wasteReportLat)::geography,
                     sa.radius
                 )
                 ORDER BY distance
             """, nativeQuery = true)
-    List<IEnterpriseDistanceView> getEnterprisesNearbyCitizen(
-            @Param("citizenLong") Double citizenLong,
-            @Param("citizenLat") Double citizenLat,
+    List<IEnterpriseDistanceView> getEnterprisesNearbyWasteReport(
+            @Param("wasteReportLong") Double wasteReportLong,
+            @Param("wasteReportLat") Double wasteReportLat,
             @Param("wasteTypeId") Long wasteTypeId
     );
+
     Optional<WasteReport> findByIdAndCitizen_Id(Long id, UUID citizenId);
 
     List<WasteReport> findAllByCitizen_IdOrderByCreatedAtDesc(UUID citizenId);
 
+    @Query("""
+            SELECT
+                wr.id               AS requestId,
+                wt.name             AS wasteTypeName,
+                wr.longitude        AS requestLongitude,
+                wr.latitude         AS requestLatitude,
+                wr.volume           AS volume,
+                wr.priority         AS priority,
+                wr.status           AS currentStatus,
+                wr.photoUrl         AS photoUrl,
+                wr.description      AS description,
+                citizen.fullName    AS citizenName,
+                citizen.phone       AS citizenPhone,
+                collector.id        AS collectorId,
+                ca.startCollectAt   AS collectTime,
+                ca.id               AS assignmentId
+            FROM CollectionAssignment ca
+            JOIN ca.wasteReport wr
+            JOIN wr.wasteType wt
+            JOIN wr.citizen citizen
+            JOIN ca.collector collector
+            WHERE collector.id = :collectorId
+            AND wr.status IN ('ASSIGNED', 'ON_THE_WAY','COLLECTED')
+            ORDER BY ca.startCollectAt ASC
+            """)
+    Page<IAssignedTaskView> findAssignedTasksByCollector_Id(UUID collectorId, Pageable pageable);
+
+    @Query(value = """
+        SELECT 
+            wr.id AS id,
+            wr.status AS status,
+            COALESCE(wr.volume, 0) AS volume,
+            COALESCE(wr.latitude, 0) AS latitude,
+            COALESCE(wr.longitude, 0) AS longitude,
+            wr.photo_url AS photoUrl,
+            wr.created_at AS createdAt,
+            wt.name AS wasteTypeName,
+            COALESCE(rt.points, 0) AS rewardPoints
+        FROM waste_reports wr
+        JOIN waste_types wt ON wr.waste_type_id = wt.id
+        LEFT JOIN reward_transactions rt 
+               ON rt.waste_report_id = wr.id
+        WHERE wr.citizen_id = :citizenId
+        ORDER BY wr.created_at DESC
+        """,
+            nativeQuery = true)
+    List<IReportHistoryView> findReportHistoryByCitizenId(
+            @Param("citizenId") UUID citizenId
+    );
+
+    long countByCitizen_Id(UUID citizenId);
+
+    @Query("""
+    SELECT COALESCE(SUM(wr.volume),0)
+    FROM WasteReport wr
+    WHERE wr.citizen.id = :citizenId
+    """)
+    Double sumVolumeByCitizenId(@Param("citizenId") UUID citizenId);
+
+    List<WasteReport> findAllByEnterprise_Id(Long enterpriseId);
 }

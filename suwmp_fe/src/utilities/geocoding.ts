@@ -1,3 +1,5 @@
+import polyline from "@mapbox/polyline"
+
 export const getUserLocation = (): Promise<GeolocationPosition> => {
     return new Promise((resolve, reject) => {
         if (navigator.geolocation) {
@@ -38,13 +40,13 @@ export const autocompleteAddress = async (
     try {
         const url = `https://sg-maps.track-asia.com/api/v2/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${apiKey}&size=${size}`;
         const res = await fetch(url);
-        
+
         if (!res.ok) {
             throw new Error("Autocomplete request failed");
         }
 
         const data = await res.json();
-        
+
         if (data.status !== "OK" || !data.results) {
             return [];
         }
@@ -66,9 +68,10 @@ export const autocompleteAddress = async (
 export const forwardGeocode = async (
     address: string
 ): Promise<{ longitude: number; latitude: number }> => {
-    const url = `https://sg-maps.track-asia.com/api/v2/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+    const url = `https://maps.track-asia.com/api/v2/place/textsearch/json?language=vi&key=${apiKey}&query=${encodeURIComponent(address)}&new_admin=true&include_old_admin=true`;
     const res = await fetch(url);
-    
+
+
     if (!res.ok) {
         throw new Error("Geocoding request failed");
     }
@@ -100,4 +103,26 @@ export const reverseGeocode = async (longitude: number, latitude: number): Promi
     }
 
     return data.results[0].formatted_address || "Unknown location";
+}
+
+
+// return coordinates from origin and destination [longitude, latitude]
+export const getCoordinates = async (origin: [number, number], destination: [number, number]) => {
+    try {
+        const response = await fetch(`https://maps.track-asia.com/route/v1/car/${origin[0]},${origin[1]};${destination[0]},${destination[1]}.json?geometries=polyline&steps=true&overview=full&key=${apiKey}`)
+        if (!response.ok) {
+            throw new Error("Route request failed");
+        }
+        
+        const data = await response.json()
+        const geometry = data.routes[0].geometry
+        const coordinates = polyline.decode(geometry).map(([lat, lng]) => [
+            lng,
+            lat
+        ])
+
+        return coordinates
+    } catch (error) {
+        console.log(error)
+    }
 }

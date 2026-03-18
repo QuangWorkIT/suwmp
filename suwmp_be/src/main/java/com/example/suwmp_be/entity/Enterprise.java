@@ -2,11 +2,7 @@ package com.example.suwmp_be.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -17,6 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "enterprises")
 @Data
+@Builder
 public class Enterprise {
 
     @Id
@@ -37,6 +34,9 @@ public class Enterprise {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
 }
 
