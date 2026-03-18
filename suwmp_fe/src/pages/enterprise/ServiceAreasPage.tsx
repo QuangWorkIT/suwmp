@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { ServiceAreaService } from "@/services/ServiceAreaService";
-import WasteReportService from "@/services/WasteReportService";
+import { ServiceAreaService } from "@/services/enterprises/ServiceAreaService";
+import WasteReportService from "@/services/waste-reports/WasteReportService";
 import type { ServiceArea } from "@/types/serviceArea";
 import ServiceAreaMap from "@/components/common/enterprise/ServiceAreaMap";
 import { reverseGeocode, forwardGeocode, autocompleteAddress, type AddressSuggestion } from "@/utilities/geocoding";
 import { useDebounce } from "@/hooks/useDebouse";
-import { CollectorService } from "@/services/CollectorService";
+import { CollectorService } from "@/services/collectors/CollectorService";
 import type { WasteReportEnterprise } from "@/types/WasteReportRequest";
 
 import { useAppSelector } from "@/redux/hooks";

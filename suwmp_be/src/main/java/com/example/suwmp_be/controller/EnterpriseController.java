@@ -48,7 +48,7 @@ public class EnterpriseController {
         if (!Objects.equals(authenticatedUserId, enterpriseUserId))
             throw new ForbiddenException(ErrorCode.UNAUTHORIZED);
 
-        enterpriseService.updateEnterpriseProfile(enterpriseId, request);
+        enterpriseService.updateEnterpriseProfile(enterpriseId, enterpriseUserId, request);
 
         return ResponseEntity.ok(new BaseResponse<>(
                 true,

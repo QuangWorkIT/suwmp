@@ -6,6 +6,7 @@ import com.example.suwmp_be.dto.enterprise_profile.EnterpriseUpdateProfileReques
 import com.example.suwmp_be.dto.mapper.IEnterpriseMapper;
 import com.example.suwmp_be.entity.Enterprise;
 import com.example.suwmp_be.entity.EnterpriseUser;
+import com.example.suwmp_be.exception.ForbiddenException;
 import com.example.suwmp_be.exception.NotFoundException;
 import com.example.suwmp_be.repository.EnterpriseRepository;
 import com.example.suwmp_be.repository.EnterpriseUserRepository;
@@ -37,7 +38,10 @@ public class EnterpriseServiceImpl {
         return enterpriseMapper.toEnterpriseGetResponse(enterprise);
     }
 
-    public void updateEnterpriseProfile(long enterpriseId, EnterpriseUpdateProfileRequest request) {
+    public void updateEnterpriseProfile(long enterpriseId, UUID enterpriseUserId, EnterpriseUpdateProfileRequest request) {
+        if (enterpriseUserRepo.existsByEnterpriseIdAndUserId(enterpriseId, enterpriseUserId))
+            throw new ForbiddenException(ErrorCode.USER_NOT_ENTERPRISE_OWNER);
+
         var enterprise = enterpriseRepo.findById(enterpriseId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ENTERPRISE_NOT_FOUND));
 

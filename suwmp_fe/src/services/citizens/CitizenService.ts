@@ -1,6 +1,6 @@
 import type { BaseResponse } from "@/types/baseResponse";
-import authClient from "../config/axios";
-import type { CitizenProfileGetResponse, CitizenProfileUpdateRequest } from "../types/citizenProfile";
+import authClient from "../../config/axios";
+import type { CitizenProfileGetResponse, CitizenProfileUpdateRequest } from "../../types/citizenProfile";
 
 export interface DashboardWidgetsResponse {
     totalReports: number;

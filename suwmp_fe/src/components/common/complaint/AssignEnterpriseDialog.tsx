@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import wasteReportService from "@/services/WasteReportService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import type { ComplaintGetResponse } from "@/types/complaint";
 import type { NearbyEnterpriseResponse, WasteReportDetailForComplaint } from "@/types/WasteReportRequest";
 import { formatWasteTypeName } from "@/utilities/capacityUtils";

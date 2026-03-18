@@ -61,7 +61,8 @@ CREATE TABLE enterprises
     description TEXT,
     rating      FLOAT        NOT NULL,
     photo_url   VARCHAR(500),
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at  TIMESTAMP
 );
 
 -- Link ENTERPRISE users (in users table) to an enterprise they manage
@@ -161,10 +162,10 @@ CREATE TABLE collection_assignments
 CREATE TABLE report_collection_status_logs
 (
     id                       BIGSERIAL PRIMARY KEY,
-    waste_report_id          BIGINT NOT NULL REFERENCES waste_reports (id),
-    collection_assignment_id BIGINT NOT NULL REFERENCES collection_assignments (id),
+    waste_report_id          BIGINT       NOT NULL REFERENCES waste_reports (id),
+    collection_assignment_id BIGINT       NOT NULL REFERENCES collection_assignments (id),
     photo_url                VARCHAR(500) NOT NULL,
-    created_by               UUID   NOT NULL REFERENCES users (id),
+    created_by               UUID         NOT NULL REFERENCES users (id),
     created_at               TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -192,13 +193,14 @@ CREATE TABLE reward_transactions
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE leaderboard_daily (
-    id BIGSERIAL PRIMARY KEY,
-    citizen_id UUID NOT NULL REFERENCES users(id),
-    rank INT NOT NULL,
-    total_points BIGINT NOT NULL,
-    snapshot_date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE leaderboard_daily
+(
+    id            BIGSERIAL PRIMARY KEY,
+    citizen_id    UUID   NOT NULL REFERENCES users (id),
+    rank          INT    NOT NULL,
+    total_points  BIGINT NOT NULL,
+    snapshot_date DATE   NOT NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (citizen_id, snapshot_date)
 );
 
@@ -215,16 +217,16 @@ CREATE INDEX idx_leaderboard_daily_user_date
 
 CREATE TABLE complaints
 (
-    id              BIGSERIAL PRIMARY KEY,
-    citizen_id      UUID   NOT NULL REFERENCES users (id),
-    waste_report_id BIGINT NOT NULL REFERENCES waste_reports (id),
+    id                  BIGSERIAL PRIMARY KEY,
+    citizen_id          UUID   NOT NULL REFERENCES users (id),
+    waste_report_id     BIGINT NOT NULL REFERENCES waste_reports (id),
     new_waste_report_id BIGINT REFERENCES waste_reports (id),
-    description     TEXT,
-    photo_url       VARCHAR(500),
-    status          VARCHAR(20) CHECK (
+    description         TEXT,
+    photo_url           VARCHAR(500),
+    status              VARCHAR(20) CHECK (
         status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED')
         ),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -261,11 +263,10 @@ VALUES ('ORGANIC', 'Biodegradable waste such as food scraps and garden waste', N
 INSERT INTO enterprises (name,
                          description,
                          rating,
-                         photo_url,
                          created_at)
 VALUES ('Green Earth Waste Solution', 'Leading waste management service provider focused on sustainability.', 4.8,
-        'https://example.com/green_earth.jpg', NOW()),
+        NOW()),
        ('Urban Cleaners', 'Efficient urban waste collection and processing.', 4.5,
-        'https://example.com/urban_cleaners.jpg', NOW()),
+        NOW()),
        ('EcoCollect', 'Innovative waste collection with a focus on recycling.', 4.7,
-        'https://example.com/ecocollect.jpg', NOW());
+        NOW());

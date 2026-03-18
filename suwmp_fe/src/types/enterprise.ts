@@ -7,8 +7,13 @@ export interface EnterpriseProfileGetResponse {
     createdAt: string;
 }
 
+export type Enterprise = {
+    name: string,
+    photoUrl: string,
+    description: string,
+}
+
 export interface EnterpriseProfileUpdateRequest {
-    id: number;
     name: string;
     description: string;
     photoUrl: string;

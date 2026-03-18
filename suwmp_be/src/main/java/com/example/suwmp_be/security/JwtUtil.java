@@ -35,6 +35,7 @@ public class JwtUtil {
         payload.put("role", user.getRole().getName());
         payload.put("email", user.getEmail());
         payload.put("status", user.getStatus());
+        payload.put("deletedAt", user.getDeletedAt() != null ? user.getDeletedAt().toString() : null);
         return Jwts.builder()
                 .subject(user.getId().toString())
                 .claims(payload)
@@ -60,7 +61,7 @@ public class JwtUtil {
     }
 
     public boolean validateJwtToken(String token) {
-        try{
+        try {
             Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
             return true;
         } catch (Exception e) {

@@ -3,7 +3,7 @@ import type { BaseResponse } from "@/types/baseResponse";
 import type { CollectionLogHistory } from "@/types/collectionLog";
 import type { CreateCollectionLogReq } from "@/types/collectorTask";
 import type { PaginatedResponse } from "@/types/response";
-import s3Service from "./S3Service";
+import s3Service from "@/services/waste-reports/S3Service";
 import { reverseGeocode } from "@/utilities/geocoding";
 
 export const collectionLogService = {
@@ -54,7 +54,7 @@ export const collectionLogService = {
 
             const content = await Promise.all(historyLogPromise)
 
-            return {...response.data, data: content}
+            return { ...response.data, data: content }
         } catch (error) {
             console.log("Fail to get collection log history")
             throw new Error("Fail to get collection log history")

@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import wasteCategoryService from '@/services/WasteCategoryService';
+import wasteCategoryService from '@/services/waste-reports/WasteCategoryService';
 import type { WasteCategory } from '@/types/WasteCategory';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, Leaf, Monitor, Package, Recycle, Sparkles } from 'lucide-react';

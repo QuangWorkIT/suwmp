@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Camera, Edit2, Leaf, Phone, Mail, User, Save, X, Loader2 } from "lucide-react";
 import type { CitizenProfileGetResponse } from "@/types/citizenProfile";
-import { CitizenService } from "@/services/CitizenService";
+import { CitizenService } from "@/services/citizens/CitizenService";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -89,9 +89,9 @@ const ProfileInfo = ({ profile, onProfileUpdate }: ProfileInfoProps) => {
               Joined in{" "}
               {profile.createdAt
                 ? new Date(profile.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    year: "numeric",
-                  })
+                  month: "short",
+                  year: "numeric",
+                })
                 : "N/A"}
             </p>
             <p className="text-sm font-medium text-gray-500">
@@ -147,8 +147,8 @@ const ProfileInfo = ({ profile, onProfileUpdate }: ProfileInfoProps) => {
               disabled={!isEditing || isLoading}
               className={`block w-full pl-10 pr-3 py-2.5 border rounded-md text-sm
                 ${errors.fullName ? "border-red-500" : ""}
-                ${isEditing 
-                  ? "bg-white border-gray-300" 
+                ${isEditing
+                  ? "bg-white border-gray-300"
                   : "bg-gray-50 border-gray-200 text-gray-600"
                 }
               `}
@@ -169,8 +169,8 @@ const ProfileInfo = ({ profile, onProfileUpdate }: ProfileInfoProps) => {
               disabled={!isEditing || isLoading}
               className={`block w-full pl-10 pr-3 py-2.5 border rounded-md text-sm
                 ${errors.phone ? "border-red-500" : ""}
-                ${isEditing 
-                  ? "bg-white border-gray-300" 
+                ${isEditing
+                  ? "bg-white border-gray-300"
                   : "bg-gray-50 border-gray-200 text-gray-600"
                 }
               `}
@@ -193,8 +193,8 @@ const ProfileInfo = ({ profile, onProfileUpdate }: ProfileInfoProps) => {
               disabled={!isEditing || isLoading}
               className={`block w-full pl-10 pr-3 py-2.5 border rounded-md text-sm
                 ${errors.email ? "border-red-500" : ""}
-                ${isEditing 
-                  ? "bg-white border-gray-300" 
+                ${isEditing
+                  ? "bg-white border-gray-300"
                   : "bg-gray-50 border-gray-200 text-gray-600"
                 }
               `}

@@ -2,11 +2,26 @@ server:
   port: 8080
 
 spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 20MB
   datasource:
-    url: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+    url: ${POSTGRES_DB}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000
+      password: ${REDIS_PASSWORD}
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
 
   jpa:
     hibernate:
@@ -14,15 +29,30 @@ spring:
     show-sql: false
     properties:
       hibernate:
+        format_sql: false
         jdbc:
           time_zone: UTC
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ${AWS_REGION:us-east-1}
+aws:
+  bucket:
+    name: ${BUCKET_NAME}
+
+allowed:
+  origin: ${ALLOWED_ORIGIN}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,info
   endpoint:
     health:
       show-details: when_authorized
@@ -33,6 +63,11 @@ management:
       enabled: true
     diskspace:
       enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:360000}
 
 logging:
   level:

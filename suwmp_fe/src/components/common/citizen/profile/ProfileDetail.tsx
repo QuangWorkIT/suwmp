@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ProfileInfo from "./ProfileInfo";
 import ProfileStats from "./ProfileStats";
-import { CitizenService } from "@/services/CitizenService";
+import { CitizenService } from "@/services/citizens/CitizenService";
 import { useSelector } from "react-redux";
 import type { CitizenProfileGetResponse } from "@/types/citizenProfile";
 import { Loader2 } from "lucide-react";

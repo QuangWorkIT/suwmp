@@ -1,4 +1,4 @@
-import authClient from "../config/axios";
+import authClient from "../../config/axios";
 
 export interface DashboardStats {
   totalUsers: number;

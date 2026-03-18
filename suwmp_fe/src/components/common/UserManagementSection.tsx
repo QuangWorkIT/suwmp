@@ -1,10 +1,10 @@
 import React from "react";
 import { Eye, Edit, Trash2, Filter, Plus } from "lucide-react";
 import { Link } from "react-router";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
-import type { DashboardUser } from "../services/AdminDashboardService";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
+import type { DashboardUser } from "../../services/admins/AdminDashboardService";
 
 interface UserManagementSectionProps {
   users: DashboardUser[];
@@ -134,7 +134,7 @@ const UserManagementSection: React.FC<UserManagementSectionProps> = ({
 
       <div className="p-6 flex items-center justify-between border-t border-gray-50">
         <p className="text-sm text-gray-500">
-           Showing <span className="font-semibold text-gray-900">{users.length}</span> of <span className="font-semibold text-gray-900">{totalUsers.toLocaleString()}</span> users
+          Showing <span className="font-semibold text-gray-900">{users.length}</span> of <span className="font-semibold text-gray-900">{totalUsers.toLocaleString()}</span> users
         </p>
         <Link to="/admin/users" className="text-sm font-bold text-gray-900 hover:text-blue-600 flex items-center gap-1">
           View All Users

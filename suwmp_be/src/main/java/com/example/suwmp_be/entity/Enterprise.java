@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "enterprises")
 @Data
+@Builder
 public class Enterprise {
 
     @Id
@@ -32,6 +33,9 @@ public class Enterprise {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
 }
 

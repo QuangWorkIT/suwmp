@@ -91,7 +91,6 @@ const EnterpriseProfileDetail = () => {
 
       try {
         await EnterpriseService.updateEnterpriseProfile(profile.id, user.id, {
-          id: profile.id,
           name: data.name,
           description: data.description,
           photoUrl: profile.photoUrl,

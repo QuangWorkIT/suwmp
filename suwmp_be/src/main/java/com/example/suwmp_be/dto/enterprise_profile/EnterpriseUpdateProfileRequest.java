@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record EnterpriseUpdateProfileRequest(
-        @Positive
-        Long id,
-
         @NotBlank
         @Size(min = 2, max = 100)
         @Pattern(

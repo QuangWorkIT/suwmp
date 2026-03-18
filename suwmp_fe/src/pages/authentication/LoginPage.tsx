@@ -85,12 +85,11 @@ export default function Login() {
       if (res.success) {
         try {
           const token = res.data.accessToken
-          
+
           const payload = decodePayLoad(token)
-          
           localStorage.setItem("token", token)
           await resolveUser(dispatch, payload, token)
-          
+
           toast.success("Login successfully")
           nav(roleNavigation[payload.role], { replace: true })
         } catch {
@@ -113,28 +112,28 @@ export default function Login() {
       toast.error("Google login failed");
       return;
     }
-    
+
     await AuthService.loginByGoogle(idToken)
-    .then(async (res) => {
-      try {
-        const token = res.data.accessToken;
+      .then(async (res) => {
+        try {
+          const token = res.data.accessToken;
 
-        const payload = decodePayLoad(token);
+          const payload = decodePayLoad(token);
 
-        localStorage.setItem("token", token);
-        await resolveUser(dispatch, payload, token);
+          localStorage.setItem("token", token);
+          await resolveUser(dispatch, payload, token);
 
-        toast.success("Login successfully");
-        nav(roleNavigation[payload.role], { replace: true })
-      } catch (error) {
+          toast.success("Login successfully");
+          nav(roleNavigation[payload.role], { replace: true })
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
+      })
+      .catch((error) => {
         console.error(error);
-        throw error;
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-      toast.error("Google login failed");
-    })
+        toast.error("Google login failed");
+      })
   };
 
   return (

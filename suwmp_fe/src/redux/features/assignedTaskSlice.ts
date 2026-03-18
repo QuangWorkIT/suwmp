@@ -21,6 +21,9 @@ export const assignedTaskSlice = createSlice({
         setNextTask: (state, action) => {
             state.nextTask = action.payload;
         },
+        setTaskStatus: (state, action) => {
+            state.currentTask = action.payload;
+        },
         clearCurrentTask: (state) => {
             state.currentTask = null;
         },
@@ -30,5 +33,5 @@ export const assignedTaskSlice = createSlice({
     }
 })
 
-export const { setCurrentTask, setNextTask, clearCurrentTask, clearNextTask } = assignedTaskSlice.actions
+export const { setCurrentTask, setNextTask, setTaskStatus, clearCurrentTask, clearNextTask } = assignedTaskSlice.actions
 export default assignedTaskSlice.reducer

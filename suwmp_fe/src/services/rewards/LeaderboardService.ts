@@ -1,5 +1,5 @@
-import authClient from "../config/axios";
-import type { LeaderboardUser } from "../types/leaderboard";
+import authClient from "../../config/axios";
+import type { LeaderboardUser } from "../../types/leaderboard";
 
 export interface ApiLeaderboardUser {
     rank: number;

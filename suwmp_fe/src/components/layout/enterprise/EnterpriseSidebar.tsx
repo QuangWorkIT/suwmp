@@ -1,24 +1,20 @@
 import UserProfileBadge from "@/components/common/UserProfileBadge";
 import {
-  LayoutDashboard,
   ClipboardList,
   Users,
   Map,
   Layers,
   BarChart,
-  Download,
   Building2,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 const menu = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/enterprise/dashboard" },
+  { label: "Reports", icon: BarChart, path: "/enterprise/reports" },
   { label: "Requests", icon: ClipboardList, path: "/enterprise/requests" },
   { label: "Collectors", icon: Users, path: "/enterprise/collectors" },
   { label: "Service Areas", icon: Map, path: "/enterprise/areas" },
   { label: "Capacity", icon: Layers, path: "/enterprise/capacity" },
-  { label: "Reports", icon: BarChart, path: "/enterprise/reports" },
-  { label: "Export", icon: Download, path: "/enterprise/export" },
 ];
 
 const EnterpriseSidebar = () => {
