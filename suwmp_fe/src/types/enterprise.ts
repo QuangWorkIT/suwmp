@@ -6,3 +6,10 @@ export interface EnterpriseProfileGetResponse {
     photoUrl: string;
     createdAt: string;
 }
+
+export interface EnterpriseProfileUpdateRequest {
+    id: number;
+    name: string;
+    description: string;
+    photoUrl: string;
+}

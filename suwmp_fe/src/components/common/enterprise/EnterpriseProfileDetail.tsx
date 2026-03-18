@@ -1,7 +1,7 @@
 import { EnterpriseService } from "@/services/EnterpriseService";
 import type { EnterpriseProfileGetResponse } from "@/types/enterprise";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Camera, Edit2, FileText, Leaf, Loader2, Save, Star, X } from "lucide-react";
+import { Building2, Camera, Edit2, FileText, Leaf, Loader2, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -83,8 +83,24 @@ const EnterpriseProfileDetail = () => {
 
     const onSubmit = async (data: ProfileSchema) => {
       setIsLoading(true);
+      if (!user?.id) {
+        toast.error("Account is not identified");
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        //await EnterpriseService.updateEnterpriseProfile(profile.id, data);
+        await EnterpriseService.updateEnterpriseProfile(profile.id, user.id, {
+          id: profile.id,
+          name: data.name,
+          description: data.description,
+          photoUrl: profile.photoUrl,
+        });
+        setProfile({
+          ...profile,
+          name: data.name,
+          description: data.description,
+        });
         setIsEditing(false);
         toast.success("Profile updated successfully");
       } catch (error: any) {
