@@ -12,3 +12,9 @@ export type Enterprise = {
     photoUrl: string,
     description: string,
 }
+
+export interface EnterpriseProfileUpdateRequest {
+    name: string;
+    description: string;
+    photoUrl: string;
+}

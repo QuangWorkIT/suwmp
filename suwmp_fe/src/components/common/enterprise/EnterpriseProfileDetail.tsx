@@ -83,9 +83,23 @@ const EnterpriseProfileDetail = () => {
 
     const onSubmit = async (data: ProfileSchema) => {
       setIsLoading(true);
+      if (!user?.id) {
+        toast.error("Account is not identified");
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        //await EnterpriseService.updateEnterpriseProfile(profile.id, data);
-        console.log(data)
+        await EnterpriseService.updateEnterpriseProfile(profile.id, user.id, {
+          name: data.name,
+          description: data.description,
+          photoUrl: profile.photoUrl,
+        });
+        setProfile({
+          ...profile,
+          name: data.name,
+          description: data.description,
+        });
         setIsEditing(false);
         toast.success("Profile updated successfully");
       } catch (error: any) {
