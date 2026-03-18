@@ -61,7 +61,8 @@ CREATE TABLE enterprises
     description TEXT,
     rating      FLOAT        NOT NULL,
     photo_url   VARCHAR(500),
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at  TIMESTAMP
 );
 
 -- Link ENTERPRISE users (in users table) to an enterprise they manage

@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter, Download, MoreVertical } from 'lucide-react';
@@ -31,6 +32,7 @@ import { type UserFormValues } from "@/components/common/users/UserForm";
 import { toast } from "sonner"; // Assuming sonner is used for toasts based on package.json
 import { useOutletContext } from 'react-router';
 import { UserService, type UserResponse } from "@/services/citizens/UserService";
+import s3Service from '@/services/waste-reports/S3Service';
 
 interface User {
     id: string;
@@ -71,6 +73,7 @@ export default function UserManagementPage() {
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Map API response to User type
     const mapUsers = (content: UserResponse[]): User[] => {
@@ -297,12 +300,20 @@ export default function UserManagementPage() {
         setDeleteConfirmOpen(true);
     };
 
+    const refreshCurrentPage = () => {
+        if (roleFilter === 'all') {
+            fetchUsers(pagination.pageNumber, searchQuery);
+        } else {
+            fetchAllUsersForFilter();
+        }
+    };
+
     const confirmDeleteUser = async () => {
         if (!userToDelete) return;
         try {
             await UserService.deleteUser(userToDelete);
-            setUsers(users.filter(u => u.id !== userToDelete));
             toast.success("User deleted successfully");
+            refreshCurrentPage();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to delete user");
         } finally {
@@ -318,7 +329,12 @@ export default function UserManagementPage() {
             setUpdateConfirmOpen(true);
         } else {
             // Create user directly
+            setIsSubmitting(true);
             try {
+                if (data.roleId === "2" && data.enterprisePhoto instanceof File) {
+                    const photoResponse = await s3Service.uploadImage(data.enterprisePhoto);
+                    data.enterprisePhoto = photoResponse.data
+                }
                 await UserService.createUser({
                     fullName: data.fullName,
                     email: data.email,
@@ -330,38 +346,34 @@ export default function UserManagementPage() {
                     enterprisePhoto: data.enterprisePhoto || ""
                 });
                 toast.success("User added successfully");
-                fetchUsers(pagination.pageNumber);
+                refreshCurrentPage()
                 setIsDialogOpen(false);
             } catch (error: any) {
                 toast.error(error.response?.data?.message || "Failed to create user");
+            } finally {
+                setIsSubmitting(false);
             }
         }
     };
 
     const confirmUpdateUser = async () => {
         if (!selectedUser || !pendingUpdateData) return;
+        setIsSubmitting(true);
         try {
+            if (pendingUpdateData.roleId === "2" && pendingUpdateData.enterprisePhoto instanceof File) {
+                const photoResponse = await s3Service.uploadImage(pendingUpdateData.enterprisePhoto);
+                pendingUpdateData.enterprisePhoto = photoResponse.data
+            }
             await UserService.updateUser(selectedUser.id, pendingUpdateData);
-
-            // Update local list
-            const updatedUsers = users.map(user =>
-                user.id === selectedUser.id
-                    ? {
-                        ...user,
-                        ...pendingUpdateData,
-                        role: pendingUpdateData.roleId === "1" ? "Citizen" : pendingUpdateData.roleId === "2" ? "Enterprise" : "Collector" as any,
-                        status: pendingUpdateData.status as any
-                    }
-                    : user
-            );
-            setUsers(updatedUsers);
             toast.success("User updated successfully");
             setIsDialogOpen(false);
+            refreshCurrentPage();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to save user");
         } finally {
             setUpdateConfirmOpen(false);
             setPendingUpdateData(null);
+            setIsSubmitting(false);
         }
     };
 
@@ -533,6 +545,7 @@ export default function UserManagementPage() {
                 user={selectedUser}
                 onSubmit={handleFormSubmit}
                 onCancel={() => setIsDialogOpen(false)}
+                isSubmitting={isSubmitting}
             />
 
             <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
@@ -560,7 +573,9 @@ export default function UserManagementPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setUpdateConfirmOpen(false)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmUpdateUser}>Update</AlertDialogAction>
+                        <AlertDialogAction onClick={(e) => { e.preventDefault(); confirmUpdateUser(); }} disabled={isSubmitting}>
+                            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</> : "Update"}
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

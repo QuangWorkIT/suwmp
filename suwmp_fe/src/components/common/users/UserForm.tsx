@@ -37,7 +37,7 @@ const userSchema = z.object({
   password: z.string(),
   enterpriseName: z.string(),
   enterpriseDescription: z.string().optional(),
-  enterprisePhoto: z.any().optional(),
+  enterprisePhoto: z.any(),
 }).superRefine((data, ctx) => {
   if (data.password && data.password.length < 6) {
     ctx.addIssue({
@@ -54,6 +54,13 @@ const userSchema = z.object({
         path: ["enterpriseName"],
       });
     }
+    if (!data.enterprisePhoto) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enterprise photo is required.",
+        path: ["enterprisePhoto"],
+      });
+    }
   }
 });
 
@@ -63,13 +70,13 @@ interface UserFormProps {
   initialData?: UserFormValues;
   onSubmit: (data: UserFormValues) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-export function UserForm({ initialData, onSubmit, onCancel }: UserFormProps) {
+export function UserForm({ initialData, onSubmit, onCancel, isSubmitting }: UserFormProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isLoading, setIsloading] = useState(false)
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -105,20 +112,23 @@ export function UserForm({ initialData, onSubmit, onCancel }: UserFormProps) {
         if (initialData.roleId === "2") {
           try {
             const enterprise = await getEnterpriseById(initialData.id);
-            console.log(enterprise)
             if (enterprise) {
               const photoResponse = await s3Service.getImage(enterprise.photoUrl);
               form.reset({
                 ...initialData,
                 enterpriseName: enterprise.name,
                 enterpriseDescription: enterprise.description,
-                enterprisePhoto: photoResponse.data,
+                enterprisePhoto: enterprise.photoUrl,
               });
               setPhotoPreview(photoResponse.data);
             }
           } catch (error) {
             console.error("Failed to load enterprise data", error);
           }
+        } else {
+          form.reset({
+            ...initialData
+          })
         }
       } else {
         form.reset({
@@ -162,17 +172,10 @@ export function UserForm({ initialData, onSubmit, onCancel }: UserFormProps) {
 
   const handleSubmit = async (data: UserFormValues) => {
     try {
-      setIsloading(true)
-      if (data.roleId === "2") {
-        const photoResponse = await s3Service.uploadImage(data.enterprisePhoto);
-        data.enterprisePhoto = photoResponse.data
-      }
       onSubmit(data)
-      setIsloading(false)
     } catch (error) {
       console.log(error)
       toast.error("Failed to create user")
-      setIsloading(false)
     }
   };
 
@@ -330,7 +333,9 @@ export function UserForm({ initialData, onSubmit, onCancel }: UserFormProps) {
               )}
             />
             <div>
-              <FormLabel>Enterprise Photo</FormLabel>
+              <FormLabel className={form.formState.errors.enterprisePhoto ? "text-destructive" : ""}>
+                Enterprise Photo
+              </FormLabel>
               <div className="mt-2">
                 {photoPreview ? (
                   <div className="relative inline-block">
@@ -365,18 +370,24 @@ export function UserForm({ initialData, onSubmit, onCancel }: UserFormProps) {
                   className="hidden"
                 />
               </div>
+              {form.formState.errors.enterprisePhoto && (
+                <p className="text-destructive text-[0.8rem] font-medium">
+                  {form.formState.errors.enterprisePhoto.message as string}
+                </p>
+              )}
             </div>
           </div>
         )}
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? <div className="flex items-center">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </div> : "Save User"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>
+            ) : (
+              "Save User"
+            )}
           </Button>
         </div>
       </form>

@@ -28,8 +28,6 @@ public class CreateUserRequest {
     @NotNull(message = "Password is required")
     private String password;
 
-    // Enterprise fields
-    @NotNull(message = "Enterprise name is required when role is enterprise")
     private String enterpriseName;
     private String enterpriseDescription;
     private String enterprisePhoto;
