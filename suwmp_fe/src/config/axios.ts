@@ -23,16 +23,24 @@ authClient.interceptors.request.use((config) => {
 
 
 // auto refresh token
-let refreshSubcribers: ((newAccessToken: string) => void)[] = []
+let refreshSubscribers: {
+  resolve: (newAccessToken: string) => void;
+  reject: (error: any) => void;
+}[] = []
 let isRefreshing = false
 
 const onRefreshed = (newAccessToken: string) => {
-  refreshSubcribers.forEach(cb => cb(newAccessToken))
-  refreshSubcribers = []
+  refreshSubscribers.forEach(cb => cb.resolve(newAccessToken))
+  refreshSubscribers = []
 }
 
-const addSubscriber = (callBack: (newAccessToken: string) => void) => {
-  refreshSubcribers.push(callBack)
+const onRefreshFailed = (error: any) => {
+  refreshSubscribers.forEach(cb => cb.reject(error))
+  refreshSubscribers = []
+}
+
+const addSubscriber = (resolve: (newAccessToken: string) => void, reject: (error: any) => void) => {
+  refreshSubscribers.push({ resolve, reject })
 }
 
 // add response interceptor
@@ -40,7 +48,7 @@ authClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originRequest = error.config
-    if (error.response.status === 401
+    if (error.response?.status === 401
       && error.response.data?.message?.includes("Invalid or expired JWT")
       && !originRequest._retry
     ) {
@@ -49,10 +57,12 @@ authClient.interceptors.response.use(
 
       // add request to queue if it is refreshing and wait for new token
       if (isRefreshing) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           addSubscriber((newAccessToken: string) => {
             originRequest.headers.Authorization = `Bearer ${newAccessToken}`
             resolve(authClient(originRequest))
+          }, (error: any) => {
+            reject(error)
           })
         })
       }
@@ -82,8 +92,11 @@ authClient.interceptors.response.use(
       } catch (error) {
         const { store } = await import('../redux/store.js') // delay import
 
+        // execute failure callbacks for waiting requests
+        onRefreshFailed(error)
+
         // logout if refresh is failed
-        store.dispatch(() => logoutAction())
+        store.dispatch(logoutAction())
         return Promise.reject(error)
       } finally {
         isRefreshing = false

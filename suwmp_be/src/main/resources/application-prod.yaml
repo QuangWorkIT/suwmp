@@ -22,7 +22,16 @@ spring:
     port: ${MAIL_PORT}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
-
+    protocol: smtp
+    properties:
+        mail:
+          smtp:
+            auth: true
+            ssl:
+              enable: true                # enables SSL on port 465
+            connectiontimeout: 5000
+            timeout: 5000
+            writetimeout: 5000
   jpa:
     hibernate:
       ddl-auto: validate
