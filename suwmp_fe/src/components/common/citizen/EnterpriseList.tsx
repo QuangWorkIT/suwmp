@@ -113,7 +113,7 @@ function EnterpriseList({
                             </p>
                         </div>
                     ) : enterprises.map((enterprise) => {
-                        const isSelected = selectedEnterprise?.id === enterprise.id
+                        const isSelected = selectedEnterprise?.id === enterprise.id && selectedEnterprise?.distance === enterprise.distance
                         return (
                             <motion.div
                                 key={enterprise.id}
