@@ -241,8 +241,9 @@ public class WasteReportServiceImpl implements IWasteReportService {
         String referenceCode = String.format("REQ-%03d", report.getId());
 
         int rewardPoints = rewardTransactionRepo.findByWasteReport_Id(report.getId())
-                .map(com.example.suwmp_be.entity.RewardTransaction::getPoints)
-                .orElse(0);
+                .stream()
+                .mapToInt(com.example.suwmp_be.entity.RewardTransaction::getPoints)
+                .sum();
 
         return new CitizenWasteReportStatusResponse(
                 report.getId(),
