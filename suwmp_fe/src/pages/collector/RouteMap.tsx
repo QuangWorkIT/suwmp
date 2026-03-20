@@ -30,7 +30,7 @@ import { ComplaintService } from "@/services/admins/ComplaintService";
 import { WasteReportStatus } from "@/types/WasteReportRequest";
 import { updateTaskStatus } from "@/components/common/collector/TaskCard";
 import type { AssignedTask } from "@/types/collectorTask";
-import { setTaskStatus } from "@/redux/features/assignedTaskSlice";
+import { clearCurrentTask, setTaskStatus } from "@/redux/features/assignedTaskSlice";
 
 const apiKey = import.meta.env.VITE_MAPS_API_KEY
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -289,6 +289,7 @@ export default function RouteMap() {
                 })
             }
 
+            dispatch(clearCurrentTask())
             toast.success("Upload proof successfully")
             setIsCompleted(true)
 
