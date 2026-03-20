@@ -84,11 +84,11 @@ function ReportStatusPage() {
         setReport(reportData);
 
         // Fetch address for Bug 1
-        reverseGeocode(reportData.latitude, reportData.longitude)
+        reverseGeocode(reportData.longitude, reportData.latitude)
           .then(setAddress)
           .catch((err) => {
             console.error("Geocoding failed:", err);
-            setAddress(null);
+            setAddress("Location unavailable");
           });
 
         // Fetch rating status separately and handle its errors independently
@@ -365,7 +365,7 @@ function ReportStatusPage() {
                       Waste type
                     </p>
                     <p className="font-medium">
-                      {report.wasteTypeName || "—"}
+                      {displayWasteType}
                     </p>
                   </div>
                 </div>

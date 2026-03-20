@@ -240,7 +240,7 @@ public class WasteReportServiceImpl implements IWasteReportService {
         Enterprise enterprise = report.getEnterprise();
         String referenceCode = String.format("REQ-%03d", report.getId());
 
-        int rewardPoints = rewardTransactionRepo.findByWasteReportId(report.getId())
+        int rewardPoints = rewardTransactionRepo.findByWasteReport_Id(report.getId())
                 .map(com.example.suwmp_be.entity.RewardTransaction::getPoints)
                 .orElse(0);
 

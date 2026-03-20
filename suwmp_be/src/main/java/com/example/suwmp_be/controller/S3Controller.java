@@ -46,12 +46,19 @@ public class S3Controller {
 
     @GetMapping("/files/{folder}/{filename}")
     public ResponseEntity<byte[]> getFile(@PathVariable String folder, @PathVariable String filename) throws IOException {
-        Path path = Paths.get("uploads", folder, filename);
-        if (!Files.exists(path)) {
+        Path uploadBase = Paths.get("uploads").toAbsolutePath().normalize();
+        Path resolvedPath = uploadBase.resolve(folder).resolve(filename).normalize();
+
+        if (!resolvedPath.startsWith(uploadBase)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        if (!Files.exists(resolvedPath)) {
             return ResponseEntity.notFound().build();
         }
-        byte[] image = Files.readAllBytes(path);
-        String contentType = Files.probeContentType(path);
+
+        byte[] image = Files.readAllBytes(resolvedPath);
+        String contentType = Files.probeContentType(resolvedPath);
         return ResponseEntity.ok()
                 .contentType(contentType != null ? MediaType.parseMediaType(contentType) : MediaType.IMAGE_JPEG)
                 .body(image);

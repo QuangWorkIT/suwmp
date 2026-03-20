@@ -25,11 +25,14 @@ public class S3ServiceImpl implements IS3Service {
     private final S3Client s3Client;
     private final S3Presigner presigner;
 
-    @Value("${cloud.aws.credentials.access-key}")
-    private String accessKey;
-
     @Value("${aws.bucket.name}")
     private String bucket;
+
+    @Value("${storage.mode:aws}")
+    private String storageMode;
+
+    @Value("${backend.public-origin:http://localhost:8080}")
+    private String publicOrigin;
 
     @Override
     public String uploadImg(MultipartFile file) throws IOException {
@@ -50,20 +53,26 @@ public class S3ServiceImpl implements IS3Service {
             }
         };
 
-        if ("dummy".equals(accessKey)) {
+        if ("local".equalsIgnoreCase(storageMode)) {
             try {
-                java.io.File uploadDir = new java.io.File("uploads/" + key).getParentFile();
+                java.nio.file.Path baseDir = java.nio.file.Paths.get("uploads").toAbsolutePath().normalize();
+                java.nio.file.Path destPath = baseDir.resolve(key).normalize();
+                
+                if (!destPath.startsWith(baseDir)) {
+                    throw new IOException("Invalid file path: " + key);
+                }
+
+                java.io.File uploadDir = destPath.toFile().getParentFile();
                 if (!uploadDir.exists() && !uploadDir.mkdirs()) {
                     System.err.println("Failed to create directories: " + uploadDir.getAbsolutePath());
                 }
                 
-                java.io.File destFile = new java.io.File("uploads/" + key);
-                java.nio.file.Files.copy(file.getInputStream(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                java.nio.file.Files.copy(file.getInputStream(), destPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 
-                System.out.println("Dummy AWS credentials: saved file locally to: " + destFile.getAbsolutePath());
+                System.out.println("Storage mode LOCAL: saved file to: " + destPath.toAbsolutePath());
                 return key;
             } catch (Exception e) {
-                System.err.println("Error during mock local upload: " + e.getMessage());
+                System.err.println("Error during local upload: " + e.getMessage());
                 e.printStackTrace();
                 throw new IOException("Failed to save file locally", e);
             }
@@ -86,9 +95,9 @@ public class S3ServiceImpl implements IS3Service {
                 .getObjectRequest(getRequest)
                 .signatureDuration(Duration.ofMinutes(15))
                 .build();
-        if ("dummy".equals(accessKey)) {
+        if ("local".equalsIgnoreCase(storageMode)) {
             // Return a local URL that our controller can serve
-            return "http://localhost:8080/api/s3/files/" + key;
+            return publicOrigin + "/api/s3/files/" + key;
         }
 
         return presigner.presignGetObject(getPresignRequest)

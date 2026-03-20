@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RewardTransactionRepository extends JpaRepository<RewardTransaction, Long> {
-    Optional<RewardTransaction> findByWasteReportId(Long wasteReportId);
+    Optional<RewardTransaction> findByWasteReport_Id(Long wasteReportId);
 
     @Query("""
         SELECT new com.example.suwmp_be.dto.history.RewardHistoryDto(
