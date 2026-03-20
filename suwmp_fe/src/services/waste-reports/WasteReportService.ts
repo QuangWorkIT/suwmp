@@ -165,7 +165,7 @@ const wasteReportService = {
             console.error(error);
             throw error;
         }
-    },
+    }
 }
 
 export default wasteReportService

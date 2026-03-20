@@ -14,7 +14,8 @@ public record CitizenWasteReportStatusResponse(
         double longitude,
         Double volume,
         String photoUrl,
-        String description
+        String description,
+        int rewardPoints
 ) {
 }
 

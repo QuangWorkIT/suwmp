@@ -81,8 +81,7 @@ export type CitizenWasteReportStatus = {
     volume?: number | null;
     photoUrl: string | null;
     description?: string | null;
-    rewardPoints?: number | null;
-    classificationConfidence?: number | null;
+    rewardPoints: number;
 };
 
 export interface RatingStatusResponse {
