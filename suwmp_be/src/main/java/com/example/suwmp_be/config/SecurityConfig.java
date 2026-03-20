@@ -16,18 +16,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.example.suwmp_be.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
-import java.util.Arrays;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private final Environment environment;
-
-    @Value("${storage.mode:aws}")
-    private String storageMode;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -53,11 +46,6 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/api/s3/files/**").access((authentication, context) -> {
-                            boolean isDev = Arrays.asList(environment.getActiveProfiles()).contains("dev");
-                            boolean isLocal = "local".equalsIgnoreCase(storageMode);
-                            return new org.springframework.security.authorization.AuthorizationDecision(isDev || isLocal);
-                        })
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

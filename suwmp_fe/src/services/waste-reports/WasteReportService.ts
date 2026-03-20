@@ -165,15 +165,6 @@ const wasteReportService = {
             console.error(error);
             throw error;
         }
-    },
-    getPresignedUrl: async (key: string): Promise<string> => {
-        try {
-            const response = await s3Service.getImage(key);
-            return response.data;
-        } catch (error) {
-            console.error("Error getting presigned URL");
-            throw new Error("Error getting presigned URL");
-        }
     }
 }
 

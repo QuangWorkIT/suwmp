@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CitizenWasteReportStatus } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/waste-reports/WasteReportService";
+import s3Service from "@/services/waste-reports/S3Service";
 import PageLoading from "@/components/common/PageLoading";
 import {
   ArrowLeft,
@@ -117,9 +118,9 @@ function ReportStatusPage() {
         // Fetch presigned URL if photoUrl exists
         if (reportData.photoUrl) {
           try {
-            const photoRes = await wasteReportService.getPresignedUrl(reportData.photoUrl);
-            if (photoRes) {
-              setReport(prev => prev ? { ...prev, photoUrl: photoRes } : null);
+            const photoRes = await s3Service.getImage(reportData.photoUrl);
+            if (photoRes.data) {
+              setReport(prev => prev ? { ...prev, photoUrl: photoRes.data } : null);
             }
           } catch (photoErr) {
             console.error("Failed to load presigned URL:", photoErr);

@@ -28,12 +28,6 @@ public class S3ServiceImpl implements IS3Service {
     @Value("${aws.bucket.name}")
     private String bucket;
 
-    @Value("${storage.mode:aws}")
-    private String storageMode;
-
-    @Value("${backend.public-origin:http://localhost:8080}")
-    private String publicOrigin;
-
     @Override
     public String uploadImg(MultipartFile file) throws IOException {
         String key = "waste_imgs/" + UUID.randomUUID();
@@ -53,31 +47,6 @@ public class S3ServiceImpl implements IS3Service {
             }
         };
 
-        if ("local".equalsIgnoreCase(storageMode)) {
-            try {
-                java.nio.file.Path baseDir = java.nio.file.Paths.get("uploads").toAbsolutePath().normalize();
-                java.nio.file.Path destPath = baseDir.resolve(key).normalize();
-                
-                if (!destPath.startsWith(baseDir)) {
-                    throw new IOException("Invalid file path: " + key);
-                }
-
-                java.io.File uploadDir = destPath.toFile().getParentFile();
-                if (!uploadDir.exists() && !uploadDir.mkdirs()) {
-                    System.err.println("Failed to create directories: " + uploadDir.getAbsolutePath());
-                }
-                
-                java.nio.file.Files.copy(file.getInputStream(), destPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                
-                System.out.println("Storage mode LOCAL: saved file to: " + destPath.toAbsolutePath());
-                return key;
-            } catch (Exception e) {
-                System.err.println("Error during local upload: " + e.getMessage());
-                e.printStackTrace();
-                throw new IOException("Failed to save file locally", e);
-            }
-        }
-
         s3Client.putObject(putRequest,
                 RequestBody.fromContentProvider(streamProvider, file.getSize(), Objects.requireNonNull(file.getContentType())));
         return key;
@@ -95,11 +64,6 @@ public class S3ServiceImpl implements IS3Service {
                 .getObjectRequest(getRequest)
                 .signatureDuration(Duration.ofMinutes(15))
                 .build();
-        if ("local".equalsIgnoreCase(storageMode)) {
-            // Return a local URL that our controller can serve
-            return publicOrigin + "/api/s3/files/" + key;
-        }
-
         return presigner.presignGetObject(getPresignRequest)
                 .url()
                 .toString();
