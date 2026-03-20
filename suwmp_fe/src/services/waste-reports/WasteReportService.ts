@@ -138,7 +138,11 @@ const wasteReportService = {
         if (file) {
             formData.append("file", file);
         }
-        const response = await authClient.post(`/waste-reports/${reportId}/issue`, formData);
+        const response = await authClient.post(`/waste-reports/${reportId}/issue`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        });
         return response.data.data as ComplaintResponse;
     },
     getIssue: async (reportId: number): Promise<ComplaintResponse> => {
