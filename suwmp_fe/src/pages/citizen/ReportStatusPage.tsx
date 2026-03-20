@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CitizenWasteReportStatus } from "@/types/WasteReportRequest";
 import wasteReportService from "@/services/waste-reports/WasteReportService";
+import s3Service from "@/services/waste-reports/S3Service";
 import PageLoading from "@/components/common/PageLoading";
 import {
   ArrowLeft,
@@ -18,7 +19,7 @@ import {
   Camera,
   XCircle,
 } from "lucide-react";
-import { reverseGeocode } from "@/utilities/trackasiaGeocode";
+import { reverseGeocode } from "@/utilities/geocoding";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,11 +85,11 @@ function ReportStatusPage() {
         setReport(reportData);
 
         // Fetch address for Bug 1
-        reverseGeocode(reportData.latitude, reportData.longitude)
+        reverseGeocode(reportData.longitude, reportData.latitude)
           .then(setAddress)
           .catch((err) => {
             console.error("Geocoding failed:", err);
-            setAddress(null);
+            setAddress("Location unavailable");
           });
 
         // Fetch rating status separately and handle its errors independently
@@ -111,6 +112,18 @@ function ReportStatusPage() {
           // 404 is expected if no issue exists
           if (issueErr.response?.status !== 404) {
             console.error("Failed to load issue status:", issueErr);
+          }
+        }
+
+        // Fetch presigned URL if photoUrl exists
+        if (reportData.photoUrl) {
+          try {
+            const photoRes = await s3Service.getImage(reportData.photoUrl);
+            if (photoRes.data) {
+              setReport(prev => prev ? { ...prev, photoUrl: photoRes.data } : null);
+            }
+          } catch (photoErr) {
+            console.error("Failed to load presigned URL:", photoErr);
           }
         }
       } catch (err) {
@@ -313,7 +326,7 @@ function ReportStatusPage() {
                   <span className="flex items-center gap-1 min-w-0">
                     <MapPin className="w-4 h-4 shrink-0" />
                     <span className="truncate">
-                      {address ?? `${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}`}
+                      {address || "Locating..."}
                     </span>
                   </span>
                   <span className="flex items-center gap-1">
@@ -344,18 +357,16 @@ function ReportStatusPage() {
                     </p>
                     <p className="font-medium text-emerald-600">
                       {report.rewardPoints != null
-                        ? `${report.rewardPoints} points`
+                        ? `+${report.rewardPoints} pts`
                         : "—"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground uppercase">
-                      Classification confidence
+                      Waste type
                     </p>
                     <p className="font-medium">
-                      {report.classificationConfidence != null
-                        ? `${report.classificationConfidence}% Accuracy`
-                        : "—"}
+                      {displayWasteType}
                     </p>
                   </div>
                 </div>

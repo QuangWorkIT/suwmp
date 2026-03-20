@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface RewardTransactionRepository extends JpaRepository<RewardTransaction, Long> {
+    List<RewardTransaction> findByWasteReport_Id(Long wasteReportId);
+
     @Query("""
         SELECT new com.example.suwmp_be.dto.history.RewardHistoryDto(
             rt.id,
