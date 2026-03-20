@@ -25,6 +25,9 @@ public class S3ServiceImpl implements IS3Service {
     private final S3Client s3Client;
     private final S3Presigner presigner;
 
+    @Value("${cloud.aws.credentials.access-key}")
+    private String accessKey;
+
     @Value("${aws.bucket.name}")
     private String bucket;
 
@@ -47,6 +50,25 @@ public class S3ServiceImpl implements IS3Service {
             }
         };
 
+        if ("dummy".equals(accessKey)) {
+            try {
+                java.io.File uploadDir = new java.io.File("uploads/" + key).getParentFile();
+                if (!uploadDir.exists() && !uploadDir.mkdirs()) {
+                    System.err.println("Failed to create directories: " + uploadDir.getAbsolutePath());
+                }
+                
+                java.io.File destFile = new java.io.File("uploads/" + key);
+                java.nio.file.Files.copy(file.getInputStream(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                
+                System.out.println("Dummy AWS credentials: saved file locally to: " + destFile.getAbsolutePath());
+                return key;
+            } catch (Exception e) {
+                System.err.println("Error during mock local upload: " + e.getMessage());
+                e.printStackTrace();
+                throw new IOException("Failed to save file locally", e);
+            }
+        }
+
         s3Client.putObject(putRequest,
                 RequestBody.fromContentProvider(streamProvider, file.getSize(), Objects.requireNonNull(file.getContentType())));
         return key;
@@ -64,6 +86,11 @@ public class S3ServiceImpl implements IS3Service {
                 .getObjectRequest(getRequest)
                 .signatureDuration(Duration.ofMinutes(15))
                 .build();
+        if ("dummy".equals(accessKey)) {
+            // Return a local URL that our controller can serve
+            return "http://localhost:8080/api/s3/files/" + key;
+        }
+
         return presigner.presignGetObject(getPresignRequest)
                 .url()
                 .toString();

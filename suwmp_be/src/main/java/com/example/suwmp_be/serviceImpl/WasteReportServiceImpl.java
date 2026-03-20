@@ -51,6 +51,7 @@ public class WasteReportServiceImpl implements IWasteReportService {
     private final EnterpriseUserRepository enterpriseUserRepo;
     private final ComplaintRepository complaintRepo;
     private final EnterpriseCapacityRepository enterpriseCapacityRepo;
+    private final RewardTransactionRepository rewardTransactionRepo;
 
     @Override
     public long createNewReport(WasteReportRequest request) {
@@ -239,6 +240,10 @@ public class WasteReportServiceImpl implements IWasteReportService {
         Enterprise enterprise = report.getEnterprise();
         String referenceCode = String.format("REQ-%03d", report.getId());
 
+        int rewardPoints = rewardTransactionRepo.findByWasteReportId(report.getId())
+                .map(com.example.suwmp_be.entity.RewardTransaction::getPoints)
+                .orElse(0);
+
         return new CitizenWasteReportStatusResponse(
                 report.getId(),
                 referenceCode,
@@ -251,7 +256,8 @@ public class WasteReportServiceImpl implements IWasteReportService {
                 report.getLongitude(),
                 report.getVolume(),
                 report.getPhotoUrl(),
-                report.getDescription()
+                report.getDescription(),
+                rewardPoints
         );
     }
 

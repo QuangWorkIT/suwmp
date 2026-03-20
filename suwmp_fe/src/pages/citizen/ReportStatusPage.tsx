@@ -18,7 +18,7 @@ import {
   Camera,
   XCircle,
 } from "lucide-react";
-import { reverseGeocode } from "@/utilities/trackasiaGeocode";
+import { reverseGeocode } from "@/utilities/geocoding";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -111,6 +111,18 @@ function ReportStatusPage() {
           // 404 is expected if no issue exists
           if (issueErr.response?.status !== 404) {
             console.error("Failed to load issue status:", issueErr);
+          }
+        }
+
+        // Fetch presigned URL if photoUrl exists
+        if (reportData.photoUrl) {
+          try {
+            const photoRes = await wasteReportService.getPresignedUrl(reportData.photoUrl);
+            if (photoRes) {
+              setReport(prev => prev ? { ...prev, photoUrl: photoRes } : null);
+            }
+          } catch (photoErr) {
+            console.error("Failed to load presigned URL:", photoErr);
           }
         }
       } catch (err) {
@@ -313,7 +325,7 @@ function ReportStatusPage() {
                   <span className="flex items-center gap-1 min-w-0">
                     <MapPin className="w-4 h-4 shrink-0" />
                     <span className="truncate">
-                      {address ?? `${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}`}
+                      {address || "Locating..."}
                     </span>
                   </span>
                   <span className="flex items-center gap-1">
@@ -344,18 +356,16 @@ function ReportStatusPage() {
                     </p>
                     <p className="font-medium text-emerald-600">
                       {report.rewardPoints != null
-                        ? `${report.rewardPoints} points`
+                        ? `+${report.rewardPoints} pts`
                         : "—"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground uppercase">
-                      Classification confidence
+                      Waste type
                     </p>
                     <p className="font-medium">
-                      {report.classificationConfidence != null
-                        ? `${report.classificationConfidence}% Accuracy`
-                        : "—"}
+                      {report.wasteTypeName || "—"}
                     </p>
                   </div>
                 </div>

@@ -6,6 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.io.IOException;
 
@@ -38,5 +42,18 @@ public class S3Controller {
                 "downloaded file successfully",
                 s3Service.generatePresignedUrl(key))
         );
+    }
+
+    @GetMapping("/files/{folder}/{filename}")
+    public ResponseEntity<byte[]> getFile(@PathVariable String folder, @PathVariable String filename) throws IOException {
+        Path path = Paths.get("uploads", folder, filename);
+        if (!Files.exists(path)) {
+            return ResponseEntity.notFound().build();
+        }
+        byte[] image = Files.readAllBytes(path);
+        String contentType = Files.probeContentType(path);
+        return ResponseEntity.ok()
+                .contentType(contentType != null ? MediaType.parseMediaType(contentType) : MediaType.IMAGE_JPEG)
+                .body(image);
     }
 }

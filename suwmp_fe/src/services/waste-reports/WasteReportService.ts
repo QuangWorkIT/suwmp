@@ -138,7 +138,11 @@ const wasteReportService = {
         if (file) {
             formData.append("file", file);
         }
-        const response = await authClient.post(`/waste-reports/${reportId}/issue`, formData);
+        const response = await authClient.post(`/waste-reports/${reportId}/issue`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
         return response.data.data as ComplaintResponse;
     },
     getIssue: async (reportId: number): Promise<ComplaintResponse> => {
@@ -166,6 +170,15 @@ const wasteReportService = {
             throw error;
         }
     },
+    getPresignedUrl: async (key: string): Promise<string> => {
+        try {
+            const response = await s3Service.getImage(key);
+            return response.data;
+        } catch (error) {
+            console.error("Error getting presigned URL");
+            throw new Error("Error getting presigned URL");
+        }
+    }
 }
 
 export default wasteReportService

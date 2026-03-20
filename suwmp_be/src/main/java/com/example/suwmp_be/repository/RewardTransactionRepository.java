@@ -9,9 +9,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface RewardTransactionRepository extends JpaRepository<RewardTransaction, Long> {
+    Optional<RewardTransaction> findByWasteReportId(Long wasteReportId);
+
     @Query("""
         SELECT new com.example.suwmp_be.dto.history.RewardHistoryDto(
             rt.id,
