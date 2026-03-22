@@ -1,6 +1,6 @@
 package com.example.suwmp_be.service;
 
-import com.example.suwmp_be.dto.leaderboard.MyLeaderBoardDto;
+import com.example.suwmp_be.constants.LeaderboardPeriod;
 import com.example.suwmp_be.dto.leaderboard.PodiumDto;
 import com.example.suwmp_be.dto.leaderboard.RankingDto;
 import org.springframework.data.domain.Pageable;
@@ -10,11 +10,12 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ILeaderBoardService {
-    List<PodiumDto> getPodium(LocalDate date);
+    List<PodiumDto> getPodium(LocalDate date, LeaderboardPeriod period);
     //MyLeaderBoardDto getMyStats(UUID me, LocalDate date);
 
     List<RankingDto> getRankings(
             LocalDate date,
+            LeaderboardPeriod period,
             Pageable pageable,
             UUID me
     );

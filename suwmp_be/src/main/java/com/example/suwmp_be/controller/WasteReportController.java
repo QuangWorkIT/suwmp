@@ -295,6 +295,7 @@ public class WasteReportController {
         UUID citizenId = (UUID) authentication.getPrincipal();
         wasteService.cancelCitizenWasteReport(id, citizenId);
         return ResponseEntity.ok(new BaseResponse<>(true, "Waste report cancelled successfully"));
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/complaints")

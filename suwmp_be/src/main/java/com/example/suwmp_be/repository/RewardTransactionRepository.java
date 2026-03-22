@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,12 +37,26 @@ public interface RewardTransactionRepository extends JpaRepository<RewardTransac
             rt.citizen as citizen,
             sum(rt.points) as totalPoints
         from RewardTransaction rt
-        where rt.createdAt <= :date
+        where rt.createdAt <= :endOfDay
         group by rt.citizen
         order by sum(rt.points) desc
     """)
     List<CitizenPointSum> sumPointsUntil(
-            @Param("date") LocalDate date
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
+
+    @Query("""
+        select
+            rt.citizen as citizen,
+            sum(rt.points) as totalPoints
+        from RewardTransaction rt
+        where rt.createdAt between :start and :end
+        group by rt.citizen
+        order by sum(rt.points) desc
+    """)
+    List<CitizenPointSum> sumPointsBetween(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
     );
 
     @Query("""

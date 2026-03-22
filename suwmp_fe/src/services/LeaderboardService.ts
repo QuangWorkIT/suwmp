@@ -61,9 +61,9 @@ const transformUser = (apiUser: ApiLeaderboardUser): LeaderboardUser => {
 };
 
 export const LeaderboardService = {
-    getRankings: async (date?: string, page: number = 0, size: number = 5): Promise<LeaderboardUser[]> => {
+    getRankings: async (period: string = 'DAILY', date?: string, page: number = 0, size: number = 5): Promise<LeaderboardUser[]> => {
         try {
-            const params = { date, page, size };
+            const params = { period, date, page, size };
             const response = await authClient.get<ApiLeaderboardResponse>('/leaderboard', { params });
             return response.data.data.map(transformUser);
         } catch (error) {
@@ -72,9 +72,10 @@ export const LeaderboardService = {
         }
     },
 
-    getPodium: async (): Promise<LeaderboardUser[]> => {
+    getPodium: async (period: string = 'DAILY'): Promise<LeaderboardUser[]> => {
         try {
-            const response = await authClient.get<ApiLeaderboardResponse>('/leaderboard/podium');
+            const params = { period };
+            const response = await authClient.get<ApiLeaderboardResponse>('/leaderboard/podium', { params });
             return response.data.data.map(transformUser);
         } catch (error) {
             console.error("Error fetching leaderboard podium:", error);

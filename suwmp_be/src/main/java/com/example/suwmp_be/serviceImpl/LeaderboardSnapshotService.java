@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,34 +22,29 @@ public class LeaderboardSnapshotService {
     @Transactional
     public void generateSnapshot(LocalDate date) {
 
-        leaderboardDailyRepository.deleteBySnapshotDate(date);
-
-        // 1️⃣ Aggregate points
         List<CitizenPointSum> results =
-                rewardTransactionRepository.sumPointsUntil(date);
+                rewardTransactionRepository.sumPointsUntil(date.atTime(23, 59, 59));
 
-        int rank = 1;
+        List<LeaderboardDaily> newRows = new ArrayList<>();
         long prevPoints = -1;
-        int actualRank = 0;
+        int actualRank = 1;
 
-        for (CitizenPointSum row : results) {
-
+        for (int i = 0; i < results.size(); i++) {
+            CitizenPointSum row = results.get(i);
             if (row.getTotalPoints() != prevPoints) {
-                actualRank = rank;
+                actualRank = i + 1;
             }
-
-            leaderboardDailyRepository.save(
-                    new LeaderboardDaily(
-                            null,
-                            row.getCitizen(),
-                            actualRank,
-                            row.getTotalPoints(),
-                            date
-                    )
-            );
-
+            newRows.add(new LeaderboardDaily(
+                    null,
+                    row.getCitizen(),
+                    actualRank,
+                    row.getTotalPoints(),
+                    date
+            ));
             prevPoints = row.getTotalPoints();
-            rank++;
         }
+
+        leaderboardDailyRepository.deleteBySnapshotDate(date);
+        leaderboardDailyRepository.saveAll(newRows);
     }
 }

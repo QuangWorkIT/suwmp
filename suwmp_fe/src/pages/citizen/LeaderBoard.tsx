@@ -7,11 +7,11 @@ import { LeaderboardService } from '@/services/LeaderboardService';
 import type { LeaderboardUser } from '@/types/leaderboard';
 import { Link } from 'react-router';
 
-type TimeFilter = 'week' | 'month' | 'all';
+type TimeFilter = 'today' | 'week' | 'month' | 'all';
 type ScopeFilter = 'neighborhood' | 'city';
 
 function LeaderBoard() {
-    const [timeFilter, setTimeFilter] = useState<TimeFilter>('week');
+    const [timeFilter, setTimeFilter] = useState<TimeFilter>('today');
     const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('neighborhood');
     
     // Data states
@@ -24,10 +24,26 @@ function LeaderBoard() {
         const fetchData = async () => {
             setLoading(true);
             try {
+                // Map frontend filter to backend period
+                const periodMap: Record<TimeFilter, string> = {
+                    today: 'DAILY',
+                    week: 'WEEKLY',
+                    month: 'MONTHLY',
+                    all: 'ALL_TIME'
+                };
+                
+                // Use local date for DAILY snapshot queries to avoid UTC issues
+                const localDate = new Date();
+                const dateStr = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
+
                 // Fetch all data in parallel
+                // If it's "all time", we can still pass DAILY to podium if we want, 
+                // but let's match the selected filter.
+                const period = periodMap[timeFilter] || 'WEEKLY';
+
                 const [podiumData, rankingsData] = await Promise.all([
-                    LeaderboardService.getPodium(),
-                    LeaderboardService.getRankings(new Date().toISOString().split('T')[0], 0, 50)
+                    LeaderboardService.getPodium(period),
+                    LeaderboardService.getRankings(period, dateStr, 0, 50)
                 ]);
 
                 setPodium(podiumData);
@@ -37,16 +53,21 @@ function LeaderBoard() {
                 const currentUser = rankingsData.find(r => r.isCurrentUser);
                 if (currentUser) {
                     setMyRank(currentUser.rank);
+                } else {
+                    setMyRank(null);
                 }
             } catch (error) {
                 console.error("Failed to fetch leaderboard data", error);
+                setPodium([]);
+                setRankings([]);
+                setMyRank(null);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, []);
+    }, [timeFilter, scopeFilter]);
 
     const restRankings = rankings.slice(3);
 
@@ -78,6 +99,16 @@ function LeaderBoard() {
             <div className="flex justify-between items-center mb-6">
                 {/* Time Filter Tabs */}
                 <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button
+                        onClick={() => setTimeFilter('today')}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                            timeFilter === 'today'
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                    >
+                        Today
+                    </button>
                     <button
                         onClick={() => setTimeFilter('week')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
