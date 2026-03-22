@@ -1,4 +1,3 @@
-// ProfileLayout.jsx
 import ProfileSidebar from "./ProfileSidebar";
 import ProfileHeader from "./ProfileHeader";
 import { Outlet } from "react-router";
@@ -12,7 +11,6 @@ function CitizenProfileMain() {
                 <div className="flex flex-col lg:flex-row gap-8">
                     <ProfileSidebar />
 
-                    {/* Đây là chỗ render nội dung của từng tab */}
                     <div className="flex-1">
                         <Outlet />
                     </div>

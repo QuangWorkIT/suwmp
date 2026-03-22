@@ -1,0 +1,81 @@
+# Build output directories
+target/
+build/
+out/
+bin/
+
+# IDE and editor files
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.agent
+*.swo
+*~
+.coderabbit.yaml
+# Operating system files
+.DS_Store
+Thumbs.db
+*.orig
+
+# Git files
+.git/
+.gitignore
+.github/
+.gitlab-ci.yml
+
+# Log files
+*.log
+logs/
+
+# Dependency caches
+.m2/
+.gradle/
+node_modules/
+
+# Environment and configuration files (except what we need)
+suwmp_fe/.env
+suwmp_be/.env
+set-env.sh
+.env
+.env.local
+.env.prod
+*.properties
+!src/main/resources/application.properties
+!src/main/resources/application.yml
+
+# Documentation
+README.md
+*.pdf
+docs/
+
+# Test files and reports
+*.jar
+*.war
+*.ear
+reports/
+test-results/
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+
+# Maven wrapper (if not needed)
+mvnw
+mvnw.cmd
+.mvn/
+
+# CI/CD configuration
+Jenkinsfile
+.gitlab-ci.yml
+.ci/

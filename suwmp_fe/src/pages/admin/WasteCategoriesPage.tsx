@@ -1,6 +1,6 @@
 import { useEffect, useState, type JSX } from "react";
 import AddWasteCategoryModal from "./AddWasteCategoryModal";
-import WasteCategoryService from "@/services/WasteCategoryService";
+import WasteCategoryService from "@/services/waste-reports/WasteCategoryService";
 import {
   Recycle,
   Leaf,

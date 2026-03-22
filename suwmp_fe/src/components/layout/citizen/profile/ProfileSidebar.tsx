@@ -1,4 +1,3 @@
-// ProfileSidebar.jsx
 import { User, Bell, Shield, Settings, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { useAppDispatch } from "@/redux/hooks";

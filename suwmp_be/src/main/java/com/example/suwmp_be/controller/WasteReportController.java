@@ -296,7 +296,6 @@ public class WasteReportController {
         wasteService.cancelCitizenWasteReport(id, citizenId);
         return ResponseEntity.ok(new BaseResponse<>(true, "Waste report cancelled successfully"));
     }
-
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/complaints")
     public ResponseEntity<BaseResponse<WasteReportDetailForComplaint>> getWasteReportDetailForComplaint(@PathVariable long id) {

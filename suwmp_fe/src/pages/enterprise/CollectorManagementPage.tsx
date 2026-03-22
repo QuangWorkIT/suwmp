@@ -8,8 +8,8 @@ import { StatsCards } from "@/components/common/collector/StatsCards";
 import { CollectorCard } from "@/components/common/collector/CollectorCard";
 import { CollectorDialog } from "@/components/common/collector/CollectorDialog";
 import { DeleteCollectorDialog } from "@/components/common/collector/DeleteCollectorDialog";
-import { CollectorService } from "@/services/CollectorService";
-import WasteReportService from "@/services/WasteReportService";
+import { CollectorService } from "@/services/collectors/CollectorService";
+import WasteReportService from "@/services/waste-reports/WasteReportService";
 import type {
   Collector,
   CreateCollectorRequest,
@@ -49,7 +49,7 @@ const CollectorManagementPage = () => {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const results = await Promise.allSettled([
         CollectorService.getCollectors(enterpriseId, pagination.page, pagination.size),
@@ -199,8 +199,8 @@ const CollectorManagementPage = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 h-full overflow-y-auto">
         {/* Add Button */}
         <div className="flex items-center justify-end">
-          <Button 
-            onClick={handleAdd} 
+          <Button
+            onClick={handleAdd}
             size="lg"
             className="shadow-sm hover:shadow-md transition-shadow"
           >

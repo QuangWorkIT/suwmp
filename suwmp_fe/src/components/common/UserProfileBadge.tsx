@@ -10,7 +10,8 @@ function UserProfileBadge() {
         <div className="flex items-center justify-between gap-3 p-3 pl-5 rounded-2xl bg-primary/10 
         hover:cursor-pointer hover:bg-primary/20 transition-all duration-200 ease-in-out">
             <Link 
-                to="/citizen/profile"
+                to={user?.role === "CITIZEN" ?  "/citizen/profile" : 
+                    user?.role === "ENTERPRISE" ? "/enterprise/profile" : ""}
                 className="flex gap-3 items-center flex-1"
             >
                 <div className="w-9 h-9 rounded-full eco-gradient text-white 

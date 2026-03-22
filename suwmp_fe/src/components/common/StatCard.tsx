@@ -1,8 +1,8 @@
 import React from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Card, CardContent } from "./ui/card";
-import { Skeleton } from "./ui/skeleton";
+import { Card, CardContent } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 
 interface StatCardProps {
   title: string;
@@ -77,13 +77,12 @@ const StatCard: React.FC<StatCardProps> = ({
             <h3 className="text-2xl font-bold text-gray-900">
               {value !== undefined && value !== null ? value : "—"}
             </h3>
-            
+
             <div className="flex items-center mt-2">
               {delta !== undefined && (
                 <div
-                  className={`flex items-center text-xs font-medium mr-2 ${
-                    isPositive ? "text-green-600" : isNegative ? "text-red-600" : "text-gray-500"
-                  }`}
+                  className={`flex items-center text-xs font-medium mr-2 ${isPositive ? "text-green-600" : isNegative ? "text-red-600" : "text-gray-500"
+                    }`}
                 >
                   {isPositive && <ArrowUp size={12} className="mr-0.5" />}
                   {isNegative && <ArrowDown size={12} className="mr-0.5" />}
@@ -99,7 +98,7 @@ const StatCard: React.FC<StatCardProps> = ({
               )}
             </div>
           </div>
-          
+
           <div className={`p-3 rounded-xl ${iconBgColor}`}>
             <Icon size={24} className={iconColor} />
           </div>

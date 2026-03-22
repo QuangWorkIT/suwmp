@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input";
-import { ReportHistoryService } from "@/services/ReportHistoryService";
+import { ReportHistoryService } from "@/services/citizens/ReportHistoryService";
 import type { ReportHistory, ReportStatus } from "@/types/reportHistory";
 import { reverseGeocode } from "@/utilities/geocoding";
 import {
@@ -156,11 +156,10 @@ const ReportHistoryPage = () => {
                                         key={filter}
                                         onClick={() => setActiveFilter(filter)}
                                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors
-                                        ${
-                                            activeFilter === filter
+                                        ${activeFilter === filter
                                                 ? "bg-white text-gray-900 shadow-sm"
                                                 : "text-gray-600 hover:text-gray-900"
-                                        } cursor-pointer`}
+                                            } cursor-pointer`}
                                     >
                                         {" "}
                                         {filter}{" "}
@@ -171,21 +170,19 @@ const ReportHistoryPage = () => {
                             <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                                 <button
                                     onClick={() => setViewMode("list")}
-                                    className={`p-2 rounded ${
-                                        viewMode === "list"
+                                    className={`p-2 rounded ${viewMode === "list"
                                             ? "bg-green-500 text-white"
                                             : "text-gray-600 hover:text-gray-900"
-                                    }`}
+                                        }`}
                                 >
                                     <TextAlignJustify className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode("grid")}
-                                    className={`p-2 rounded ${
-                                        viewMode === "grid"
+                                    className={`p-2 rounded ${viewMode === "grid"
                                             ? "bg-green-500 text-white"
                                             : "text-gray-600 hover:text-gray-900"
-                                    }`}
+                                        }`}
                                 >
                                     <LayoutGrid className="w-5 h-5" />
                                 </button>
@@ -210,11 +207,10 @@ const ReportHistoryPage = () => {
                             <div
                                 key={report.id}
                                 onClick={() => navigate(`/citizen/reports/${report.id}`)}
-                                className={`p-6 hover:bg-gray-50 cursor-pointer group ${
-                                    viewMode === "grid"
+                                className={`p-6 hover:bg-gray-50 cursor-pointer group ${viewMode === "grid"
                                         ? "rounded-lg border border-gray-200 hover:shadow-sm"
                                         : "hover:bg-gray-50"
-                                }`}
+                                    }`}
                             >
                                 <div className="flex justify-between">
                                     <div className="flex gap-4">

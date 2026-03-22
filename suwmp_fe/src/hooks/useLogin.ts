@@ -1,7 +1,7 @@
 import { authInitialized, login } from "@/redux/features/userSlice"
 import { useAppDispatch } from "@/redux/hooks"
 import { AuthService } from "@/services/AuthService"
-import { EnterpriseUserService } from "@/services/EnterpriseUserService"
+import { EnterpriseUserService } from "@/services/enterprises/EnterpriseUserService"
 import type { UserInterface } from "@/types/Users"
 import type { AppDispath } from "@/redux/store"
 import { decodePayLoad, isTokenExpired } from "@/utilities/jwt"

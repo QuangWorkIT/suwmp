@@ -18,7 +18,7 @@ import {
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { CollectionLogHistory } from "@/types/collectionLog";
-import { collectionLogService } from "@/services/CollectionLogService";
+import { collectionLogService } from "@/services/collectors/CollectionLogService";
 import ImageDetail from "@/components/common/ImageDetail";
 
 
@@ -141,7 +141,20 @@ export default function CollectorHistory() {
                         )}
 
                         <AnimatePresence mode="popLayout">
-                            {!isFetching && filteredLogs.length === 0 && (
+                            {!isFetching && filteredLogs.length === 0 && historyLogs.length === 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="flex flex-col items-center justify-center py-20 text-center"
+                                >
+                                    <Package className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
+                                    <h3 className="text-md font-medium">No history result</h3>
+                                </motion.div>
+                            )}
+
+
+                            {!isFetching && filteredLogs.length === 0 && historyLogs.length > 0 && (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}

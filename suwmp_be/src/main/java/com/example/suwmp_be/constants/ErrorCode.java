@@ -21,6 +21,7 @@ public enum ErrorCode {
     EMAIL_EXISTED("Bad Request", "Email already exists"),
     PHONE_EXISTED("Bad Request", "Phone already exists"),
 
+    ENTERPRISE_USER_NOT_FOUND("Not Found", "Enterprise user not found"),
     USER_NOT_FOUND("Not Found", "User not found"),
     USER_ALREADY_EXISTS("Bad Request", "User already exists"),
     USER_INACTIVE("Unauthenticated", "User is inactive"),

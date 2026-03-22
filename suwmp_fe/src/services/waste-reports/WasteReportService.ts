@@ -1,7 +1,7 @@
 import authClient from "@/config/axios";
 import type { AssignedTask } from "@/types/collectorTask";
 
-import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, RatingStatusResponse, UpdateWasteReportRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
+import type { CancelWasteReportRequest, CitizenWasteReportStatus, NearbyEnterpriseRequest, NearbyEnterpriseResponse, RatingStatusResponse, UpdateWasteReportRequest, WasteReportEnterprise, WasteReportRequest } from "@/types/WasteReportRequest";
 import type { WasteReportDetailForComplaint } from "@/types/WasteReportRequest";
 export interface ComplaintResponse {
     description: string;
@@ -44,7 +44,15 @@ const wasteReportService = {
             const response = await authClient.get("/waste-reports/nearby/enterprises",
                 { params: payload }
             );
-            return response.data;
+            const arr: NearbyEnterpriseResponse[] = []
+            for (let i = 0; i < response.data.data.length; i++) {
+                const element = response.data.data[i];
+                arr.push(await s3Service.getImage(element.photoUrl)
+                    .then((res) => ({ ...element, photoUrl: res.data }))
+                    .catch(() => element))
+            }
+
+            return { ...response.data, data: arr };
         } catch (error) {
             console.error("Error getting enterprises nearby citizen");
             throw new Error("Error getting enterprises nearby citizen");
@@ -138,7 +146,11 @@ const wasteReportService = {
         if (file) {
             formData.append("file", file);
         }
-        const response = await authClient.post(`/waste-reports/${reportId}/issue`, formData);
+        const response = await authClient.post(`/waste-reports/${reportId}/issue`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        });
         return response.data.data as ComplaintResponse;
     },
     getIssue: async (reportId: number): Promise<ComplaintResponse> => {
@@ -165,7 +177,7 @@ const wasteReportService = {
             console.error(error);
             throw error;
         }
-    },
+    }
 }
 
 export default wasteReportService

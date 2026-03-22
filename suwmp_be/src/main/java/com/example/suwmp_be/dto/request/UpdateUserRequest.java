@@ -17,4 +17,8 @@ public class UpdateUserRequest {
 
     @Pattern(regexp = "^(ACTIVE|SUSPENDED)$")
     private String status;
+
+    private String enterpriseName;
+    private String enterpriseDescription;
+    private String enterprisePhoto;
 }

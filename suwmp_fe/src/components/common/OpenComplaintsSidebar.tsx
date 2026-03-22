@@ -1,8 +1,8 @@
 import React from "react";
 import { Link } from "react-router";
-import { Badge } from "./ui/badge";
-import { Skeleton } from "./ui/skeleton";
-import type { DashboardComplaint } from "../services/AdminDashboardService";
+import { Badge } from "../ui/badge";
+import { Skeleton } from "../ui/skeleton";
+import type { DashboardComplaint } from "../../services/admins/AdminDashboardService";
 
 interface OpenComplaintsSidebarProps {
   complaints: DashboardComplaint[];

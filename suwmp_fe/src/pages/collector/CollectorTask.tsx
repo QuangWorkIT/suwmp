@@ -2,7 +2,7 @@ import TaskCard from "@/components/common/collector/TaskCard";
 import Pagination from "@/components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import wasteReportService from "@/services/WasteReportService";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import type { AssignedTask } from "@/types/collectorTask";
 import type { PaginatedResponse } from "@/types/response";
 import { AnimatePresence, motion } from "framer-motion";
@@ -95,7 +95,7 @@ function CollectorTask() {
                 </div>
             </header>
 
-            <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+            <main className="mx-auto max-w-7xl py-6 sm:px-6">
                 {/* Search & Filters */}
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative max-w-md flex-1">

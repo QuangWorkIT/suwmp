@@ -6,13 +6,13 @@ import WastePhotoUpload from "@/components/common/citizen/WastePhotoUpload"
 import WasteReportStep, { type Step } from "@/components/common/citizen/WasteReportStep"
 import ReportHeader from "@/components/layout/citizen/ReportHeader"
 import { useAppSelector } from "@/redux/hooks";
-import s3Service from "@/services/S3Service";
-import wasteReportService from "@/services/WasteReportService";
+import s3Service from "@/services/waste-reports/S3Service";
+import wasteReportService from "@/services/waste-reports/WasteReportService";
 import type { WasteCategory } from "@/types/WasteCategory";
 import { useState } from "react";
 import { toast } from "sonner";
 import { WasteReportStatus, type NearbyEnterpriseResponse } from "@/types/WasteReportRequest"
-import { RewardTransactionService } from "@/services/RewardTransactionService";
+import { RewardTransactionService } from "@/services/rewards/RewardTransactionService";
 
 function WasteReportProcess() {
     const user = useAppSelector(state => state.user)
@@ -98,7 +98,7 @@ function WasteReportProcess() {
             if (!rewardTransactionResponse.isSuccess) {
                 throw new Error(rewardTransactionResponse.message)
             }
-            
+
             toast.success("Report submitted successfully", {
                 position: "top-right"
             })

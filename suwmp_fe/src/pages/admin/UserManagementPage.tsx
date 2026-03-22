@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter, Download, MoreVertical } from 'lucide-react';
@@ -17,20 +18,21 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { UserDialog } from "@/components/users/UserDialog";
-import { type UserFormValues } from "@/components/users/UserForm";
+import { UserDialog } from "@/components/common/users/UserDialog";
+import { type UserFormValues } from "@/components/common/users/UserForm";
 import { toast } from "sonner"; // Assuming sonner is used for toasts based on package.json
 import { useOutletContext } from 'react-router';
-import { UserService, type UserResponse } from "@/services/UserService";
+import { UserService, type UserResponse } from "@/services/citizens/UserService";
+import s3Service from '@/services/waste-reports/S3Service';
 
 interface User {
     id: string;
@@ -42,7 +44,7 @@ interface User {
     status: 'active' | 'suspended';
     activity: string;
     joined: string;
-    avatar: string;
+    image_url: string;
 }
 
 
@@ -68,9 +70,10 @@ export default function UserManagementPage() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
-    
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Map API response to User type
     const mapUsers = (content: UserResponse[]): User[] => {
@@ -80,15 +83,15 @@ export default function UserManagementPage() {
             email: u.email,
             phone: u.phone ?? '',
             roleId: '',
-            role: u.role && typeof u.role === 'string' 
-                ? u.role.charAt(0).toUpperCase() + u.role.slice(1).toLowerCase() as any 
+            role: u.role && typeof u.role === 'string'
+                ? u.role.charAt(0).toUpperCase() + u.role.slice(1).toLowerCase() as any
                 : u.role,
             status: u.status && typeof u.status === 'string'
                 ? u.status.charAt(0).toUpperCase() + u.status.slice(1).toLowerCase() as any
                 : u.status,
             activity: u.activityStatus || 'No activity',
             joined: new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            avatar: u.fullName.charAt(0).toUpperCase()
+            image_url: u.image_url || u.fullName.charAt(0).toUpperCase()
         }));
     };
 
@@ -103,7 +106,7 @@ export default function UserManagementPage() {
                 response = await UserService.getUsers(page, pagination.pageSize);
             }
             const { content, totalPages, totalElements, number, first, last } = response.data;
-            
+
             const mappedUsers = mapUsers(content);
 
             setUsers(mappedUsers);
@@ -172,7 +175,7 @@ export default function UserManagementPage() {
         // Filter all users by role AND search query
         const filtered = allUsers.filter(user => {
             const matchesRole = user.role.toLowerCase() === roleFilter.toLowerCase();
-            const matchesSearch = !searchQuery.trim() || 
+            const matchesSearch = !searchQuery.trim() ||
                 user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.email.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesRole && matchesSearch;
@@ -189,7 +192,7 @@ export default function UserManagementPage() {
         }
         return allUsers.filter(user => {
             const matchesRole = user.role.toLowerCase() === roleFilter.toLowerCase();
-            const matchesSearch = !searchQuery.trim() || 
+            const matchesSearch = !searchQuery.trim() ||
                 user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.email.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesRole && matchesSearch;
@@ -276,7 +279,7 @@ export default function UserManagementPage() {
 
         return () => {
             if (setOnAddClick) {
-                setOnAddClick(() => () => {}); // Reset to no-op or null
+                setOnAddClick(() => () => { }); // Reset to no-op or null
             }
         }
     }, [setOnAddClick]);
@@ -288,7 +291,7 @@ export default function UserManagementPage() {
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
-    
+
     const [updateConfirmOpen, setUpdateConfirmOpen] = useState(false);
     const [pendingUpdateData, setPendingUpdateData] = useState<UserFormValues | null>(null);
 
@@ -297,12 +300,20 @@ export default function UserManagementPage() {
         setDeleteConfirmOpen(true);
     };
 
+    const refreshCurrentPage = () => {
+        if (roleFilter === 'all') {
+            fetchUsers(pagination.pageNumber, searchQuery);
+        } else {
+            fetchAllUsersForFilter();
+        }
+    };
+
     const confirmDeleteUser = async () => {
         if (!userToDelete) return;
         try {
             await UserService.deleteUser(userToDelete);
-            setUsers(users.filter(u => u.id !== userToDelete));
             toast.success("User deleted successfully");
+            refreshCurrentPage();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to delete user");
         } finally {
@@ -318,47 +329,51 @@ export default function UserManagementPage() {
             setUpdateConfirmOpen(true);
         } else {
             // Create user directly
+            setIsSubmitting(true);
             try {
+                if (data.roleId === "2" && data.enterprisePhoto instanceof File) {
+                    const photoResponse = await s3Service.uploadImage(data.enterprisePhoto);
+                    data.enterprisePhoto = photoResponse.data
+                }
                 await UserService.createUser({
-                    ...data,
                     fullName: data.fullName,
                     email: data.email,
                     phone: data.phone,
-                    roleId: data.roleId
+                    roleId: data.roleId,
+                    password: data.password,
+                    enterpriseName: data.enterpriseName,
+                    enterpriseDescription: data.enterpriseDescription || "",
+                    enterprisePhoto: data.enterprisePhoto || ""
                 });
                 toast.success("User added successfully");
-                fetchUsers(pagination.pageNumber);
+                refreshCurrentPage()
                 setIsDialogOpen(false);
             } catch (error: any) {
                 toast.error(error.response?.data?.message || "Failed to create user");
+            } finally {
+                setIsSubmitting(false);
             }
         }
     };
 
     const confirmUpdateUser = async () => {
         if (!selectedUser || !pendingUpdateData) return;
+        setIsSubmitting(true);
         try {
+            if (pendingUpdateData.roleId === "2" && pendingUpdateData.enterprisePhoto instanceof File) {
+                const photoResponse = await s3Service.uploadImage(pendingUpdateData.enterprisePhoto);
+                pendingUpdateData.enterprisePhoto = photoResponse.data
+            }
             await UserService.updateUser(selectedUser.id, pendingUpdateData);
-            
-            // Update local list
-            const updatedUsers = users.map(user => 
-                user.id === selectedUser.id 
-                    ? { 
-                        ...user, 
-                        ...pendingUpdateData, 
-                        role: pendingUpdateData.roleId === "1" ? "Citizen" : pendingUpdateData.roleId === "2" ? "Enterprise" : "Collector" as any,
-                        status: pendingUpdateData.status as any
-                    } 
-                    : user
-            );
-            setUsers(updatedUsers);
             toast.success("User updated successfully");
             setIsDialogOpen(false);
+            refreshCurrentPage();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to save user");
         } finally {
             setUpdateConfirmOpen(false);
             setPendingUpdateData(null);
+            setIsSubmitting(false);
         }
     };
 
@@ -443,7 +458,7 @@ export default function UserManagementPage() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-10 h-10 rounded-full ${getAvatarColor(index)} flex items-center justify-center text-white font-medium shadow-sm`}>
-                                                    {user.avatar}
+                                                    {user.image_url}
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-medium text-gray-900 group-hover:text-green-700 transition-colors">{user.fullName}</div>
@@ -476,7 +491,7 @@ export default function UserManagementPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
                                                     <DropdownMenuItem onClick={() => handleEditUser(user)}>Edit Details</DropdownMenuItem>
-                                                    <DropdownMenuItem 
+                                                    <DropdownMenuItem
                                                         className="text-red-600 focus:text-red-700"
                                                         onClick={() => handleDeleteUser(user.id)}
                                                     >
@@ -502,18 +517,18 @@ export default function UserManagementPage() {
                 <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white">
                     <p className="text-sm text-gray-500">Showing {displayUsers.length} of {getFilteredTotal()} users</p>
                     <div className="flex gap-2">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             className="h-8 text-xs border-gray-200 text-gray-600"
                             onClick={() => handlePageChange(pagination.pageNumber - 1)}
                             disabled={isFirstPage()}
                         >
                             Previous
                         </Button>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             className="h-8 text-xs border-gray-200 text-gray-600"
                             onClick={() => handlePageChange(pagination.pageNumber + 1)}
                             disabled={isLastPage()}
@@ -524,12 +539,13 @@ export default function UserManagementPage() {
                 </div>
             </div>
 
-            <UserDialog 
+            <UserDialog
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
                 user={selectedUser}
                 onSubmit={handleFormSubmit}
                 onCancel={() => setIsDialogOpen(false)}
+                isSubmitting={isSubmitting}
             />
 
             <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
@@ -557,7 +573,9 @@ export default function UserManagementPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setUpdateConfirmOpen(false)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmUpdateUser}>Update</AlertDialogAction>
+                        <AlertDialogAction onClick={(e) => { e.preventDefault(); confirmUpdateUser(); }} disabled={isSubmitting}>
+                            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</> : "Update"}
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

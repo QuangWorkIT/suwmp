@@ -1,11 +1,11 @@
-import authClient from "../config/axios";
+import authClient from "@/config/axios";
 import type {
   Collector,
   CreateCollectorRequest,
   UpdateCollectorRequest,
   BaseResponse,
   PaginatedResponse,
-} from "../types/collector";
+} from "@/types/collector";
 
 export const CollectorService = {
   getCollectors: async (
