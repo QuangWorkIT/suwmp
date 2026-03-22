@@ -143,9 +143,9 @@ public class LeaderBoardService implements ILeaderBoardService {
 
             final LocalDate finalDate = date; // for closure
             List<UUID> citizenIds =
-                    rows.stream()
+                    new ArrayList<>(rows.stream()
                             .map(ld -> ld.getCitizen().getId())
-                            .toList();
+                            .toList());
 
             boolean isMeInPage = citizenIds.contains(me);
             LeaderboardDaily myDaily = null;
