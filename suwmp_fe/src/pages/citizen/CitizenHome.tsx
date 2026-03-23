@@ -126,6 +126,7 @@ const CitizenHome = () => {
         // Fetch leaderboard separately to handle its errors independently
         try {
           const leaderboardRes = await LeaderboardService.getRankings(
+            "DAILY",
             new Date().toISOString().split("T")[0],
             0,
             5

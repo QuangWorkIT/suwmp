@@ -1,7 +1,7 @@
 package com.example.suwmp_be.controller;
 
+import com.example.suwmp_be.constants.LeaderboardPeriod;
 import com.example.suwmp_be.dto.BaseResponse;
-import com.example.suwmp_be.dto.leaderboard.MyLeaderBoardDto;
 import com.example.suwmp_be.dto.leaderboard.PodiumDto;
 import com.example.suwmp_be.dto.leaderboard.RankingDto;
 import com.example.suwmp_be.service.ILeaderBoardService;
@@ -26,8 +26,10 @@ public class LeaderboardController {
     private final ILeaderBoardService leaderboardService;
 
     @GetMapping("/podium")
-    public ResponseEntity<BaseResponse<List<PodiumDto>>> podium() {
-        List<PodiumDto> podium = leaderboardService.getPodium(LocalDate.now());
+    public ResponseEntity<BaseResponse<List<PodiumDto>>> podium(
+            @RequestParam(defaultValue = "DAILY") LeaderboardPeriod period
+    ) {
+        List<PodiumDto> podium = leaderboardService.getPodium(LocalDate.now(), period);
         return ResponseEntity.ok(
                 new BaseResponse<>(
                         true,
@@ -40,12 +42,14 @@ public class LeaderboardController {
     @GetMapping
     public ResponseEntity<BaseResponse<List<RankingDto>>> rankings(
             @RequestParam(defaultValue = "#{T(java.time.LocalDate).now()}") LocalDate date,
+            @RequestParam(defaultValue = "DAILY") LeaderboardPeriod period,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "5") @Min(1) int size,
             @AuthenticationPrincipal UUID userId
     ) {
         List<RankingDto> ranks = leaderboardService.getRankings(
                 date,
+                period,
                 Pageable.ofSize(size).withPage(page),
                 userId
         );
