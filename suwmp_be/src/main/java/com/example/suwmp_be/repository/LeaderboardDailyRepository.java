@@ -54,5 +54,8 @@ public interface LeaderboardDailyRepository extends JpaRepository<LeaderboardDai
             @Param("date") LocalDate date
     );
 
+    @Query("SELECT MAX(ld.snapshotDate) FROM LeaderboardDaily ld")
+    Optional<LocalDate> findLatestSnapshotDate();
+
     void deleteBySnapshotDate(LocalDate snapshotDate);
 }
